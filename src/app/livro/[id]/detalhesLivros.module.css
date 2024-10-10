@@ -1,0 +1,72 @@
+/* styles/DetalhesLivro.module.css */
+
+.containerConsLiv {
+  background: #fff;
+  position: absolute;
+  background: linear-gradient(to bottom, rgba(21, 75, 253, 0.767), rgba(136, 138, 255, 0.568));
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  width: 80%;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 2px 10px 3px rgba(0, 0, 0, 0.404);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.gridDiv {
+  display: flex;
+  flex-direction: column;
+}
+
+.gridImg {
+  max-width: 100%;
+  height: auto;
+}
+
+.livroInfo {
+  position: relative;
+}
+
+.botaoReservarPos {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40%;
+  height: 50px;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 10px;
+  padding-bottom: 10px;
+}
+
+.botaoReservar {
+  background-image: linear-gradient(to left, #91f3ba, #07ff6e, #00f767, #bafdd6);
+  color: rgb(0, 0, 0);
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.botaoReservar:hover {
+  background-image: linear-gradient(to left, #051352, #6270ee, #5f6ef1, #001aff);
+  color: white;
+}
+
+.botaoReservado {
+  background-image: linear-gradient(to left, #520505, #f84040, #f84040, #520505);
+  color: white;
+  cursor: not-allowed;
+}

@@ -1,4 +1,7 @@
 .nav100 {
+  display: block;
+  position: fixed;
+  top: 0px;
   background: linear-gradient(to right, rgb(116, 129, 252), rgb(0, 0, 0));
   height: 50px;
   width: 100%;

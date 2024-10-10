@@ -1,16 +1,24 @@
-// main.js
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const livrosRouter = require('./routes/livros.routes');
-// Importar rotas para usuários e empréstimos conforme necessário
 const usuariosRouter = require('./routes/usuarios.routes');
 const emprestimosRouter = require('./routes/emprestimos.router');
 
 const app = express();
 
+// Configuração CORS para permitir múltiplas origens
+const allowedOrigins = ['http://127.0.0.1:5501', 'http://localhost:3000'];
+
 app.use(cors({
-  origin: 'http://127.0.0.1:5501',
+  origin: function (origin, callback) {
+    // Permite requisições de origens que estão na lista
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Não permitido por CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

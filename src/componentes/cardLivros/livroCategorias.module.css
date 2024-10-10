@@ -1,0 +1,104 @@
+
+/*aacima é um teste Meu código */
+
+/* Estilos específicos para o Swiper */
+.section-carrosel-categorias .swiper-1 {
+  width: 100%;
+  height: auto;
+  position: relative;
+}
+
+.section-carrosel-categorias .swiper-button-next,
+.section-carrosel-categorias .swiper-button-prev  {
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+
+.section-carrosel-categorias .swiper-pagination {
+  bottom: 10px;
+  z-index: 10;
+}
+
+/* Estilos para o slide */
+.section-carrosel-categorias .swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 300px;
+  height: 420px; /* Ajustar altura conforme necessário */
+  margin-right: 0; /* Ajustar margem direita para evitar espaçamento extra */
+  border-radius: 80px;
+}
+
+/* Estilos para o card do livro */
+.cardLivro {
+  background: linear-gradient(to bottom, rgb(6, 0, 32), rgb(17, 2, 2));
+  width: 280px; 
+  height: 400px; 
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  box-sizing: border-box;
+  box-shadow: 0 10px 10px rgb(12, 8, 8);
+  transition: transform 0.2s ease-in-out;
+  margin: 0; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.cardLivro img {
+  width: 150px; 
+  height: 250px; 
+  border-radius: 8px;
+  margin-top: 25px;
+}
+.categoriaContainer h3 {
+  color: rgb(10, 0, 0);
+}
+.cardLivro h2 {
+  color: rgb(255, 255, 255);
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.cardLivro h4 {
+  color: rgb(202, 202, 202);
+  font-weight: 100;
+  font-size: 15px;
+  margin: 0;
+}
+
+.categoriaContainer {
+  margin: 20px 0;
+}
+
+.categoria {
+  color: #fff;
+  font-size: 25px;
+  margin: 20px 0 10px 10px;
+  text-transform: uppercase;
+}
+
+
+/* Remover desfoque - Certificar que nenhum estilo de desfoque seja aplicado */
+.section-carrosel-categorias .swiper-slide {
+  filter: none !important;
+}
+
+/* Adicionar estilo flex para o swiper-wrapper */
+.section-carrosel-categorias .swiper-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+}
