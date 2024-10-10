@@ -1,0 +1,200 @@
+.nav100 {
+  background: linear-gradient(to right, rgb(116, 129, 252), rgb(0, 0, 0));
+  height: 50px;
+  width: 100%;
+  position: fixed;
+  z-index: 1; /* Lower z-index so it stays behind the menu */
+}
+
+.navMenu {
+  background: linear-gradient(to bottom, rgb(74, 92, 253), rgb(248, 124, 124));
+  width: 250px;
+  height: 0; 
+  position: fixed;
+  left: 0;
+  z-index: 100; 
+  transition: height 0.5s ease;
+  overflow: hidden;
+  border-radius: 0 0 70px 0;
+}
+
+.menuContent {
+  padding-top: 50px;
+}
+
+.navMenu.navOpen {
+  height: 100vh; 
+}
+
+.navMenu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menuContent {
+  display: flex;
+  flex-direction: column;
+ 
+
+}
+
+.navItem {
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  padding: 5px; 
+}
+.navItem a{
+  display: flex;
+  align-items: start;
+  justify-content: start;
+  gap: 10px;
+  color: #000000;
+
+}
+
+.navMenu li {
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-family: 'Days One', sans-serif;
+}
+
+.navMenu.navOpen .navItem {
+  display: block;
+  margin-left: 5px;
+}
+
+#home-icon {
+  position: relative;
+  top: 10px;
+  margin-left: 5px;
+  cursor: pointer;
+  z-index: 10; /* Ensure it's clickable */
+}
+
+#closeMenu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: rgb(148, 5, 5);
+}
+
+.sair {
+  position: relative;
+  bottom: -65vh;
+}
+
+.perfil {
+  position: absolute;
+  right: 10px;
+  border-radius: 40%;
+  top: 5px;
+  height: 40px;
+  width: 50px;
+}
+
+.navHover .menuContent li:hover {
+  background: linear-gradient(to left, rgba(118, 150, 255, 0.801), rgba(255, 255, 255, 0.938));
+  padding: 5px;
+  margin: 0;
+  color: rgb(55, 69, 82);
+  border-radius: 5px;
+  border: 1px solid rgb(0, 136, 255);
+  z-index: 2;
+}
+
+.menu3Pontinhos {
+  position: relative;
+  left: 8px;
+  top: -40px;
+  width: 40px;
+  height: 35px;
+  cursor: pointer;
+  transition: transform 0.4s ease;
+  z-index: 99; 
+}
+
+.menu3Pontinhos.rotated {
+  transform: rotate(60deg);
+}
+
+.inputContainer1 {
+  position: relative;
+  margin-left: auto;
+  margin-right: 70px;
+  width: 530px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, rgb(142, 221, 231), rgb(42, 212, 235));
+  border-radius: 30px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 1px 1px 5px rgba(192, 192, 192, 0.815);
+  z-index: 4;
+  margin-top: 3px;
+}
+
+.inputContainer1 .input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  caret-color: rgb(255, 81, 0);
+  border-radius: 30px;
+  padding-left: 15px;
+  letter-spacing: 0.8px;
+  color: rgb(19, 19, 19);
+  font-size: 13.4px;
+  background: none;
+}
+
+.inputContainer1 .icon {
+  position: absolute;
+  right: 1.5rem;
+  fill: #140910;
+  width: 1rem;
+  height: 1rem;
+  z-index: 1;
+}
+
+.inputContainer1 .input:focus, 
+.inputContainer1 .input:hover {
+  outline: none;
+  border-color: rgba(97, 113, 253, 0.664);
+  background: linear-gradient(to left, rgb(94, 184, 245), rgb(255, 231, 231));
+  box-shadow: 0 0 0 4px rgba(28, 2, 46, 0.1);
+}
+
+.sugestoesContainer {
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #4bdbe6;
+  position: absolute;
+  z-index: 1000;
+  width: 510px; 
+  top: 45px;
+  right: 80px;
+  border-radius: 10px;
+}
+
+.sugestaoItem {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.sugestaoItem:hover {
+  background-color: #f0f0f0;
+}
+
+.navMenu {
+  z-index: 2; 
+}
+
+
