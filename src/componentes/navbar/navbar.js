@@ -96,7 +96,7 @@ export default function Navbar() {
             </Link>
           </li>
           <li className={styles.navItem}>
-            <Link href="/">
+            <Link href="/homecards">
               <Image src="/img/home.png" alt="Home" width={20} height={20} />
               Home
             </Link>
