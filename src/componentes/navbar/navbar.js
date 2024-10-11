@@ -102,7 +102,7 @@ export default function Navbar() {
             </Link>
           </li>
           <li className={`${styles.navItem} ${styles.sair}`}>
-            <Link href="/sair">
+            <Link href="/login">
               <Image src="/img/sair.png" alt="Sair" width={20} height={20} />
               Sair
             </Link>
