@@ -23,6 +23,7 @@ const CategoriaSwiper: React.FC<CategoriaSwiperProps> = ({ categoria, livros }) 
   const router = useRouter(); 
 
   useEffect(() => {
+    
     // Inicializa o Swiper para cada categoria
     new Swiper(`.mySwiper-${categoria}`, {
       slidesPerView: 3,

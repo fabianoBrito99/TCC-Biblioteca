@@ -63,7 +63,7 @@ export default function Navbar() {
             </Link>
           </li>
           <li className={styles.navItem}>
-            <Link href="/cadastrar-livro">
+            <Link href="/cadastrarLivro">
               <Image
                 src="/img/livro.png"
                 alt="Cadastrar Livro"
