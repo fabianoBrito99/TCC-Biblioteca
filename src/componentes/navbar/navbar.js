@@ -1,12 +1,19 @@
-"use client";
+"use client"; 
 
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation"; // Importa o hook para obter a rota atual
 import styles from "@/componentes/navbar/navbar.module.css";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname(); // Obtém a rota atual
+
+  // Não renderiza o Navbar se a rota for "/login"
+  if (pathname === "/login") {
+    return null;
+  }
 
   const toggleMenu = () => {
     setMenuOpen((prev) => !prev); // Alterna o estado do menu
@@ -53,12 +60,7 @@ export default function Navbar() {
         <div className={styles.menuContent}>
           <li className={styles.navItem}>
             <Link href="/livros">
-              <Image
-                src="/img/livros.png"
-                alt="Livros"
-                width={20}
-                height={20}
-              />
+              <Image src="/img/livros.png" alt="Livros" width={20} height={20} />
               Livros
             </Link>
           </li>

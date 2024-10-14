@@ -7,9 +7,9 @@
 
 .login::before {
   display: block;
-  content: '';
-  background: url('/assets/login.jpg') no-repeat center center;
-  background-size: cover;
+  content: "";
+  background: url("/img/logon.png") no-repeat center center;
+  background-size: 110%;
 }
 
 .forms {
