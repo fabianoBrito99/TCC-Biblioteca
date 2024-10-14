@@ -1,0 +1,64 @@
+
+.container {
+  margin: 50px auto;
+  text-align: center;
+}
+
+.detEmprestimos {
+  display: flex;
+  color: #ffffff;
+  margin-top: 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.detalhesContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 2px solid #9286fc;
+  padding: 20px;
+  background: #9263ff3a;
+  color: #ffffff;
+  width: 60%;
+  box-shadow: 0 20px 30px rgb(53, 40, 40);
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+}
+
+.grid1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid2 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+#btn-devolver-livro {
+  color: #ffffff;
+  background: linear-gradient(to left, rgba(0, 60, 255, 0.61), rgba(12, 12, 20, 0.856));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 50px auto;
+  padding: 20px;
+  font-size: 2rem;
+  width: 30%;
+  box-shadow: 0 10px 50px rgb(18, 0, 32);
+}
+
+#btn-devolver-livro:hover {
+  background: linear-gradient(to left, rgba(65, 109, 255, 0.61), rgba(151, 152, 252, 0.856));
+  cursor: pointer;
+}

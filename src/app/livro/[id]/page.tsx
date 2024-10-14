@@ -1,7 +1,7 @@
-"use client"; // Marca como Client Component
+"use client";
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation'; // Trocar para o uso do hook correto
+import { useParams } from 'next/navigation';
 import styles from './detalhesLivros.module.css';
 
 interface Livro {

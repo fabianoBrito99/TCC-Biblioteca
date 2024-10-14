@@ -1,27 +1,16 @@
-
-.containerLogin{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.507), rgba(221, 220, 245, 0.856));
-  height: 100vh;
-
-}
 .login {
-  justify-content: center;
-  align-items: center;
-  display: flex;
-  background-color: #ffffff;
-  width: 800px;
-  height: 90vh;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 20px rgba(19, 1, 87, 0.781);
-  border-radius: 20px;
-  
- 
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  gap: 2rem;
 }
 
+.login::before {
+  display: block;
+  content: '';
+  background: url('/assets/login.jpg') no-repeat center center;
+  background-size: cover;
+}
 
 .forms {
   max-width: 30rem;
