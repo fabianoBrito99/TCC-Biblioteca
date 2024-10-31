@@ -75,7 +75,7 @@ const CadastrarLivroForm = () => {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container_cad}>
       <h2 className={styles.title}>Cadastrar Livro</h2>
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.grid}>

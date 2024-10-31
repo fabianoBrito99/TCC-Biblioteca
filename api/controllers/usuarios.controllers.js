@@ -100,4 +100,36 @@ function create(request, response) {
   );
 }
 
-module.exports = { list, show, login, create };
+
+function loginMobile(request, response) {
+  const { email, senha } = request.body;
+
+  // Verifique se ambos os campos estão preenchidos
+  if (!email || !senha) {
+    return response.status(400).json({ erro: "Todos os campos são obrigatórios" });
+  }
+
+  // Realiza a consulta no banco de dados
+  connection.query(
+    "SELECT * FROM usuarios WHERE (email = ? OR nome_login = ?) AND senha = ?",
+    [email, email, senha],
+    function (err, resultado) {
+      if (err) {
+        return response.status(500).json({ erro: "Erro ao buscar o usuário" });
+      }
+
+      // Se nenhum usuário for encontrado, retorne erro
+      if (resultado.length === 0) {
+        return response.status(401).json({ erro: "Email ou senha incorretos" });
+      }
+
+      // Se o login for bem-sucedido, retorne os dados do usuário
+      return response.status(200).json({
+        message: "Login bem-sucedido",
+        usuario: resultado[0], // Envia os dados do usuário
+      });
+    }
+  );
+}
+
+module.exports = { list, show, login, create, loginMobile };

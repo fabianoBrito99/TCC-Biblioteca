@@ -9,4 +9,5 @@ router.post('/usuario', usuariosController.create);
 //router.put('/usuario/:codigo', usuariosController.update);
 //router.delete('/usuario/:codigo', usuariosController.destroy);
 router.post('/login', usuariosController.login); 
+router.post('/loginMobile', usuariosController.loginMobile); 
 module.exports = router;

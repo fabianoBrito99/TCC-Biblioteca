@@ -9,7 +9,7 @@
   display: block;
   content: "";
   background: url("/img/logon.png") no-repeat center center;
-  background-size: 110%;
+  background-size: cover;
 }
 
 .forms {
