@@ -1,31 +1,9 @@
-.login {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 100vh;
-  gap: 2rem;
-}
-
-.login::before {
-  display: block;
-  content: "";
-  background: url("/img/logon.png") no-repeat center center;
-  background-size: cover;
-}
-
-.forms {
-  max-width: 30rem;
-  padding: 1rem;
-  margin-top: 2vh;
-}
-
-@media (max-width: 40rem) {
-  .login {
-    grid-template-columns: 1fr;
-  }
-  .login::before {
-    display: none;
-  }
-  .forms {
-    max-width: 100%;
-  }
+.containerLogin{
+  background: linear-gradient(to bottom, rgba(0, 110, 255, 0.089), rgba(107, 105, 248, 0.068));
+  height: 100vh ;
+  margin-top: auto;
+  margin-bottom: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
