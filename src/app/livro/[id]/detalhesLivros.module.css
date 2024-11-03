@@ -2,7 +2,7 @@
 
 .containerConsLiv {
   background: #fff;
-  position: absolute;
+  position: relative;
   background: linear-gradient(to bottom, rgba(21, 75, 253, 0.767), rgba(136, 138, 255, 0.568));
   width: 100vw;
   height: 100vh;
@@ -15,11 +15,12 @@
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 20px;
-  width: 80%;
+  width: 70%;
   backdrop-filter: blur(20px);
   box-shadow: 0 2px 10px 3px rgba(0, 0, 0, 0.404);
   padding: 20px;
   border-radius: 8px;
+  margin: 30px;
 }
 
 .gridDiv {
@@ -69,4 +70,147 @@
   background-image: linear-gradient(to left, #520505, #f84040, #f84040, #520505);
   color: white;
   cursor: not-allowed;
+}
+/* Centralizar o Tab Navigation */
+.tabContainer {
+  margin-top: 100px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Botões de Tab Navigation */
+.tabButton {
+  padding: 10px;
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background-color: transparent;
+  font-weight: bold;
+  transition: border-color 0.3s;
+}
+
+.tabButton:hover {
+  color: #001aff;
+}
+
+.tabButton.active {
+  color: #001aff;
+  font-weight: bold; 
+  border-color: #00aaff; 
+}
+
+.tabButton.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #001aff; 
+}
+
+/* Contêiner de comentários e avaliações */
+.tabContent {
+  position: absolute;
+  bottom: 20px; 
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+/* Estilos para Comentários */
+.comentarios {
+  width: 80%;
+  padding: 10px;
+  background: #fff;
+  border-radius: 8px;
+  
+}
+
+.comentarioInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #001aff;
+  border-radius: 5px;
+  resize: none;
+  overflow: hidden;
+}
+
+.contador {
+  text-align: right;
+  font-size: 0.9em;
+  color: #888;
+  margin-top: 5px;
+}
+
+.botaoEnviarFeedback {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #001aff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.botaoEnviarFeedback:hover {
+  background-color: #0044ff;
+}
+
+
+.feedbackContainer {
+  position: absolute;
+  bottom: 20px; /* fixa ao fundo */
+  right: 20px; /* fixa à direita */
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  width: 25vw; /* ajuste conforme necessário */
+  
+}
+.conatinerLateral{
+  position: relative;
+  width: 30vw;
+  height: 100vh;
+  background: #fff;
+}
+
+.comentarioInput {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.contador {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}
+
+.estrelas {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.estrela {
+  font-size: 2.5rem;
+  cursor: pointer;
+}
+
+.estrelaAtiva {
+  color: gold;
+}
+
+.botaoEnviarFeedback {
+  width: 100%;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
 }
