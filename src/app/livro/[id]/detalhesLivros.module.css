@@ -1,42 +1,40 @@
-/* styles/DetalhesLivro.module.css */
 
 .containerConsLiv {
-  background: #fff;
-  position: relative;
-  background: linear-gradient(to bottom, rgba(21, 75, 253, 0.767), rgba(136, 138, 255, 0.568));
+  background: linear-gradient(to bottom, rgba(173, 178, 197, 0.767), rgba(136, 138, 255, 0.568));
   width: 100vw;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px;
+  gap: 30px;
 }
 
+/* Grid para o layout de livro */
 .grid {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 20px;
-  width: 70%;
-  backdrop-filter: blur(20px);
+  width: 80%;
+  background: rgba(241, 238, 238, 0.897);
+  backdrop-filter: blur(2000px);
   box-shadow: 0 2px 10px 3px rgba(0, 0, 0, 0.404);
-  padding: 20px;
+  padding: 30px;
   border-radius: 8px;
-  margin: 30px;
 }
 
-.gridDiv {
-  display: flex;
-  flex-direction: column;
-}
-
+/* Imagem do livro */
 .gridImg {
   max-width: 100%;
   height: auto;
 }
 
+/* Informações do livro */
 .livroInfo {
   position: relative;
 }
 
+/* Botão de reservar */
 .botaoReservarPos {
   position: absolute;
   bottom: 0;
@@ -50,7 +48,7 @@
 }
 
 .botaoReservar {
-  background-image: linear-gradient(to left, #91f3ba, #07ff6e, #00f767, #bafdd6);
+  background-image: linear-gradient(to left, #03fc6b, #77faad, #6ef7a7, #00ff6a);
   color: rgb(0, 0, 0);
   border: none;
   cursor: pointer;
@@ -62,7 +60,7 @@
 }
 
 .botaoReservar:hover {
-  background-image: linear-gradient(to left, #051352, #6270ee, #5f6ef1, #001aff);
+  background-image: linear-gradient(to left, #74e9a5, #08b851, #08b851, #00682d);
   color: white;
 }
 
@@ -71,9 +69,9 @@
   color: white;
   cursor: not-allowed;
 }
+
 /* Centralizar o Tab Navigation */
 .tabContainer {
-  position: fixed;
   margin-top: 100px;
   display: flex;
   justify-content: center;
@@ -97,8 +95,8 @@
 
 .tabButton.active {
   color: #001aff;
-  font-weight: bold; 
-  border-color: #00aaff; 
+  font-weight: bold;
+  border-color: #00aaff;
 }
 
 .tabButton.active::after {
@@ -108,17 +106,18 @@
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #001aff; 
+  background-color: #001aff;
 }
 
-/* Contêiner de comentários e avaliações */
+/* Comentários e avaliações */
 .tabContent {
   position: absolute;
-  bottom: 20px; 
+  bottom: 20px;
   width: 100%;
   height: 100vh;
   display: flex;
   justify-content: center;
+  overflow-y: auto; /* Habilita a rolagem vertical */
 }
 
 /* Estilos para Comentários */
@@ -127,7 +126,6 @@
   padding: 10px;
   background: #fff;
   border-radius: 8px;
-  
 }
 
 .comentarioInput {
@@ -161,34 +159,70 @@
   background-color: #0044ff;
 }
 
-
+/* Feedback Container (avaliações) */
 .feedbackContainer {
   position: absolute;
-  bottom: 20px; /* fixa ao fundo */
-  right: 20px; /* fixa à direita */
+  bottom: 20px;
+  right: 20px;
   background-color: #fff;
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  width: 25vw; /* ajuste conforme necessário */
-  
+  width: 25vw;
 }
-.conatinerLateral{
+
+/* Contêiner lateral com tamanho fixo e barra de rolagem */
+.conatinerLateral {
   position: relative;
-  width: 30vw;
-  height: 100vh;
+  width: 31vw;
+  height: 70vh;
   background: #fff;
+  overflow-y: auto;
+  padding: 10px;
+  margin-top: -20px;
+  margin-right: -20px;
+  margin-bottom: 50px;
+
+}
+.conatinerLateral::-webkit-scrollbar {
+  width: 0px; 
+  background: transparent;
 }
 
-.comentarioInput {
-  width: 100%;
-  margin-bottom: 10px;
+/* Comentários dentro do contêiner */
+.comentariosContainer {
+  margin-top: 20px;
 }
 
-.contador {
-  font-size: 12px;
-  color: #666;
-  text-align: right;
+.comentario {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.respostasContainer {
+  margin-left: 20px;
+  border-left: 2px solid #ddd;
+  padding-left: 10px;
+  margin-top: 10px;
+}
+
+.resposta {
+  margin-top: 5px;
+}
+
+.curtirBtn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #999;
+}
+
+.curtirBtn.curtido {
+  color: red;
 }
 
 .estrelas {
@@ -200,18 +234,215 @@
 .estrela {
   font-size: 2.5rem;
   cursor: pointer;
+  transition: color 0.3s;
 }
 
 .estrelaAtiva {
   color: gold;
 }
 
-.botaoEnviarFeedback {
-  width: 100%;
+/* Botões de envio */
+.botaoEnviarFeedback,
+.botaoEnviarComentario,
+.botaoEnviarAvaliacao {
   background-color: #007bff;
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 5px;
   padding: 10px;
   cursor: pointer;
+  width: 80%;
+  transition: background-color 0.3s;
+}
+
+.botaoEnviarFeedback:hover,
+.botaoEnviarComentario:hover,
+.botaoEnviarAvaliacao:hover {
+  background-color: #0044ff;
+}
+
+.curtirBtn {
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: gray;
+  transition: color 0.3s ease, transform 0.2s ease;
+  position: relative;
+  left: 420px;
+  bottom: 50px;
+}
+
+.curtirBtn:hover {
+  transform: scale(1.01);
+}
+
+.curtirBtn.curtido {
+  color: red;
+  animation: flame 1s ease-in-out infinite;
+}
+
+.curtirBtn.naoCurtido {
+  color: gray;
+}
+
+.estrela {
+  font-size: 2rem; /* Tamanho da estrela */
+  color: gray; /* Cor padrão para estrela inativa */
+}
+
+.estrelaAtiva {
+  color: gold; /* Cor para estrelas ativas */
+}
+
+.estrelaInativa {
+  color: lightgray; /* Cor para estrelas inativas */
+}
+
+.formAvaliacao {
+  position: fixed;
+  bottom: 1px; 
+  right: -8px; 
+  width: 28vw; 
+  height: 19vh;
+  background-color: white;
+  padding: 10px;
+  box-sizing: border-box; 
+  z-index: 10; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.estrelas {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.formAvaliacao textarea {
+  width: 90%; 
+  max-width: 500px; 
+  min-height: 50px; 
+  margin-bottom: 10px; /* Espaçamento entre os elementos */
+}
+
+.botaoEnviarAvaliacao {
+  width: 90%;
+  max-width: 500px;
+  padding: 10px;
+  background-color: #4CAF50; /* Cor de fundo do botão */
+  color: white; /* Cor do texto */
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.botaoEnviarAvaliacao:hover {
+  background-color: #45a049; /* Cor de fundo ao passar o mouse */
+}
+
+
+.formComentario{
+  position: fixed;
+  bottom: 1px; 
+  right: -8px; 
+  width: 28vw; 
+  height: 19vh;
+  background-color: white;
+  padding: 10px;
+  box-sizing: border-box; 
+  z-index: 10; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.formComentario textarea {
+  width: 90%;
+ 
+  min-height: 80px; 
+  margin-top: 30px;
+  margin-bottom: 10px; /* Espaçamento entre os elementos */
+}
+.tabContainer {
+  position: fixed;
+  top: -50px;
+  width: 29vw; /* Ajuste para ocupar toda a largura da tela */
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  background-color: #ffffff; /* Define um fundo para o container fixo */
+  color: #001aff;
+  z-index: 10; /* Garante que fique acima de outros elementos */
+  padding: 10px;
+  right: -27px;
+
+
+}
+
+/* Botões de Tab Navigation */
+.tabButton {
+  padding: 10px;
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background-color: transparent;
+  font-weight: bold;
+  transition: border-color 0.3s;
+}
+
+.tabButton:hover {
+  color: #001aff;
+}
+
+
+
+.gridImg{
+    width: 100%;
+    height: auto; 
+}
+
+.categoria{
+  font-size: 1rem;
+  background-color: #0f22ce;
+  width: 20%;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(248, 248, 248);
+  padding: 5px;
+  text-transform: uppercase;
+  
+}
+.usuario{
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  
+}
+.usuario img{
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #4400ff;
+
+}
+.flexRes{
+  display: flex;
+  align-items: center;
+  margin: 5px;
+
+}
+.responder{
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.data{
+  font-size: 0.7rem;
+}
+.respostas{
+  margin: 0px 30px;
 }
