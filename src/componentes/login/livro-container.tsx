@@ -31,6 +31,7 @@ export default function BookContainer() {
           <p className={`${animateText ? (isLogin ? styles.animeLeft1 : styles.animeRight1) : ''}`}>
             {isLogin ? 'Bem-vindo de volta!' : 'Junte-se a nós!'}
           </p>
+          
         </div>
 
         <div className={`${styles.rotatingSection} ${isLogin ? styles.rightPage : styles.leftPage}`}>

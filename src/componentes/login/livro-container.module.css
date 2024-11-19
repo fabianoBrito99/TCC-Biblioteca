@@ -8,6 +8,7 @@
   justify-content: center;
   align-items: center;
   box-shadow: 0 25px 30px rgba(182, 180, 187, 0.781);
+  
 }
 
 /* Contêiner do "livro" */
@@ -21,6 +22,7 @@
   border: 3px solid #ddd;
   box-sizing: border-box;
   overflow: hidden;
+  
 }
 
 /* Parte fixa com título e subtítulo (muda de lado) */
@@ -118,15 +120,16 @@
   }
 }
 
+
 /* Aplica a rotação ao alternar entre login e cadastro */
 .showRegister .rotatingSection {
   transform-origin: right center;
-  animation: rotateToRegister 0.9s forwards;
+  animation: rotateToRegister 0.7s forwards;
 }
 
 .showLogin .rotatingSection {
   transform-origin: left center;
-  animation: rotateToLogin 0.9s forwards;
+  animation: rotateToLogin 0.7s forwards;
 }
 
 /* Estilos do conteúdo */

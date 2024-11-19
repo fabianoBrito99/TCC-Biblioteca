@@ -1,23 +1,27 @@
+// src/pages/login/page.tsx
 "use client";
+
 import login from "@/actions/login";
-import { useFormState, useFormStatus } from "react-dom";
+import { useState, FormEvent } from "react";
 import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
 import ErrorMessage from "../helper/error-message";
-import React from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./login-form.module.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-function FormButton() {
-  const { pending } = useFormStatus();
+interface LoginResponse {
+  id_usuario: string;
+  nome_login: string;
+  email: string;
+}
+
+function FormButton({ isSubmitting }: { isSubmitting: boolean }) {
   return (
-    <>
-      {pending ? (
-        <Button disabled>Enviando...</Button>
-      ) : (
-        <Button>Entrar</Button>
-      )}
-    </>
+    <Button disabled={isSubmitting}>
+      {isSubmitting ? "Enviando..." : "Entrar"}
+    </Button>
   );
 }
 
@@ -26,24 +30,84 @@ type LoginFormProps = {
 };
 
 export default function LoginForm({ onToggle }: LoginFormProps) {
-  const [state, action] = useFormState(login, {
-    ok: false,
-    error: "",
-    data: null,
-  });
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  React.useEffect(() => {
-    if (state.ok) window.location.href = "/conta";
-  }, [state.ok]);
+  //ver a senha
+  const toggleShowPassword = () => setShowPassword((prev) => !prev);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await login(
+        {},
+        new FormData(e.currentTarget as HTMLFormElement)
+      );
+
+      if (response.ok && response.data) {
+        const userId = response.data.id_usuario;
+        localStorage.setItem("userId", userId); // Salva o ID do usuário no localStorage
+        router.push(`/conta/${userId}`); // Redireciona para a conta do usuário
+      } else {
+        setError(response.error);
+      }
+    } catch (error) {
+      setError("Erro ao fazer login");
+      console.error("Erro ao fazer login:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div>
-      <form action={action} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <h1 className={styles.h1Login}>Informe os dados para Login</h1>
-        <Input label="Usuário" name="username" type="text" />
-        <Input label="Senha" name="password" type="password" />
-        <ErrorMessage error={state.error} />
-        <FormButton />
+        <Input
+          label="Usuário"
+          name="username"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <div className={styles.passwordContainer}>
+          {/* Campo de senha */}
+          <Input
+            label="Senha"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            
+          />
+
+          {/* Ícone para exibir/ocultar a senha */}
+          <button
+            type="button"
+            onClick={toggleShowPassword}
+            className={`${styles.eyeIcon} ${
+              showPassword ? styles.highlight : ""
+            }`}
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+
+          {/* Animação de marca-texto */}
+          <span
+            className={`${styles.highlightEffect} ${
+              showPassword ? styles.visible : ""
+            }`}
+          ></span>
+        </div>
+        {error && <ErrorMessage error={error} />}
+        <FormButton isSubmitting={isSubmitting} />
       </form>
       <Link className={styles.perdeu} href="/login/perdeu">
         Perdeu a senha?
