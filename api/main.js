@@ -4,6 +4,12 @@ const path = require("path");
 const livrosRouter = require("./routes/livros.routes");
 const usuariosRouter = require("./routes/usuarios.routes");
 const emprestimosRouter = require("./routes/emprestimos.router");
+const comentarioRoutes = require('./routes/comentario.routes');
+const avaliacaoRoutes = require('./routes/avaliacoes.routes'); 
+const sugestoesRoutes = require('./routes/sugestoes.routes'); 
+const doelivroRoutes = require('./routes/doelivro.routes'); 
+const comunidadeRoutes = require('./routes/comunidade.routes'); 
+
 
 const app = express();
 
@@ -39,6 +45,12 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(livrosRouter);
 app.use("/api", usuariosRouter);
 app.use("/api", emprestimosRouter);
+app.use("/api", comentarioRoutes);
+app.use("/api", avaliacaoRoutes); 
+app.use("/api", sugestoesRoutes); 
+app.use("/api", doelivroRoutes); 
+app.use("/api", comunidadeRoutes); 
+
 
 const PORT = 4000;
 app.listen(PORT, () => {
