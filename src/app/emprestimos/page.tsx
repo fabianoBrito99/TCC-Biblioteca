@@ -1,13 +1,14 @@
-"use client"
-import React, { useEffect, useState } from 'react';
-import EmprestimoCard from '@/componentes/emprestimo/emprestimo';
-import styles from '@/componentes/emprestimo/empretismo.module.css';
+"use client";
+import React, { useEffect, useState } from "react";
+import EmprestimoCard from "@/componentes/emprestimo/emprestimo";
+import styles from "@/componentes/emprestimo/empretismo.module.css";
 
 interface Emprestimo {
-  id: number;
+  id_emprestimo: number;
   foto_capa: string;
   nome_usuario: string;
   nome_livro: string;
+  id_livro: string;
   data_prevista_devolucao: string;
 }
 
@@ -17,11 +18,11 @@ const Home: React.FC = () => {
   useEffect(() => {
     const carregarEmprestimos = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/emprestimos');
+        const response = await fetch("http://localhost:4000/api/emprestimos");
         const data = await response.json();
         setEmprestimos(data.dados);
       } catch (error) {
-        console.error('Erro ao carregar os empréstimos:', error);
+        console.error("Erro ao carregar os empréstimos:", error);
       }
     };
 
@@ -34,11 +35,13 @@ const Home: React.FC = () => {
         <h1>Lista de Empréstimos</h1>
       </div>
       <div id="emprestimos-container" className={styles.emprestimosContainer}>
-        {emprestimos.map(emprestimo => (
+        {emprestimos.map((emprestimo) => (
           <EmprestimoCard
-            key={emprestimo.id}
+            key={emprestimo.id_emprestimo}
             emprestimo={emprestimo}
-            onClick={() => window.location.href = `/emprestimos/detalheEmprestimo/${emprestimo.id}`}
+            onClick={() =>
+              (window.location.href = `/emprestimos/detalheEmprestimo/${emprestimo.id_emprestimo}`)
+            }
           />
         ))}
       </div>
