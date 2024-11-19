@@ -1,0 +1,134 @@
+.suggestionPage {
+  padding: 0px;
+  max-width: 1000px;
+  
+  margin-top: 30px;
+}
+.doe {
+  margin-bottom: 50px;
+}
+.titleDoe {
+  font-family: var(--type-second);
+  line-height: 1;
+  font-size: 3rem;
+  margin: 1rem 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.titleDoe::after {
+  content: "";
+  display: block;
+  width: 1.95rem;
+  height: 1.5rem;
+  background: rgb(0, 140, 255);
+  position: absolute;
+  bottom: 4px;
+  left: 390px;
+  border-radius: 0.2rem;
+  z-index: -1;
+}
+
+.titleSug {
+  font-family: var(--type-second);
+  line-height: 1;
+  font-size: 2rem;
+  margin: 1rem 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.titleSug::after {
+  content: "";
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  background: rgb(0, 140, 255);
+  position: absolute;
+  bottom: 4px;
+  left: 0px;
+  border-radius: 0.2rem;
+  z-index: -1;
+}
+
+.suggestionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.suggestionList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.suggestionCard {
+  padding: 15px 150px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fafafa;
+  margin-bottom: 10px;
+}
+
+.suggestionCard h3 {
+  margin: 0;
+  color: #333;
+}
+
+.suggestionCard p {
+  margin: 5px 0;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userPhoto,
+.defaultUserPhoto {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.defaultUserPhoto {
+  display: inline-block;
+}
+
+.userPhoto {
+  object-fit: cover;
+}
+
+.gridDoe {
+  width: 100vw;
+  background-image: linear-gradient(to right, #4bc4fc, #4bc4fc, #e4f5fa, #ffffff);
+  color: rgb(0, 0, 0);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin-left: 0px;
+  margin-right: 0px;
+  padding: 20px;
+ 
+}
+.sugestoes{
+  display: flex;
+  flex-direction: column;
+  width: 99vw;
+  align-items: center;
+  justify-content: center;
+
+}
+

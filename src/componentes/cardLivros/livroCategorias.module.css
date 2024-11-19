@@ -1,24 +1,7 @@
 
 /*aacima é um teste Meu código */
 
-/* Estilos específicos para o Swiper */
-.section-carrosel-categorias .swiper-1 {
-  width: 100%;
-  height: auto;
-  position: relative;
-}
 
-.section-carrosel-categorias .swiper-button-next,
-.section-carrosel-categorias .swiper-button-prev  {
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
 
 
 .section-carrosel-categorias .swiper-pagination {
@@ -101,4 +84,38 @@
 .section-carrosel-categorias .swiper-wrapper {
   display: flex;
   flex-wrap: nowrap;
+}
+.categoriaContainer {
+  margin-top: 60px;
+}
+
+
+.categoria {
+  font-size: 24px;
+  margin-bottom: 1px;
+}
+
+.swiper-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.cardLivro {
+  width: 200px; /* Ajuste o tamanho do card conforme necessário */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.cardLivro img {
+  width: 100%;
+  height: auto;
+}
+
+.cardLivro h2,
+.cardLivro h4 {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #ffffff;
 }

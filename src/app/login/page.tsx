@@ -1,5 +1,6 @@
-import LoginForm from "@/componentes/login/login-form";
+import BookContainer from "@/componentes/login/livro-container";
 import { Metadata } from "next";
+import styles from './login.module.css'
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -8,10 +9,8 @@ export const metadata: Metadata = {
 
 export default async function LoginPage() {
   return (
-    <section className="animeLeft">
-      <h1 className="title">Login</h1>
-      <LoginForm />
-      
+    <section className={`${styles.containerLogin} animeLeft`}>
+      <BookContainer />
     </section>
   );
 }

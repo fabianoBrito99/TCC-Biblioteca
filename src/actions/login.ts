@@ -4,7 +4,13 @@
 import apiError from '@/functions/api-error';
 import { cookies } from 'next/headers';
 
-export default async function login(state: {}, formData: FormData) {
+export interface LoginResponse {
+  data: { id_usuario: string } | null;
+  ok: boolean;
+  error: string;
+}
+
+export default async function login(state: {}, formData: FormData): Promise<LoginResponse> {
   const email = formData.get('username') as string | null;
   const password = formData.get('password') as string | null;
 
@@ -22,8 +28,6 @@ export default async function login(state: {}, formData: FormData) {
     if (!response.ok) throw new Error('Email ou senha inválidos.');
     const data = await response.json();
 
-    // Se houver um token na resposta, você pode armazená-lo nos cookies
-    // Caso seu backend retorne um token, ajusta o retorno aqui
     cookies().set('token', data.token, {
       httpOnly: true,
       secure: true,
@@ -31,7 +35,7 @@ export default async function login(state: {}, formData: FormData) {
       maxAge: 60 * 60 * 24,
     });
 
-    return { data: null, ok: true, error: '' };
+    return { data: { id_usuario: data.usuario.id_usuario }, ok: true, error: '' };
   } catch (error: unknown) {
     return apiError(error);
   }

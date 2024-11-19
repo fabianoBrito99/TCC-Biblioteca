@@ -1,0 +1,18 @@
+.progessoFixo{
+  position: fixed;
+  bottom: 10px;
+  width: 15%;
+}
+.progessoFixo button{
+  background-image: linear-gradient(to left, #4bfcb8, #e4faec, #e4faec, #4bfcb8);
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #00ff55;
+  border-radius: 5px;
+}
+.progessoFixo button:hover{
+  background-image: linear-gradient(to left, #4bfcb8, #e4faec, #e4faec, #4bfcb8);
+  padding: 10px;
+  margin-top: 10px;
+  border: 3px solid #00bb3e;
+}

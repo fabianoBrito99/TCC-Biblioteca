@@ -1,0 +1,135 @@
+
+
+
+/* Container de comentários */
+.comentariosContainer {
+  margin-top: 20px;
+}
+
+.comentario {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+/* Informações do usuário no comentário */
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fotoUsuario {
+  border-radius: 50%;
+}
+
+/* Botões */
+.botaoEnviarAvaliacao {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+}
+
+.botaoEnviarAvaliacao:hover {
+  background-color: #0056b3;
+}
+
+.curtirBtn {
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: gray;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.curtirBtn:hover {
+  transform: scale(1.05);
+}
+
+.curtirBtn.curtido {
+  color: red;
+}
+
+.curtirBtn.naoCurtido {
+  color: gray;
+}
+
+/* Respostas */
+.respostas {
+  margin-left: 20px;
+  border-left: 2px solid #ddd;
+  padding-left: 10px;
+  margin-top: 10px;
+}
+
+.resposta {
+  margin-top: 5px;
+}
+
+
+
+/* Tab Navigation */
+.tabContainer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tabButton {
+  padding: 10px;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  font-weight: bold;
+  transition: color 0.3s, border-bottom 0.3s;
+}
+
+.tabButton:hover,
+.tabButton.active {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+
+/* Ajuste para data e botões de responder */
+.flexRes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.data {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: 400px;
+}
+
+.responder {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.responder:hover {
+  text-decoration: underline;
+}
+
+.comentariosFixo{
+  position: fixed;
+  bottom: 150px;
+  width: 15%;
+}
+.usuario img{
+  border-radius: 50%;
+}

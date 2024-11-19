@@ -3,12 +3,14 @@ const emprestimosController = require('../controllers/emprestimos.controllers');
 
 const router = express.Router();
 
-router.get('/emprestimos/:id', emprestimosController.show);
 router.get('/emprestimos', emprestimosController.list);
-//router.post('/livro', emprestimosController.create);
-//router.get('/categorias', emprestimosController.listCategories);  // Adicionando a nova rota
-router.put('/emprestimos/:id/devolver', emprestimosController.devolver);
+router.get('/emprestimos/aprovar', emprestimosController.emprestimoAprovar);
+
+
+router.get('/emprestimos/:id', emprestimosController.show);
 router.put('/emprestimos/:id/reservar', emprestimosController.reservar);
-//router.delete('/livro/:codigo', emprestimosController.destroy);
+router.put('/emprestimos/:id/aprovar', emprestimosController.aprovarReserva);
+router.put('/emprestimos/:id/rejeitar', emprestimosController.rejeitarReserva);
+router.put('/emprestimos/:id/devolver', emprestimosController.devolver);
 
 module.exports = router;

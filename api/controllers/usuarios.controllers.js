@@ -1,56 +1,73 @@
 const connection = require("../config/mysql.config");
 
-function list(request, response) {
+async function list(request, response) {
   connection.query(
-    `SELECT id_user, nome_login, email FROM usuarios`,
+    `SELECT id_usuario, nome_login, email, tipo_usuario FROM Usuario`,
     function (err, resultado) {
       if (err) {
-        return response.json({ erro: "Ocorreu um erro ao buscar os usuários" });
+        return response.status(500).json({ erro: "Erro ao buscar os usuários" });
       }
       return response.json({ dados: resultado });
     }
   );
 }
 
-function show(request, response) {
+async function show(request, response) { 
   const userId = request.params.id;
 
-  // Primeiro, obtenha os dados do usuário
+  // Obter informações do usuário
   connection.query(
-    `SELECT * FROM usuarios WHERE id_user = ?`,
+    `SELECT * FROM Usuario WHERE id_usuario = ?`,
     [userId],
     function (err, usuario) {
       if (err) {
-        return response.json({ erro: "Ocorreu um erro ao buscar os detalhes do usuário" });
+        return response.status(500).json({ erro: "Erro ao buscar o usuário" });
       }
       if (usuario.length === 0) {
-        return response.json({ erro: "Usuário não encontrado" });
+        return response.status(404).json({ erro: "Usuário não encontrado" });
       }
 
-      // Agora, obtenha o histórico de empréstimos desse usuário
+      // Converte `foto_usuario` para base64, se houver uma imagem
+      let fotoUsuarioBase64 = null;
+      if (usuario[0].foto_usuario) {
+        fotoUsuarioBase64 = Buffer.from(usuario[0].foto_usuario).toString("base64");
+      }
+
+      // Obter endereço do usuário
       connection.query(
-        `SELECT e.id, l.nome_livro, l.foto_capa, e.data_emprestimo, e.devolucao 
-         FROM emprestimos e
-         JOIN livros l ON e.livro_id = l.id
-         WHERE e.usuario_id  = ?`,
+        `SELECT e.* FROM Endereco e
+         JOIN Usuario_Endereco ue ON e.id_endereco = ue.fk_id_endereco
+         WHERE ue.fk_id_usuario = ?`,
         [userId],
-        function (err, historico) {
+        function (err, endereco) {
           if (err) {
-            return response.json({ erro: "Ocorreu um erro ao buscar o histórico de empréstimos" });
+            return response.status(500).json({ erro: "Erro ao buscar o endereço" });
           }
 
-          // Convertendo o BLOB da imagem para Base64 em cada item do histórico
-          historico.forEach(emprestimo => {
-            if (emprestimo.foto_capa) {
-              emprestimo.foto_capa = `data:image/jpeg;base64,${Buffer.from(emprestimo.foto_capa).toString('base64')}`;
-            }
-          });
+          // Obter histórico de empréstimos do usuário
+          connection.query(
+            `SELECT e.id_emprestimo, l.nome_livro, e.data_emprestimo, e.data_devolucao
+             FROM Emprestimos e
+             JOIN Usuario_Emprestimos ue ON e.id_emprestimo = ue.fk_id_emprestimo
+             JOIN Livro l ON e.fk_id_livros = l.id_livro
+             WHERE ue.fk_id_usuario = ?`,
+            [userId],
+            function (err, historico) {
+              if (err) {
+                return response.status(500).json({ erro: "Erro ao buscar o histórico de empréstimos" });
+              }
 
-          // Combine os dados do usuário com o histórico de empréstimos e envie a resposta
-          return response.json({
-            usuario: usuario[0],
-            historico: historico
-          });
+              // Respondendo com os dados completos do usuário, endereço, histórico e imagem convertida
+              return response.json({
+                usuario: {
+                  ...usuario[0],
+                  foto_usuario: fotoUsuarioBase64, // Enviando a imagem convertida em base64
+                },
+                endereco: endereco[0] || {},
+                historico: historico,
+              });
+            }
+          );
         }
       );
     }
@@ -59,15 +76,81 @@ function show(request, response) {
 
 
 
+async function create(request, response) {
+  const {
+    nome_login,
+    email,
+    senha,
+    telefone,
+    igreja_local,
+    data_nascimento,
+    foto_usuario, // Recebe como Base64 do front-end
+    tipo_usuario,
+    cep,
+    rua,
+    numero,
+    bairro,
+    cidade,
+    estado,
+  } = request.body;
+
+  // Converte a imagem Base64 para Buffer para armazenar como Blob
+  const fotoBuffer = foto_usuario ? Buffer.from(foto_usuario.split(",")[1], 'base64') : null;
+
+  connection.query(
+    `INSERT INTO Usuario (nome_login, email, senha, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [nome_login, email, senha, telefone, data_nascimento, igreja_local, fotoBuffer, tipo_usuario],
+    function (err, resultadoUsuario) {
+      if (err) {
+        console.error("Erro ao criar usuário:", err);
+        return response.status(500).json({ erro: "Erro ao criar usuário" });
+      }
+
+      // Insere endereço na tabela `Endereco`
+      connection.query(
+        `INSERT INTO Endereco (cep, rua, numero, bairro, cidade, estado) VALUES (?, ?, ?, ?, ?, ?)`,
+        [cep, rua, numero, bairro, cidade, estado],
+        function (err, resultadoEndereco) {
+          if (err) {
+            console.error("Erro ao inserir endereço:", err);
+            return response.status(500).json({ erro: "Erro ao inserir endereço" });
+          }
+
+          // Relaciona o usuário ao endereço
+          connection.query(
+            `INSERT INTO Usuario_Endereco (fk_id_usuario, fk_id_endereco) VALUES (?, ?)`,
+            [resultadoUsuario.insertId, resultadoEndereco.insertId],
+            function (err) {
+              if (err) {
+                console.error("Erro ao associar usuário ao endereço:", err);
+                return response.status(500).json({ erro: "Erro ao associar usuário ao endereço" });
+              }
+              console.log("Usuário criado com sucesso");
+              return response.status(201).json({ message: "Usuário criado com sucesso" });
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
+
+
+
+
+// API de login
 function login(request, response) {
   const { email, senha } = request.body;
 
+  // Validação de entrada
   if (!email || !senha) {
     return response.status(400).json({ erro: "Todos os campos são obrigatórios" });
   }
 
   connection.query(
-    "SELECT * FROM usuarios WHERE (email = ? OR nome_login = ?) AND senha = ?",
+    `SELECT * FROM Usuario WHERE (email = ? OR nome_login = ?) AND senha = ?`,
     [email, email, senha],
     function (err, resultado) {
       if (err) {
@@ -76,60 +159,20 @@ function login(request, response) {
       if (resultado.length === 0) {
         return response.status(401).json({ erro: "Email ou senha incorretos" });
       }
-      return response.status(200).json({ message: "Login bem-sucedido" });
-    }
-  );
-}
 
-function create(request, response) {
-  const { nome_login, email, senha, telefone, igrejaLocal, cep, rua, numero, bairro } = request.body;
-
-  if (!nome_login || !email || !senha) {
-    return response.status(400).json({ erro: "Os campos obrigatórios não foram preenchidos" });
-  }
-
-  connection.query(
-    "INSERT INTO usuarios (nome_login, email, senha, telefone, igrejaLocal, cep, rua, numero, bairro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [nome_login, email, senha, telefone, igrejaLocal, cep, rua, numero, bairro],
-    function (err, resultado) {
-      if (err) {
-        return response.status(500).json({ erro: "Erro ao criar usuário" });
-      }
-      return response.status(201).json({ menssage: "Usuário criado com sucesso" });
-    }
-  );
-}
-
-
-function loginMobile(request, response) {
-  const { email, senha } = request.body;
-
-  // Verifique se ambos os campos estão preenchidos
-  if (!email || !senha) {
-    return response.status(400).json({ erro: "Todos os campos são obrigatórios" });
-  }
-
-  // Realiza a consulta no banco de dados
-  connection.query(
-    "SELECT * FROM usuarios WHERE (email = ? OR nome_login = ?) AND senha = ?",
-    [email, email, senha],
-    function (err, resultado) {
-      if (err) {
-        return response.status(500).json({ erro: "Erro ao buscar o usuário" });
-      }
-
-      // Se nenhum usuário for encontrado, retorne erro
-      if (resultado.length === 0) {
-        return response.status(401).json({ erro: "Email ou senha incorretos" });
-      }
-
-      // Se o login for bem-sucedido, retorne os dados do usuário
+      // Retornar dados do usuário
       return response.status(200).json({
         message: "Login bem-sucedido",
-        usuario: resultado[0], // Envia os dados do usuário
+        usuario: {
+          id_usuario: resultado[0].id_usuario,
+          nome_login: resultado[0].nome_login,
+          tipo_usuario: resultado[0].tipo_usuario,
+        },
       });
     }
   );
 }
 
-module.exports = { list, show, login, create, loginMobile };
+
+
+module.exports = { list, show, login, create};
