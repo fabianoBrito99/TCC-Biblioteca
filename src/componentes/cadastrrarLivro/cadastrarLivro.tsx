@@ -215,13 +215,7 @@ export default function CadastrarLivro({ onToggle }: CadastrarLivroProps) {
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
             />
-            <Input
-              label="ISBN"
-              name="isbn"
-              type="text"
-              value={isbn}
-              onChange={(e) => setIsbn(e.target.value)}
-            />
+
             <Input
               label="Ano de Publicação"
               name="anoPublicacao"

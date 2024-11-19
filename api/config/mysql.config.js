@@ -4,7 +4,7 @@ const connection = mysql.createConnection({
   port: 3306,
   user: 'root',
   password: 'root',
-  database: 'bibliota_web'
+  database: 'biblioteca_tcc'
 });
 
 module.exports = connection;

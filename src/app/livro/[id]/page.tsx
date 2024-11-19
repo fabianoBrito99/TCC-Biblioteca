@@ -6,7 +6,7 @@ import styles from "./detalhesLivros.module.css";
 interface Livro {
   id: number;
   nome_livro: string;
-  autor: string;
+  nome_autor: string;
   categoria: string;
   descricao: string;
   foto_capa: string;
@@ -118,7 +118,7 @@ export default function DetalhesLivro() {
         </div>
         <div className={styles.livroInfo}>
           <h1>{livro?.nome_livro}</h1>
-          <h2>Autor: {livro?.autor}</h2>
+          <h2>Autor: {livro?.nome_autor}</h2>
           <h2>Categoria: {livro?.categoria}</h2>
           <h6 className="descricao-livro">{livro?.descricao}</h6>
           <div className={styles.botaoReservarPos}>

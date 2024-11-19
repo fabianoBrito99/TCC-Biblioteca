@@ -73,6 +73,7 @@
 }
 /* Centralizar o Tab Navigation */
 .tabContainer {
+  position: fixed;
   margin-top: 100px;
   display: flex;
   justify-content: center;
