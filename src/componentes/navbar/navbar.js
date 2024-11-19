@@ -1,34 +1,72 @@
-"use client"; 
-
+"use client"
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation"; // Importa o hook para obter a rota atual
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import styles from "@/componentes/navbar/navbar.module.css";
+
+type User = {
+  id: string;
+  foto_usuario: string | null;
+};
+interface user{
+  foto_usuario: string | null;
+}
+
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const pathname = usePathname(); // Obtém a rota atual
+  const [user, setUser] = useState<User | null>(null);
+  const pathname = usePathname();
 
-  // Não renderiza o Navbar se a rota for "/login"
-  if (pathname === "/login") {
-    return null;
-  }
 
-  const toggleMenu = () => {
-    setMenuOpen((prev) => !prev); // Alterna o estado do menu
-  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        try {
+          const res = await fetch(`http://localhost:4000/api/usuario/${userId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setUser({ id: userId, foto_usuario: data.usuario.foto_usuario });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar dados do usuário:", error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+  if (pathname === "/login") return;
+
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   return (
     <nav className={`${styles.navMenu} ${menuOpen ? styles.navOpen : ""}`}>
       <div className={styles.nav100}>
-        <Image
-          className={styles.perfil}
-          src="/img/perfil.jpg"
-          alt="Perfil"
-          width={40}
-          height={40}
-        />
+        {user ? (
+          <Link href={`/conta/${user.id}`}>
+            <img
+              className={styles.perfil}
+              src={`data:image/jpeg;base64,${user.foto_usuario}`} 
+              alt="Perfil"
+              width={40}
+              height={40}
+            />
+          </Link>
+        ) : (
+          <img
+            className={styles.perfil}
+            src="/img/perfil.jpg"
+            alt="Perfil"
+            width={40}
+            height={40}
+          />
+        )}
+
         <div className={styles.inputContainer1}>
           <svg className={styles.icon} aria-hidden="true" viewBox="0 0 24 24">
             <g>
@@ -43,7 +81,7 @@ export default function Navbar() {
             type="text"
           />
         </div>
-        <div id="sugestoes" className={styles.sugestoesContainer}></div>
+
         <div className={styles.menuIconContainer}>
           <Image
             className={`${styles.menu3Pontinhos} ${menuOpen ? styles.rotated : ""}`}
@@ -56,6 +94,7 @@ export default function Navbar() {
           />
         </div>
       </div>
+
       <ul className={styles.navHover}>
         <div className={styles.menuContent}>
           <li className={styles.navItem}>
@@ -87,6 +126,17 @@ export default function Navbar() {
             </Link>
           </li>
           <li className={styles.navItem}>
+            <Link href="/emprestimos/aprovar">
+              <Image
+                src="/img/empr-livro.png"
+                alt="Empréstimos"
+                width={20}
+                height={20}
+              />
+              Aprovar Empréstimos
+            </Link>
+          </li>
+          <li className={styles.navItem}>
             <Link href="/usuarios">
               <Image
                 src="/img/users.png"
@@ -103,6 +153,19 @@ export default function Navbar() {
               Home
             </Link>
           </li>
+          <li className={styles.navItem}>
+            <Link href="/doeumlivro">
+              <Image src="/img/home.png" alt="Home" width={20} height={20} />
+              sugire/doe um Livro
+            </Link>
+          </li>
+          <li className={styles.navItem}>
+            <Link href="/comunidade">
+              <Image src="/img/home.png" alt="Home" width={20} height={20} />
+              Comunidade
+            </Link>
+          </li>
+
           <li className={`${styles.navItem} ${styles.sair}`}>
             <Link href="/login">
               <Image src="/img/sair.png" alt="Sair" width={20} height={20} />
