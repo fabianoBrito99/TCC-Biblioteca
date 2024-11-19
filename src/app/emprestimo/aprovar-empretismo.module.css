@@ -1,0 +1,81 @@
+.emprestimoCard {
+  background: linear-gradient(to bottom, rgba(65, 109, 255, 0.171), rgba(151, 153, 252, 0.178));
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 1500px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  cursor: pointer;
+  align-items: center;
+}
+
+
+.fotoLivro {
+  grid-column: 1;
+}
+
+.usuarioEmprestimo {
+  grid-column: 2;
+  color: black;
+  text-align: left;
+}
+
+.livroEmprestimo {
+  grid-column: 3;
+  text-align: left;
+}
+
+.dataDevolucaoEmprestimo {
+  grid-column: 4;
+  text-align: left;
+}
+
+.diasRestantesEmprestimo {
+  grid-column: 5;
+  text-align: left;
+}
+
+
+/* pagina principal */
+.container {
+  padding: 20px;
+}
+
+.listaEmprestimo {
+  display: flex;
+  justify-content: center;
+  margin-top: 60px;
+}
+
+.emprestimosContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.botoes{
+  display: flex;
+  gap: 10px;
+  
+}
+.aprovar{
+  padding: 8px;
+  color: #fff;
+  background: #2aa75a;
+  border-radius: 5px;
+  border: 2px solid #000000;
+  cursor: pointer;
+}
+.rejeitar{
+  padding: 8px;
+  color: #fff;
+  background: #a72a2a;
+  border-radius: 5px;
+  border: 2px solid #000000;
+  cursor: pointer;
+}

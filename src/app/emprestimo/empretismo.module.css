@@ -68,3 +68,20 @@
   align-items: center;
   padding: 20px;
 }
+
+
+.devolverButton {
+  background-color: #ff6347;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.devolverButton:hover {
+  background-color: #ff4500;
+}
