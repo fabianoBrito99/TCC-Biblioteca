@@ -27,7 +27,7 @@ interface GraficosProps {
 
 const generateColor = (value: number, maxValue: number) => {
   const intensity = Math.floor((value / maxValue) * 150);
-  return `rgba(22, 0, ${255 - intensity}, 1)`;
+  return `rgba(22, ${250 - intensity}, ${255 - intensity}, 1)`;
 };
 
 const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {

@@ -1,7 +1,6 @@
 .suggestionPage {
   padding: 0px;
   max-width: 1000px;
-  
   margin-top: 30px;
 }
 .doe {
@@ -111,16 +110,10 @@
 
 .gridDoe {
   width: 100vw;
-  background-image: linear-gradient(to right, #4bc4fc, #4bc4fc, #e4f5fa, #ffffff);
+  background-image: linear-gradient(to bottom, #4bc4fc, #4bc4fc, #4bc4fc, #ffffff);
   color: rgb(0, 0, 0);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  margin-left: 0px;
-  margin-right: 0px;
-  padding: 20px;
+  padding: 20px 220px;
+  margin-top: 50px;
  
 }
 .sugestoes{

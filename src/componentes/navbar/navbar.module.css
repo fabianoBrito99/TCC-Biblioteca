@@ -2,7 +2,7 @@
   display: block;
   position: fixed;
   top: 0px;
-  background: linear-gradient(to right, rgb(116, 129, 252), rgb(0, 0, 0));
+  background: linear-gradient(to right, #0051ff, #0b1957);
   height: 50px;
   width: 100%;
   position: fixed;
@@ -10,7 +10,7 @@
 }
 
 .navMenu {
-  background: linear-gradient(to bottom, rgb(74, 92, 253), rgb(248, 124, 124));
+  background: linear-gradient(to bottom,#426bc2, #e9f3ff);
   width: 250px;
   height: 0; 
   position: fixed;
@@ -89,7 +89,7 @@
 
 .sair {
   position: relative;
-  bottom: -65vh;
+  bottom: -25vh;
 }
 
 .perfil {

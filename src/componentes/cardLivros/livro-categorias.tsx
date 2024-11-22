@@ -12,8 +12,8 @@ interface Livro {
   foto_capa: string;
   autor: string;
   categoria_principal: string;
+  media_avaliacoes: number;
 }
-
 
 interface CategoriaSwiperProps {
   categoria_principal: string;
@@ -74,7 +74,29 @@ const CategoriaSwiper: React.FC<CategoriaSwiperProps> = ({
                   className="livro-capa"
                 />
                 <h2>{livro.nome_livro}</h2>
-                <h4>{livro.autor}</h4>
+                <h4>Autor: {livro.autor}</h4>
+                <p>
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const media = livro.media_avaliacoes; // Média do livro
+                    const isFull = media >= star; // Estrela completa
+                    const isHalf = media >= star - 0.5 && media < star; // Estrela parcial
+
+                    return (
+                      <span
+                        key={star}
+                        className={`${styles.estrela} ${
+                          isFull
+                            ? styles.estrelaAtiva // Estrela completa
+                            : isHalf
+                            ? styles.estrelaParcial // Estrela parcial
+                            : styles.estrelaInativa // Estrela vazia
+                        }`}
+                      >
+                        ★
+                      </span>
+                    );
+                  })}
+                </p>
               </div>
             </div>
           ))}

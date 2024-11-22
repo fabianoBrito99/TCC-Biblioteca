@@ -1,18 +1,29 @@
 .progessoFixo{
-  position: fixed;
-  bottom: 10px;
+  position: relative;
+  top: 89px;
+  left: 10px;
   width: 15%;
+  z-index: 1;
+}
+.progessoFixo input{
+  width: 59%;
 }
 .progessoFixo button{
-  background-image: linear-gradient(to left, #4bfcb8, #e4faec, #e4faec, #4bfcb8);
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid #00ff55;
-  border-radius: 5px;
+  position: relative;
+  background-image: linear-gradient(to left, rgba(0, 255, 128, 0.507), rgba(5, 127, 143, 0.856));
+  padding: 15px 30px;
+  border-radius: 15px;
+  border: 1px solid #69c287;
+  left: 200px;
+  top: -78px;
 }
 .progessoFixo button:hover{
-  background-image: linear-gradient(to left, #4bfcb8, #e4faec, #e4faec, #4bfcb8);
-  padding: 10px;
-  margin-top: 10px;
-  border: 3px solid #00bb3e;
+  background-image: linear-gradient(to left, rgba(0, 173, 86, 0.521), rgba(1, 180, 204, 0.747));
+  border: 2px solid #00ff95;
+  border-color: rgba(4, 175, 104, 0.507);
+  box-shadow: 0 0 0 2px rgb(2, 247, 206);
+}
+.progessoFixo h4{
+  position: relative;
+  margin-bottom: 15px;
 }

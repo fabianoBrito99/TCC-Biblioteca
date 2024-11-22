@@ -4,6 +4,7 @@ import styles from "./comentarios.module.css";
 import { useParams } from "next/navigation";
 import Input from "../forms/input";
 import Button from "../forms/button";
+import { FaPaperPlane } from "react-icons/fa";
 
 interface Comentario {
   id_comentario: number;
@@ -13,11 +14,26 @@ interface Comentario {
   data_comentario: string;
   curtidas: number;
   usuario_curtiu: boolean;
+  fk_id_usuario: string;
 }
 
 interface ComentariosProps {
   comunidadeId: number;
 }
+
+const generateColorFromName = (name: string | undefined) => {
+  if (!name || name.length === 0) {
+    // Retorna uma cor padrão caso o nome seja inválido
+    return "#cccccc";
+  }
+
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = (hash & 0x00ffffff).toString(16).padStart(6, "0");
+  return `#${color}`;
+};
 
 export default function Comentarios({ comunidadeId }: ComentariosProps) {
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
@@ -29,13 +45,14 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) {
       setUsuarioId(storedUserId);
+      console.log("Usuário logado:", storedUserId);
     } else {
       console.error("Usuário não encontrado no localStorage.");
     }
   }, []);
 
-  useEffect(() => {
-    const fetchComentarios = async () => {
+  const fetchComentarios = async () => {
+    try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${comunidadeId}/comentarios`
       );
@@ -47,10 +64,17 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
         setComentarios([]);
         console.error("Resposta da API não é um array:", data);
       }
-    };
+    } catch (error) {
+      console.error("Erro ao buscar comentários:", error);
+    }
+  };
+
+  // useEffect para buscar os comentários ao carregar ou quando o `comunidadeId` mudar
+  useEffect(() => {
     fetchComentarios();
   }, [comunidadeId]);
 
+  // Função para enviar um novo comentário
   const handleEnviarComentario = async () => {
     if (!usuarioId) {
       alert("Erro: Usuário não identificado.");
@@ -74,45 +98,71 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
         throw new Error("Erro ao adicionar comentário");
       }
 
-      const newComment = await response.json();
-      setComentarios((prevComentarios) => [...prevComentarios, newComment]);
-      setComentario("");
+      // Atualizar a lista de comentários
+      await fetchComentarios();
+      setComentario(""); // Limpa o campo de comentário após o envio
     } catch (error) {
       console.error("Erro ao enviar comentário:", error);
       alert("Erro ao enviar comentário. Tente novamente mais tarde.");
     }
   };
-
   return (
     <div className={styles.comentariosContainer}>
       <div className={styles.comentariosFixo}>
         <Input
-          label="comentarios"
+          label="Mensagem"
           value={comentario}
           onChange={(e) => setComentario(e.target.value)}
         />
-        <Button onClick={handleEnviarComentario}>Enviar Comentário</Button>
+        <button
+          className={styles.buttonEnviar}
+          onClick={handleEnviarComentario}
+        >
+          <FaPaperPlane size={20} color="#fff" />
+        </button>
       </div>
-
+  
       {comentarios &&
         Array.isArray(comentarios) &&
-        comentarios.map((com) => (
-          <div key={com.id_comentario} className={styles.comentario}>
-            <div className={styles.usuario}>
-              <Image
-                src={com.foto_usuario || "/img/perfil.jpg"}
-                alt="foto"
-                width={40}
-                height={40}
-              />
-              <span>{com.nome_usuario}</span>
+        comentarios.map((com) => {
+          const isCurrentUser = String(com.fk_id_usuario) === String(usuarioId);
+  
+          return (
+            <div
+              key={com.id_comentario}
+              className={`${styles.comentarioContainer} ${
+                isCurrentUser ? styles.usuarioLogado : ""
+              }`}
+            >
+              <div className={styles.cardComentario}>
+                <div className={styles.header}>
+                  <Image
+                    className={styles.fotoUsuario}
+                    src={com.foto_usuario || "/img/perfil.jpg"}
+                    alt="foto"
+                    width={40}
+                    height={40}
+                  />
+                  <span
+                    className={styles.nomeUsuario}
+                    style={{
+                      color: isCurrentUser
+                        ? "#0d6efd"
+                        : generateColorFromName(com.nome_usuario),
+                    }}
+                  >
+                    {com.nome_usuario}
+                  </span>
+                </div>
+                <h6 className={styles.mensagem}>{com.comentario}</h6>
+                <small className={styles.data}>
+                  {new Date(com.data_comentario).toLocaleDateString()}
+                </small>
+              </div>
             </div>
-            <h3>{com.comentario}</h3>
-            <small className={styles.data}>
-              {new Date(com.data_comentario).toLocaleDateString()}
-            </small>
-          </div>
-        ))}
+          );
+        })}
     </div>
   );
+  
 }

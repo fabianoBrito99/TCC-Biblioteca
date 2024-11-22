@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import EmprestimoCardAprovar from '@/componentes/emprestimo/emprestimoAprovar';
-import styles from '@/componentes/emprestimo/empretismo.module.css';
+import React, { useEffect, useState } from "react";
+import EmprestimoCardAprovar from "@/componentes/emprestimo/emprestimoAprovar";
+import styles from "@/componentes/emprestimo/empretismo.module.css";
 
 interface Emprestimo {
   id_emprestimo: number;
@@ -14,17 +14,22 @@ interface Emprestimo {
 export default function AprovarEmprestimo() {
   const [emprestimos, setEmprestimos] = useState<Emprestimo[]>([]);
 
-  const carregarEmprestimos = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/api/emprestimos/aprovar');
-      const data = await response.json();
-      setEmprestimos(data.dados);
-    } catch (error) {
-      console.error('Erro ao carregar os empréstimos:', error);
-    }
-  };
-
   useEffect(() => {
+    const carregarEmprestimos = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/api/emprestimos/aprovar");
+        const data = await response.json();
+        // Verifique a estrutura da resposta para garantir que seja um array
+        if (Array.isArray(data.dados)) {
+          setEmprestimos(data.dados);
+        } else {
+          console.error("Estrutura de dados inesperada:", data);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar os empréstimos:", error);
+      }
+    };
+
     carregarEmprestimos();
   }, []);
 

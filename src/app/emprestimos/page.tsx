@@ -20,7 +20,12 @@ const Home: React.FC = () => {
       try {
         const response = await fetch("http://localhost:4000/api/emprestimos");
         const data = await response.json();
-        setEmprestimos(data.dados);
+        // Verifique a estrutura da resposta para garantir que seja um array
+        if (Array.isArray(data.dados)) {
+          setEmprestimos(data.dados);
+        } else {
+          console.error("Estrutura de dados inesperada:", data);
+        }
       } catch (error) {
         console.error("Erro ao carregar os empréstimos:", error);
       }

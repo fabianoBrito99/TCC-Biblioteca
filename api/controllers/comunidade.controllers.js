@@ -88,7 +88,8 @@ function listarComentarios(req, res) {
       `
       SELECT c.*, 
              u.nome_login AS nome_usuario, 
-             u.foto_usuario AS foto_usuario
+             u.foto_usuario AS foto_usuario,
+             cu.fk_id_usuario -- Inclui o fk_id_usuario aqui
       FROM Comentarios AS c
       JOIN Comentarios_Comunidade AS cc ON cc.fk_id_comentario = c.id_comentario
       JOIN Comentarios_usuario AS cu ON cu.fk_id_comentario = c.id_comentario
@@ -125,6 +126,7 @@ function listarComentarios(req, res) {
       .json({ error: "Erro inesperado ao listar comentários da comunidade" });
   }
 }
+
 
 
 

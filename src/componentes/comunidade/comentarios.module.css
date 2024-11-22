@@ -1,30 +1,3 @@
-
-
-
-/* Container de comentários */
-.comentariosContainer {
-  margin-top: 20px;
-}
-
-.comentario {
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-}
-
-/* Informações do usuário no comentário */
-.usuario {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.fotoUsuario {
-  border-radius: 50%;
-}
-
 /* Botões */
 .botaoEnviarAvaliacao {
   background-color: #007bff;
@@ -74,8 +47,6 @@
   margin-top: 5px;
 }
 
-
-
 /* Tab Navigation */
 .tabContainer {
   display: flex;
@@ -107,12 +78,6 @@
   margin-top: 10px;
 }
 
-.data {
-  font-size: 0.8rem;
-  color: #888;
-  margin-left: 400px;
-}
-
 .responder {
   background: none;
   border: none;
@@ -125,11 +90,155 @@
   text-decoration: underline;
 }
 
-.comentariosFixo{
+.comentariosFixo {
   position: fixed;
-  bottom: 150px;
+  bottom: 0px;
   width: 15%;
+  z-index: 2;
 }
-.usuario img{
+
+.buttonEnviar {
+  position: fixed;
+  background: linear-gradient(
+    to left,
+    rgba(0, 110, 255, 0.507),
+    rgba(108, 105, 248, 0.856)
+  );
+  border-radius: 15px;
+  border: 2px solid #fff;
+  padding: 15px 30px;
+  bottom: 20px;
+  right: 5px;
+}
+.buttonEnviar:hover {
+  background: linear-gradient(
+    to left,
+    rgba(0, 110, 255, 0.678),
+    rgb(107, 105, 248)
+  );
+  border: 2px solid #0400ff;
+  border-color: rgba(4, 78, 175, 0.507);
+  box-shadow: 0 0 0 1px rgb(2, 67, 247);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Contêiner do comentário */
+.comentarioContainer {
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  margin: 20px 55px;
+  gap: 5px;
+}
+
+/* Foto do usuário */
+.fotoUsuario {
+  position: relative;
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  left: -80px;
+  top: -10px; /* Alinha a foto verticalmente */
+}
+
+/* Card do comentário */
+.cardComentario {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 15px;
+  position: relative;
+  max-width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #a4bbdf;
+  word-wrap: break-word;
+  flex-grow: 1;
+  
+}
+
+/* Setinha do card (comentário de outro usuário) */
+.cardComentario::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: -15px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 15px 15px 20px 0;
+  border-color: transparent #a4bbdf transparent transparent;
+}
+
+/* Nome do usuário */
+.nomeUsuario {
+  position: relative;
+  top: -40px;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Mensagem */
+.mensagem {
+  position: relative;
+  top: -30px;
+  text-align: start;
+  margin: 10px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Data do comentário */
+.data {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* Comentário do usuário logado */
+.usuarioLogado .cardComentario {
+  background-color: #e0f7fa;
+  border-right: 5px solid #75b8b0;
+  border-left: none;
+  margin-right: 20px;
+  margin-left: auto; 
+}
+
+/* Setinha do card (comentário do usuário logado) */
+.usuarioLogado .cardComentario::after {
+  content: "";
+  position: absolute;
+  top:10px; 
+  left: 265px; /* Posição à direita do card */
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 15px 0 15px 20px;
+  border-color: transparent transparent transparent #75b8b0;
+}
+
+/* Foto do usuário logado */
+.usuarioLogado .fotoUsuario {
+  left: auto;
+  right: -120%;
+}
+.usuarioLogado .nomeUsuario{
+  left: 160px;
 }

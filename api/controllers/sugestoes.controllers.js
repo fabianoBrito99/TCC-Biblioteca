@@ -37,7 +37,7 @@ function listarAutores(request, response) {
 // Sugestão para editoras
 function listarEditoras(request, response) {
   connection.query(
-    `SELECT e.nome_editora, end.cep, end.rua, end.bairro, end.numero, end.cidade, end.estado
+    `SELECT DISTINCT  e.nome_editora, end.cep, end.rua, end.bairro, end.numero, end.cidade, end.estado
      FROM Editora e
      LEFT JOIN Endereco end ON e.fk_id_endereco = end.id_endereco;`,
     (err, resultado) => {

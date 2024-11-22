@@ -5,9 +5,10 @@
   justify-content: center;
   justify-content: space-around;
   padding: 20px;
-  background-color: #f9f9f9; /* Fundo claro */
+  background-color: #fdf8e2; 
   position: relative;
   width: 78vw;
+  top: -90px;
 }
 
 .legenda {

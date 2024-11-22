@@ -7,8 +7,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 25px 30px rgba(182, 180, 187, 0.781);
-  
+  box-shadow: 0 25px 30px rgba(182, 180, 187, 0.781); 
 }
 
 /* Contêiner do "livro" */
@@ -18,7 +17,7 @@
   width: 100%;
   height: 800px;
   position: relative;
-  background-color: #fafafa;
+  background-color: #f5e2b6;
   border: 3px solid #ddd;
   box-sizing: border-box;
   overflow: hidden;
@@ -34,7 +33,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  background-color: #ffffff;
+  background-color: #fdf8e2;
   z-index: 1;
   transition: transform 0.8s ease;
   flex-direction: column;
@@ -50,7 +49,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #ffffff;
+  background-color: #f7f4ed;
   border: 3px solid #ddd;
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
@@ -115,7 +114,7 @@
     border-top-right-radius: 590px;
   }
   100% {
-    transform: rotateY(0deg) scaleY(1); /* Finaliza reto */
+    transform: rotateY(0deg) scaleY(1); 
    
   }
 }

@@ -12,6 +12,7 @@ interface Livro {
   foto_capa: string;
   autor: string;
   categoria_principal: string;
+  media_avaliacoes: number;
 }
 
 const Home: React.FC = () => {
@@ -45,7 +46,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className={styles.containerHome}>
       <Head>
         <title>Home</title>
         <link rel="icon" href="/icones/home-.png" />

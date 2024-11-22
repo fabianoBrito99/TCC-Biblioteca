@@ -49,24 +49,45 @@ function show(request, response) {
 // Lista todos os livros
 function list(request, response) {
   connection.query(
-    `SELECT 
-        Livro.*, 
-        Estoque.quantidade_estoque, 
-        Editora.nome_editora, 
-        Categoria.categoria_principal, 
-        Subcategoria.nome_subcategoria
-     FROM 
-        Livro
-     LEFT JOIN 
-        Estoque ON Livro.fk_id_estoque = Estoque.id_estoque
-     LEFT JOIN 
-        Editora ON Livro.fk_id_editora = Editora.id_editora
-     LEFT JOIN 
-        Livro_Categoria ON Livro.id_livro = Livro_Categoria.fk_id_livros
-     LEFT JOIN 
-        Categoria ON Livro_Categoria.fk_id_categoria = Categoria.id_categoria
-     LEFT JOIN 
-        Subcategoria ON Subcategoria.fk_id_categoria = Categoria.id_categoria;`,
+    `SELECT DISTINCT
+    Livro.*,
+    Estoque.quantidade_estoque,
+    Editora.nome_editora,
+    Categoria.categoria_principal,
+    Subcategoria.nome_subcategoria,
+    Autor.nome AS autor,
+    COALESCE(SUM(Avaliacoes.nota) / NULLIF(COUNT(Avaliacoes.id_avaliacoes), 0), 0) AS media_avaliacoes
+FROM 
+    Livro
+LEFT JOIN 
+    Estoque ON Livro.fk_id_estoque = Estoque.id_estoque
+LEFT JOIN 
+    Editora ON Livro.fk_id_editora = Editora.id_editora
+LEFT JOIN 
+    Livro_Categoria ON Livro.id_livro = Livro_Categoria.fk_id_livros
+LEFT JOIN 
+    Categoria ON Livro_Categoria.fk_id_categoria = Categoria.id_categoria
+LEFT JOIN 
+    Subcategoria ON Subcategoria.fk_id_categoria = Categoria.id_categoria
+LEFT JOIN 
+    Autor_Livros ON Livro.id_livro = Autor_Livros.fk_id_livros
+LEFT JOIN 
+    Autor ON Autor_Livros.fk_id_autor = Autor.id_autor
+LEFT JOIN 
+    Avaliacoes_livro ON Livro.id_livro = Avaliacoes_livro.fk_id_livro
+LEFT JOIN 
+    Avaliacoes ON Avaliacoes_livro.fk_id_avaliacoes = Avaliacoes.id_avaliacoes
+GROUP BY 
+    Livro.id_livro,
+    Estoque.quantidade_estoque,
+    Editora.nome_editora,
+    Categoria.categoria_principal,
+    Subcategoria.nome_subcategoria,
+    Autor.nome;
+
+
+
+`,
     (err, resultado) => {
       if (err) {
         console.error("Erro ao buscar livros:", err);
@@ -316,7 +337,7 @@ function ListaAutorLivro(request, response) {
   const { livroId } = request.params;
 
   connection.query(
-    `SELECT Autor.nome
+    `SELECT DISTINCT Autor.nome
      FROM Autor
      JOIN Autor_Livros ON Autor.id_autor = Autor_Livros.fk_id_autor
      WHERE Autor_Livros.fk_id_livros = ?;`,
@@ -381,10 +402,8 @@ function createEditora(request, response) {
 }
 function listEditora(request, response) {
   connection.query(
-    `SELECT Livro.*, Estoque.quantidade_estoque, Editora.nome_editora
-     FROM Livro
-     LEFT JOIN Estoque ON Livro.fk_id_estoque = Estoque.id_estoque
-     LEFT JOIN Editora ON Livro.fk_id_editora = Editora.id_editora;`,
+    `SELECT DISTINCT nome_editora
+     FROM Editora;`,
     (err, resultado) => {
       if (err)
         return response.status(500).json({ erro: "Erro ao buscar livros" });
