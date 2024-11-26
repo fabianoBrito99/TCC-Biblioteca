@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./conta.module.css";
+import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 
 interface User {
   id_usuario: string;
@@ -76,63 +77,67 @@ export default function ContaPage({ params }: { params: { id: string } }) {
 
   return (
     <div className={styles.contaContainer}>
-      <h1>Conta de {user.nome_login}</h1>
-      <img
-        src={`data:image/jpeg;base64,${user.foto_usuario}`}
-        alt="Foto de perfil"
-        width={100}
-        height={100}
-      />
-      <div className={styles.user}>
-      <p>
-        <strong>Nome:</strong> {user.nome_login}
-      </p>
-      <p>
-        <strong>Email:</strong> {user.email}
-      </p>
-      <p>
-        <strong>Telefone:</strong> {user.telefone}
-      </p>
-      <p>
-        <strong>Data de Nascimento:</strong>{" "}
-        {new Date(user.data_nascimento).toLocaleDateString()}
-      </p>
-      <p>
-        <strong>Igreja Local:</strong>{" "}
-        {user.igreja_local === "1" ? "IMUB" : "Não"}
-      </p>
-      <p>
-        <strong>Tipo de Usuário:</strong> {user.tipo_usuario}
-      </p>
-      </div>
+      <div className={styles.grid}>
+        <div className={styles.grid1}>
+          <img
+            src={`data:image/jpeg;base64,${user.foto_usuario}`}
+            alt="Foto de perfil"
+            width={100}
+            height={100}
+          />
+        </div>
+        <div className={styles.grid2}>
+          <div className={styles.user}>
+            <p>
+              <strong>Nome:</strong> {user.nome_login}
+            </p>
+            <p>
+              <strong>Email:</strong> {user.email}
+            </p>
+            <p>
+              <strong>Telefone:</strong> {user.telefone}
+            </p>
+            <p>
+              <strong>Data de Nascimento:</strong>{" "}
+              {new Date(user.data_nascimento).toLocaleDateString()}
+            </p>
 
-      {endereco && (
-        <>
-          <div className={styles.endereco}>
-            <h2>Endereço</h2>
-            <p>
-              <strong>CEP:</strong> {endereco.cep}
-            </p>
-            <p>
-              <strong>Rua:</strong> {endereco.rua}
-            </p>
-            <p>
-              <strong>Número:</strong> {endereco.numero}
-            </p>
-            <p>
-              <strong>Bairro:</strong> {endereco.bairro}
-            </p>
-            <p>
-              <strong>Cidade:</strong> {endereco.cidade}
-            </p>
-            <p>
-              <strong>Estado:</strong> {endereco.estado}
-            </p>
+  
           </div>
-        </>
-      )}
 
-      <button onClick={() => router.push("/")}>Voltar à Página Inicial</button>
+          {endereco && (
+            <>
+              <div className={styles.endereco}>
+                <h2>Endereço</h2>
+                <p>
+                  <strong>CEP:</strong> {endereco.cep}
+                </p>
+                <p>
+                  <strong>Rua:</strong> {endereco.rua}
+                </p>
+                <p>
+                  <strong>Número:</strong> {endereco.numero}
+                </p>
+                <p>
+                  <strong>Bairro:</strong> {endereco.bairro}
+                </p>
+                <p>
+                  <strong>Cidade:</strong> {endereco.cidade}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {endereco.estado}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      <h2 className={styles.historico}>Histórico</h2>
+
+      <div className={styles.historicoContainer}>
+
+        <HistoricoUsuario userId={userId} />
+      </div>
     </div>
   );
 }

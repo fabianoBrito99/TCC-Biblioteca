@@ -247,5 +247,49 @@ function devolver(request, response) {
   );
 }
 
+function listarHistorico(req, res) {
+  const { idUsuario } = req.params;
 
-module.exports = { list, show, reservar, devolver, aprovarReserva, rejeitarReserva, emprestimoAprovar };
+  connection.query(
+    `SELECT 
+      h.id_historico,
+      h.data_historico,
+      l.nome_livro,
+      l.foto_capa,
+      e.data_emprestimo,
+      e.data_prevista_devolucao,
+      e.data_devolucao
+    FROM Historico AS h
+    JOIN Livro AS l ON h.fk_id_livros = l.id_livro
+    JOIN Emprestimos AS e ON h.fk_id_emprestimo = e.id_emprestimo
+    JOIN Usuario_Emprestimos AS ue ON ue.fk_id_emprestimo = e.id_emprestimo
+    WHERE ue.fk_id_usuario = ?
+    ORDER BY h.data_historico DESC`,
+    [idUsuario],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar histórico:", error);
+        return res.status(500).json({ error: "Erro ao buscar histórico." });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ mensagem: "Nenhum histórico encontrado." });
+      }
+
+      // Convertendo a foto (BLOB) para base64
+      const formattedResults = results.map((result) => ({
+        ...result,
+        foto_capa: result.foto_capa
+          ? `data:image/jpeg;base64,${Buffer.from(result.foto_capa).toString(
+              "base64"
+            )}`
+          : null,
+      }));
+
+      res.json(formattedResults);
+    }
+  );
+}
+
+
+module.exports = { list, show, reservar, devolver, aprovarReserva, rejeitarReserva, emprestimoAprovar, listarHistorico };

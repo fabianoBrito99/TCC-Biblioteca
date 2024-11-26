@@ -57,16 +57,10 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({ emprestimo, onClick }) => {
       <div className={styles.fotoLivro}>
         <img src={emprestimo.foto_capa} alt="Foto do Livro" style={{ width: '100px', height: 'auto' }} />
       </div>
-      <div className={styles.usuarioEmprestimo}>
+      <div className={styles.grid2}>
         <h2>Usuário: {emprestimo.nome_usuario}</h2>
-      </div>
-      <div className={styles.livroEmprestimo}>
         <h3><strong>Livro:</strong> {emprestimo.nome_livro}</h3>
-      </div>
-      <div className={styles.dataDevolucaoEmprestimo}>
         <h4><strong>Data de Vencimento:</strong> {new Date(emprestimo.data_prevista_devolucao).toLocaleDateString('pt-BR')}</h4>
-      </div>
-      <div className={styles.diasRestantesEmprestimo}>
         <h5><strong>Dias Restantes:</strong> {diasRestantes}</h5>
       </div>
       <button className={styles.devolverButton} onClick={(e) => {

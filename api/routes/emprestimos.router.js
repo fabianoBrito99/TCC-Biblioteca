@@ -13,4 +13,6 @@ router.put('/emprestimos/:id/aprovar', emprestimosController.aprovarReserva);
 router.put('/emprestimos/:id/rejeitar', emprestimosController.rejeitarReserva);
 router.put('/emprestimos/:id/devolver', emprestimosController.devolver);
 
+router.get("/historico/:idUsuario", emprestimosController.listarHistorico);
+
 module.exports = router;
