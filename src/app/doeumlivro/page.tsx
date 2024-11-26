@@ -85,11 +85,10 @@ export default function SuggestionPage() {
             nos abençoe com uma contribuição via Pix — basta colocar o título do
             livro desejado na descrição. Cada livro conta, e juntos podemos
             enriquecer a jornada de quem ama ler!
-
             <span className={styles.pix}>Pix:doeumlivro@gmail.com</span>
             <span className={styles.qrcode}>QrCode👇</span>
           </p>
-         
+
           <img
             className={styles.perfil}
             src="/img/qrcode.png"
@@ -97,13 +96,22 @@ export default function SuggestionPage() {
             width={300}
             height={300}
           />
-          
         </div>
         <div>
           <h1 className={styles.titleDoe}>Sugira um Livro</h1>
           <form onSubmit={handleSubmit} className={styles.suggestionForm}>
             <Input
               label="Nome do Livro"
+              name="nomeLivro"
+              type="text"
+              value={nomeLivro}
+              onChange={(e) => setNomeLivro(e.target.value)}
+              required
+            />
+            <p >caso você não saiba o nome do livro ou queira apenas indicar livros de uma autor em especifico, deixe apenas o nome do autor e fale o motivo</p>
+
+            <Input
+              label="Nome do Autor"
               name="nomeLivro"
               type="text"
               value={nomeLivro}

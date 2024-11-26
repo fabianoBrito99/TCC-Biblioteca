@@ -3,7 +3,7 @@
   position: fixed;
   top: 0px;
   background: linear-gradient(to right, #0051ff, #0b1957);
-  height: 50px;
+  height: 60px;
   width: 100%;
   position: fixed;
   z-index: 1; /* Lower z-index so it stays behind the menu */
@@ -114,7 +114,7 @@
 .menu3Pontinhos {
   position: relative;
   left: 8px;
-  top: -40px;
+  top: -140px;
   width: 40px;
   height: 35px;
   cursor: pointer;
@@ -201,3 +201,96 @@
 }
 
 
+
+
+.logo{
+  position: relative;
+  left: 800px;
+  top: -40px;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Fumaça */
+.smoke {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: rgb(10, 3, 3);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: smoke 3s infinite ease-in-out;
+}
+
+/* Texto */
+.text p {
+  margin: 0;
+  font-size: 25px;
+  font-weight: bold;
+  text-align: left;
+  color: #dbdfb6;
+ 
+}
+.text .sobrenome{
+  top: 12px;
+  left: -99px;
+  font-size: 13px;
+  position: relative;
+  font-family: --type-tree;
+}
+.text .biblioteca {
+  display: block;
+  font-size: 9px;
+  position: relative;
+  top: 10px;
+  color: #fff;
+  left: 19px;
+}
+
+.text .biblioteca::before,
+.text .biblioteca::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 3px;
+  background: #ffffff;
+  top: 30%;
+}
+
+.text .biblioteca::before {
+  left: -15px; border-radius: 0% 50% 50% 0%;
+}
+
+.text .biblioteca::after {
+  left: 60px;
+  border-radius: 50% 0% 0% 50%;
+}
+
+/* Animações */
+
+@keyframes smoke {
+  0% {
+    transform: translate(-50%, 0) scale(0.5);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -60px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.logoFogo{
+  position: relative;
+  top: -50px;
+  left: -80px;
+}

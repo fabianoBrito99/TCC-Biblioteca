@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -9,25 +9,23 @@ type User = {
   id: string;
   foto_usuario: string | null;
 };
-interface user{
+interface user {
   foto_usuario: string | null;
 }
-
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const pathname = usePathname();
 
-
-
   useEffect(() => {
     const fetchUserData = async () => {
-
       const userId = localStorage.getItem("userId");
       if (userId) {
         try {
-          const res = await fetch(`http://localhost:4000/api/usuario/${userId}`);
+          const res = await fetch(
+            `http://localhost:4000/api/usuario/${userId}`
+          );
           if (res.ok) {
             const data = await res.json();
             setUser({ id: userId, foto_usuario: data.usuario.foto_usuario });
@@ -51,7 +49,7 @@ export default function Navbar() {
           <Link href={`/conta/${user.id}`}>
             <img
               className={styles.perfil}
-              src={`data:image/jpeg;base64,${user.foto_usuario}`} 
+              src={`data:image/jpeg;base64,${user.foto_usuario}`}
               alt="Perfil"
               width={40}
               height={40}
@@ -82,9 +80,30 @@ export default function Navbar() {
           />
         </div>
 
+        <div className={styles.logo}>
+          <div className={styles.smoke}></div>
+          <div className={styles.text}>
+      
+            <p>
+              HELENA
+              <span className={styles.sobrenome}>RAMAZZOTTE</span>
+              <span className={styles.biblioteca}>BIBLIOTECA</span>
+            </p>
+          </div>{" "}
+          <img
+              className={styles.logoFogo}
+              src="/img/logoFogo.png"
+              alt="Logo"
+              width={90}
+              height={80}
+            />
+        </div>
+
         <div className={styles.menuIconContainer}>
           <Image
-            className={`${styles.menu3Pontinhos} ${menuOpen ? styles.rotated : ""}`}
+            className={`${styles.menu3Pontinhos} ${
+              menuOpen ? styles.rotated : ""
+            }`}
             id="home-icon"
             src="/img/3pontinhos.png"
             alt="Abrir Menu"
@@ -99,7 +118,12 @@ export default function Navbar() {
         <div className={styles.menuContent}>
           <li className={styles.navItem}>
             <Link href="/livros">
-              <Image src="/img/livros.png" alt="Livros" width={20} height={20} />
+              <Image
+                src="/img/livros.png"
+                alt="Livros"
+                width={20}
+                height={20}
+              />
               Livros
             </Link>
           </li>

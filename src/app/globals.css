@@ -7,6 +7,7 @@ body {
   color: #333;
   --type-first: Helvetica, Arial, sans-serif;
   --type-second: var(--type-second-spectral), Georgia;
+  --type-tree: var(--type-tree), Bungee Spice;
   font-family: var(--type-first);
 }
 
