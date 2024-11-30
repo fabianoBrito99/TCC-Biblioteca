@@ -2,17 +2,26 @@ const connection = require("../config/mysql.config");
 
 async function list(request, response) {
   connection.query(
-    `SELECT id_usuario, nome_login, email, tipo_usuario FROM Usuario`,
+    `SELECT id_usuario, nome_login, email, tipo_usuario, foto_usuario FROM Usuario`,
     function (err, resultado) {
       if (err) {
         return response.status(500).json({ erro: "Erro ao buscar os usuários" });
       }
-      return response.json({ dados: resultado });
+
+      // Converte apenas a coluna `foto_usuario` em Base64, se existir
+      const usuarios = resultado.map((usuario) => ({
+        ...usuario,
+        foto_usuario: usuario.foto_usuario
+          ? Buffer.from(usuario.foto_usuario).toString("base64")
+          : null,
+      }));
+
+      return response.json({ dados: usuarios });
     }
   );
 }
 
-async function show(request, response) { 
+async function show(request, response) {
   const userId = request.params.id;
 
   // Obter informações do usuário
@@ -30,7 +39,9 @@ async function show(request, response) {
       // Converte `foto_usuario` para base64, se houver uma imagem
       let fotoUsuarioBase64 = null;
       if (usuario[0].foto_usuario) {
-        fotoUsuarioBase64 = Buffer.from(usuario[0].foto_usuario).toString("base64");
+        fotoUsuarioBase64 = Buffer.from(usuario[0].foto_usuario).toString(
+          "base64"
+        );
       }
 
       // Obter endereço do usuário
@@ -41,7 +52,9 @@ async function show(request, response) {
         [userId],
         function (err, endereco) {
           if (err) {
-            return response.status(500).json({ erro: "Erro ao buscar o endereço" });
+            return response
+              .status(500)
+              .json({ erro: "Erro ao buscar o endereço" });
           }
 
           // Obter histórico de empréstimos do usuário
@@ -54,7 +67,9 @@ async function show(request, response) {
             [userId],
             function (err, historico) {
               if (err) {
-                return response.status(500).json({ erro: "Erro ao buscar o histórico de empréstimos" });
+                return response.status(500).json({
+                  erro: "Erro ao buscar o histórico de empréstimos",
+                });
               }
 
               // Respondendo com os dados completos do usuário, endereço, histórico e imagem convertida

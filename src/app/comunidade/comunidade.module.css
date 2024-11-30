@@ -20,7 +20,7 @@ width: 80%;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-image: linear-gradient(to left, #4bc4fc, #e4f5fa, #e4f5fa, #4bc4fc);
+  background-image: linear-gradient(to left, #a7e3ff, #e4f5fa, #e4f5fa, #a7e3ff);
   margin-bottom: 20px;
   width: 80vw;
   margin-left: auto;
@@ -29,7 +29,7 @@ width: 80%;
 
 }
 .comunidadeCard:hover{
-  background-image: linear-gradient(to left, #e4f5fa, #4bc4fc, #4bc4fc, #e4f5fa);
+  background-image: linear-gradient(to left, #e4f5fa, #a7e3ff, #a7e3ff, #e4f5fa);
   border: 1px solid #4882ff;
 }
 .comunidadeCard button{

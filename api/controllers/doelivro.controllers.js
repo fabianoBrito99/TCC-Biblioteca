@@ -1,11 +1,12 @@
 const connection = require("../config/mysql.config");
 
 // Listar todas as sugestões, incluindo dados do usuário
-function listarSugestoes(req, res){
+function listarSugestoes(req, res) {
   const query = `
     SELECT 
       s.id_sugestao,
       s.nome_livro,
+      s.autor, -- Inclui o autor na consulta
       s.descricao_livro,
       s.motivo_sugestao,
       s.data_sugestao,
@@ -23,21 +24,29 @@ function listarSugestoes(req, res){
     }
     res.json(results);
   });
-};
+}
+
 
 // Adicionar uma nova sugestão
 function adicionarSugestao(req, res) {
-  const { nome_livro, descricao_livro, motivo_sugestao, fk_id_usuario } = req.body;
+  const { nome_livro, autor, descricao_livro, motivo_sugestao, fk_id_usuario } = req.body;
 
-  if (!nome_livro || !motivo_sugestao || !fk_id_usuario) {
-    return res.status(400).json({ erro: "Nome do livro, motivo e ID do usuário são obrigatórios" });
+  // Verificar se os campos obrigatórios estão presentes
+  if (!motivo_sugestao || !fk_id_usuario) {
+    return res.status(400).json({ erro: "Motivo e ID do usuário são obrigatórios" });
   }
 
+  // Verifica se o nome do livro ou autor foram fornecidos, caso contrário, define como null
+  const nomeLivroValue = nome_livro || null;
+  const autorValue = autor || null;
+
   const query = `
-    INSERT INTO Sugestoes (nome_livro, descricao_livro, motivo_sugestao, fk_id_usuario) 
-    VALUES (?, ?, ?, ?)
+    INSERT INTO Sugestoes (nome_livro, autor, descricao_livro, motivo_sugestao, fk_id_usuario) 
+    VALUES (?, ?, ?, ?, ?)
   `;
-  connection.query(query, [nome_livro, descricao_livro, motivo_sugestao, fk_id_usuario], (error) => {
+
+  // Realizar a inserção no banco
+  connection.query(query, [nomeLivroValue, autorValue, descricao_livro, motivo_sugestao, fk_id_usuario], (error) => {
     if (error) {
       console.error("Erro ao adicionar sugestão:", error);
       return res.status(500).json({ erro: "Erro ao adicionar sugestão" });
@@ -45,4 +54,5 @@ function adicionarSugestao(req, res) {
     res.json({ mensagem: "Sugestão adicionada com sucesso!" });
   });
 };
+
 module.exports = { listarSugestoes,adicionarSugestao}

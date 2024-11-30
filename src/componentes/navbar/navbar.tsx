@@ -161,7 +161,7 @@ export default function Navbar() {
             </Link>
           </li>
           <li className={styles.navItem}>
-            <Link href="/usuarios">
+            <Link href="/usuario">
               <Image
                 src="/img/users.png"
                 alt="Usuários"

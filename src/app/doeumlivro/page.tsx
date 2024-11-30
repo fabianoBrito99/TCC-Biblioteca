@@ -6,7 +6,8 @@ import styles from "./doelivro.module.css";
 
 type Sugestao = {
   id_sugestao: number;
-  nome_livro: string;
+  nome_livro?: string; // Agora pode ser opcional
+  autor?: string; // Adicionado campo autor
   descricao_livro?: string;
   motivo_sugestao: string;
   data_sugestao: string;
@@ -18,11 +19,12 @@ export default function SuggestionPage() {
   const [nomeLivro, setNomeLivro] = useState("");
   const [descricaoLivro, setDescricaoLivro] = useState("");
   const [motivoSugestao, setMotivoSugestao] = useState("");
+  const [nomeAutor, setNomeAutor] = useState(""); 
+  const [isAuthorSuggestion, setIsAuthorSuggestion] = useState(false); // Estado para alternar entre livro e autor
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Recuperar o ID do usuário logado
     const storedUserId = localStorage.getItem("userId");
     if (storedUserId) setUsuarioId(storedUserId);
 
@@ -45,24 +47,26 @@ export default function SuggestionPage() {
       alert("Usuário não logado.");
       return;
     }
-
+  
     try {
       const response = await fetch("http://localhost:4000/api/sugestoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nome_livro: nomeLivro,
-          descricao_livro: descricaoLivro,
+          nome_livro: nomeLivro || undefined, // Envia undefined se o campo estiver vazio
+          autor: isAuthorSuggestion ? nomeAutor : undefined, // Mapeia corretamente o autor
+          descricao_livro: descricaoLivro || undefined,
           motivo_sugestao: motivoSugestao,
           fk_id_usuario: usuarioId,
         }),
       });
-
+  
       if (response.ok) {
         alert("Sugestão enviada com sucesso!");
         setNomeLivro("");
         setDescricaoLivro("");
         setMotivoSugestao("");
+        setNomeAutor("");
         fetchSugestoes();
       } else {
         console.error("Erro ao enviar sugestão:", await response.json());
@@ -73,6 +77,7 @@ export default function SuggestionPage() {
       alert("Erro ao enviar sugestão.");
     }
   };
+  
 
   return (
     <div className={styles.suggestionPage}>
@@ -97,79 +102,109 @@ export default function SuggestionPage() {
             height={300}
           />
         </div>
+
         <div>
-          <h1 className={styles.titleDoe}>Sugira um Livro</h1>
+          <h1 className={styles.titleDoe}>Sugira um Livro ou Autor</h1>
+
+          {/* Navegação de abas */}
+          <div className={styles.tabNavigation}>
+            <button
+              className={isAuthorSuggestion ? "" : styles.activeTab}
+              onClick={() => setIsAuthorSuggestion(false)}
+            >
+              Livro
+            </button>
+            <button
+              className={isAuthorSuggestion ? styles.activeTab : ""}
+              onClick={() => setIsAuthorSuggestion(true)}
+            >
+              Autor
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className={styles.suggestionForm}>
-            <Input
-              label="Nome do Livro"
-              name="nomeLivro"
-              type="text"
-              value={nomeLivro}
-              onChange={(e) => setNomeLivro(e.target.value)}
-              required
-            />
-            <p >caso você não saiba o nome do livro ou queira apenas indicar livros de uma autor em especifico, deixe apenas o nome do autor e fale o motivo</p>
+            {/* Se for sugerir livro */}
+            {!isAuthorSuggestion ? (
+              <>
+                <Input
+                  label="Nome do Livro"
+                  name="nomeLivro"
+                  type="text"
+                  value={nomeLivro}
+                  onChange={(e) => setNomeLivro(e.target.value)}
+                  required
+                />
+
+                <Input
+                  label="Descrição do Livro"
+                  name="descricaoLivro"
+                  value={descricaoLivro}
+                  onChange={(e) => setDescricaoLivro(e.target.value)}
+                />
+              </>
+            ) : (
+              // Se for sugerir autor
+              <Input
+                label="Nome do Autor"
+                name="nomeAutor"
+                type="text"
+                value={nomeAutor}
+                onChange={(e) => setNomeAutor(e.target.value)}
+                required
+              />
+            )}
 
             <Input
-              label="Nome do Autor"
-              name="nomeLivro"
-              type="text"
-              value={nomeLivro}
-              onChange={(e) => setNomeLivro(e.target.value)}
-              required
-            />
-            <Input
-              label="Descrição do Livro"
-              name="descricaoLivro"
-              value={descricaoLivro}
-              onChange={(e) => setDescricaoLivro(e.target.value)}
-            />
-            <Input
-              label="Por que você quer este livro na biblioteca?"
+              label="Por que você quer este livro/autor na biblioteca?"
               name="motivoSugestao"
               value={motivoSugestao}
               onChange={(e) => setMotivoSugestao(e.target.value)}
               required
             />
+
             <Button type="submit">Enviar Sugestão</Button>
           </form>
         </div>
       </div>
+
       <div className={styles.sugestoes}>
-        <h2 className={styles.titleSug}>Sugestões de Outros Usuários</h2>
-        <div className={styles.suggestionList}>
-          {sugestoes.map((sugestao) => (
-            <div key={sugestao.id_sugestao} className={styles.suggestionCard}>
-              <div className={styles.userInfo}>
-                {sugestao.foto_usuario ? (
-                  <img
-                    src={`data:image/jpeg;base64,${sugestao.foto_usuario}`}
-                    alt={`${sugestao.nome_usuario} foto`}
-                    className={styles.userPhoto}
-                  />
-                ) : (
-                  <div className={styles.defaultUserPhoto}></div>
-                )}
-                <span>{sugestao.nome_usuario}</span>
-              </div>
-              <h3>{sugestao.nome_livro}</h3>
-              {sugestao.descricao_livro && (
-                <p>
-                  {" "}
-                  <strong>Descrição:</strong> {sugestao.descricao_livro}
-                </p>
+        {sugestoes.map((sugestao) => (
+          <div key={sugestao.id_sugestao} className={styles.suggestionCard}>
+            <div className={styles.userInfo}>
+              {sugestao.foto_usuario ? (
+                <img
+                  src={`data:image/jpeg;base64,${sugestao.foto_usuario}`}
+                  alt={`${sugestao.nome_usuario} foto`}
+                  className={styles.userPhoto}
+                />
+              ) : (
+                <div className={styles.defaultUserPhoto}></div>
               )}
-              <p>
-                <strong>Motivo:</strong> {sugestao.motivo_sugestao}
-              </p>
-              <p>
-                <small>
-                  Data: {new Date(sugestao.data_sugestao).toLocaleDateString()}
-                </small>
-              </p>
+              <span>{sugestao.nome_usuario}</span>
             </div>
-          ))}
-        </div>
+            {/* Exibe o nome do livro ou autor */}
+            {sugestao.nome_livro ? (
+              <h3>{sugestao.nome_livro}</h3>
+            ) : sugestao.autor ? (
+              <h3>Autor: {sugestao.autor}</h3>
+            ) : (
+              <h3>Sem título ou autor informado</h3>
+            )}
+            {sugestao.descricao_livro && (
+              <p>
+                <strong>Descrição:</strong> {sugestao.descricao_livro}
+              </p>
+            )}
+            <p>
+              <strong>Motivo:</strong> {sugestao.motivo_sugestao}
+            </p>
+            <p>
+              <small>
+                Data: {new Date(sugestao.data_sugestao).toLocaleDateString()}
+              </small>
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

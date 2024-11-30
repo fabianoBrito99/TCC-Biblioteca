@@ -8,13 +8,11 @@
   font-size: 2rem;
   font-weight: 600;
   color: #000000;
-
 }
-.doe img{
-
+.doe img {
 }
 
-.titleDoe{
+.titleDoe {
   font-family: var(--type-second);
   line-height: 1;
   font-size: 3rem;
@@ -31,24 +29,22 @@
   display: block;
   width: 1.9rem; /* Largura do quadrado */
   height: 1.7rem; /* Altura do quadrado + pernas */
-  background:linear-gradient(to top, #625bec, #a9a8ca);
+  background: linear-gradient(to top, #625bec, #a9a8ca);
   position: absolute;
   bottom: -2px; /* Ajusta a posição vertical */
-  left: 637px;
+  left: 503px;
   transform: translateX(-50%); /* Centraliza o elemento */
   z-index: -1;
   clip-path: polygon(
-    0% 0%,     /* Canto superior esquerdo */
-    100% 0%,   /* Canto superior direito */
-    100% 100%,  /* Início das pernas */
-    90% 100%,  /* Perna direita */
-    50% 70%,   /* Centro da base */
-    10% 100%,  /* Perna esquerda */
-    0% 100%     /* Fim das pernas */
+    0% 0%,
+    /* Canto superior esquerdo */ 100% 0%,
+    /* Canto superior direito */ 100% 100%,
+    /* Início das pernas */ 90% 100%,
+    /* Perna direita */ 50% 70%,
+    /* Centro da base */ 10% 100%,
+    /* Perna esquerda */ 0% 100% /* Fim das pernas */
   );
 }
-
-
 
 .titleSug {
   font-family: var(--type-second);
@@ -91,6 +87,7 @@
 .suggestionCard {
   padding: 15px 150px;
   border: 1px solid #ddd;
+  height: 300px;
   border-radius: 5px;
   background: #fafafa;
   margin-bottom: 10px;
@@ -129,37 +126,76 @@
 
 .gridDoe {
   width: 100vw;
-  background-image: linear-gradient(to bottom, #4bc4fc, #4bc4fc, #ffffff, #ffffff);
+  background-image: linear-gradient(
+    to bottom,
+    #4bc4fc,
+    #4bc4fc,
+    #ffffff,
+    #ffffff
+  );
   color: rgb(0, 0, 0);
   padding: 20px 220px;
   margin-top: 50px;
-
- 
 }
-.sugestoes{
+.sugestoes {
   display: flex;
-  flex-direction: column;
+flex-wrap: wrap;
+gap: 20px;
   width: 99vw;
   align-items: center;
   justify-content: center;
-
 }
-.gridDoe img{
+.gridDoe img {
   display: flex;
   margin-left: auto;
   margin-right: auto;
   margin-top: 112px;
   margin-bottom: 50px;
 }
-.pix{
+.pix {
   position: relative;
   bottom: -60px;
   left: -150px;
 }
-.qrcode{
+.qrcode {
   position: relative;
   bottom: -110px;
   left: -520px;
   color: #333;
 }
 
+.tabNavigation {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tabNavigation button {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s;
+  border-radius: 10px;
+  color: #070303;
+}
+
+.tabNavigation button:hover {
+  background-color: #1855f1;
+}
+
+.activeTab {
+  background-color: #007bff;
+  color: white;
+}
+
+.suggestionForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestionForm input,
+.suggestionForm button {
+  margin-bottom: 10px;
+}
