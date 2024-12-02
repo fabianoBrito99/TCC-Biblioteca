@@ -1,0 +1,52 @@
+.comunidadesUsuario {
+  position: relative;
+}
+
+.toggleButton {
+  background-color: #007bff00;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
+  margin-top: -10px;
+}
+
+.listaComunidades {
+  position: absolute;
+  top: 40px;
+  left: -280px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  width: 300px;
+  z-index: 10;
+  overflow-y: auto;
+  max-height: 350px;
+}
+
+.comunidadeCard {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+.comunidadeCard h3 {
+  margin: 0;
+}
+
+.comunidadeCard p {
+  margin: 5px 0 10px;
+  
+}
+
+.comunidadeCard button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}

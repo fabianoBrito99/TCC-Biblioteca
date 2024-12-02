@@ -7,6 +7,7 @@ import ProgressoForm from "@/componentes/comunidade/progresso";
 import Graficos from "@/componentes/comunidade/graficos";
 import styles from "../comunidade.module.css";
 import Notificacoes from "@/componentes/notificacoes/notificacoes";
+import GerenciarUsuarios from "@/componentes/comunidade/aceitar-usuario";
 
 interface Comunidade {
   id_comunidade: number;
@@ -39,6 +40,8 @@ export default function ComunidadeDetalhesPage() {
   const [progresso, setProgresso] = useState<Progresso[]>([]);
   const [idadeStats, setIdadeStats] = useState<EstatisticasIdade[]>([]);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
+  const isAdmin = true; // Aqui você deve verificar se o usuário logado é o admin da comunidade
+  const comunidadeId = parseInt(id);
 
   const fetchComentarios = async () => {
     try {
@@ -71,8 +74,7 @@ export default function ComunidadeDetalhesPage() {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${id}/estatisticas/idade`
       );
-      if (!response.ok)
-        throw new Error("Erro ao buscar estatísticas de idade");
+      if (!response.ok) throw new Error("Erro ao buscar estatísticas de idade");
       const data = await response.json();
       setIdadeStats(data);
     } catch (error) {
@@ -124,6 +126,11 @@ export default function ComunidadeDetalhesPage() {
               comentarios={comentarios}
               atualizarComentarios={fetchComentarios}
             />
+          </div>
+
+          <div>
+            <h1>Gerenciar Comunidade</h1>
+            <GerenciarUsuarios comunidadeId={comunidadeId} isAdmin={isAdmin} />
           </div>
         </>
       )}

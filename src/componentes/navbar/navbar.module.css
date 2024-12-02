@@ -99,7 +99,7 @@
   top: 5px;
   height: 40px;
   width: 50px;
-  z-index: 10;
+  z-index: 100;
 }
 
 .navHover .menuContent li:hover {
@@ -130,7 +130,7 @@
 .inputContainer1 {
   position: relative;
   margin-left: auto;
-  margin-right: 120px;
+  margin-right: 200px;
   width: 530px;
   height: 40px;
   display: flex;
@@ -142,7 +142,7 @@
   cursor: pointer;
   box-shadow: 1px 1px 5px rgba(192, 192, 192, 0.815);
   z-index: 4;
-  margin-top: -19px;
+  margin-top: -65px;
 }
 
 .inputContainer1 .input {
@@ -203,15 +203,21 @@
 
 .notificacoes{
   position: relative;
-  left: 2010px;
+  left: 1970px;
   top: 15px;
+}
+.comunidadeUser{
+  position: relative;
+  left: 2000px;
+  top: -15px;
+  z-index: 10;
 }
 
 
 .logo{
   position: relative;
   left: 800px;
-  top: -50px;
+  top: -45px;
 }
 
 

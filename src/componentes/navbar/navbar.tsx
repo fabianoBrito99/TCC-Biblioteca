@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import styles from "@/componentes/navbar/navbar.module.css";
 import Notificacoes from "../notificacoes/notificacoes";
+import ComunidadesUsuario from "../comunidade/listar-comunidade-do-usuario";
 
 type User = {
   id: string;
@@ -65,8 +66,11 @@ export default function Navbar() {
             height={40}
           />
         )}
-        <div  className={styles.notificacoes}>
-        <Notificacoes usuarioId={user?.id} />
+        <div className={styles.notificacoes}>
+          <Notificacoes usuarioId={user?.id} />
+        </div>
+        <div className={styles.comunidadeUser}>
+          <ComunidadesUsuario usuarioId={user?.id} />
         </div>
 
         <div className={styles.inputContainer1}>
@@ -87,7 +91,6 @@ export default function Navbar() {
         <div className={styles.logo}>
           <div className={styles.smoke}></div>
           <div className={styles.text}>
-      
             <p>
               HELENA
               <span className={styles.sobrenome}>RAMAZZOTTE</span>
@@ -95,12 +98,12 @@ export default function Navbar() {
             </p>
           </div>{" "}
           <img
-              className={styles.logoFogo}
-              src="/img/logoFogo.png"
-              alt="Logo"
-              width={90}
-              height={80}
-            />
+            className={styles.logoFogo}
+            src="/img/logoFogo.png"
+            alt="Logo"
+            width={90}
+            height={80}
+          />
         </div>
 
         <div className={styles.menuIconContainer}>

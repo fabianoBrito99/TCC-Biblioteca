@@ -20,4 +20,12 @@ router.post("/comunidade/:id/progresso", comunidadeController.registrarProgresso
 router.get("/comunidade/:id/progresso", comunidadeController.listarProgresso);
 router.get("/comunidade/:id/estatisticas/idade", comunidadeController.estatisticasIdade);
 
+router.get("/comunidade/usuario/:idUsuario", comunidadeController.listarComunidadesUsuario);
+
+router.get("/comunidade/:id/usuarios", comunidadeController.listarUsuariosComunidade);
+
+router.patch("/comunidade/:id/usuarios/:idUsuario", comunidadeController.atualizarStatusUsuario);
+
+router.get("/comunidade/:idComunidade/usuario/:idUsuario/status", comunidadeController.verificarStatusUsuario);
+
 module.exports = router;

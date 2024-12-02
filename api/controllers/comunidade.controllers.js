@@ -2,24 +2,34 @@ const connection = require("../config/mysql.config");
 
 function criarComunidade(req, res) { 
   const { nome, descricao, objetivo, tipo, id_adm } = req.body;
-  try {
-    connection.query(
-      "INSERT INTO Comunidade (nome, descricao, objetivo, tipo, id_adm) VALUES (?, ?, ?, ?, ?)",
-      [nome, descricao, objetivo, tipo, id_adm],
-      (error, result) => {
-        if (error) {
-          console.error("Erro ao inserir comunidade:", error);
-          return res.status(500).json({ error: "Erro ao criar comunidade" });
-        }
-        res.status(201).json({ id: result.insertId, message: "Comunidade criada!" });
-      }
-    );
-  } catch (error) {
-    console.error("Erro no servidor:", error);
-    res.status(500).json({ error: "Erro ao criar comunidade" });
-  }
-}
 
+  connection.query(
+    "INSERT INTO Comunidade (nome, descricao, objetivo, tipo, id_adm) VALUES (?, ?, ?, ?, ?)",
+    [nome, descricao, objetivo, tipo, id_adm],
+    (error, result) => {
+      if (error) {
+        console.error("Erro ao inserir comunidade:", error);
+        return res.status(500).json({ error: "Erro ao criar comunidade" });
+      }
+
+      const comunidadeId = result.insertId;
+
+      // Insere o administrador na comunidade automaticamente
+      connection.query(
+        "INSERT INTO Comunidade_usuario (fk_id_comunidade, fk_id_usuario, status) VALUES (?, ?, 'aceito')",
+        [comunidadeId, id_adm],
+        (error) => {
+          if (error) {
+            console.error("Erro ao adicionar administrador na comunidade:", error);
+            return res.status(500).json({ error: "Erro ao adicionar administrador na comunidade" });
+          }
+
+          res.status(201).json({ id: comunidadeId, message: "Comunidade criada!" });
+        }
+      );
+    }
+  );
+}
 
 function listarComunidades(req, res) {
   try {
@@ -39,6 +49,87 @@ function listarComunidades(req, res) {
     res.status(500).json({ error: "Erro ao listar comunidades" });
   }
 }
+
+function entrarComunidade(req, res) {
+  const { id } = req.params; // ID da comunidade
+  const { fk_id_usuario } = req.body;
+  const status = req.body.tipo === "publica" ? "aceito" : "pendente";
+
+  try {
+    // Verifica se o usuário já está na comunidade
+    connection.query(
+      `
+      SELECT * FROM Comunidade_usuario 
+      WHERE fk_id_comunidade = ? AND fk_id_usuario = ?
+      `,
+      [id, fk_id_usuario],
+      (err, results) => {
+        if (err) {
+          console.error("Erro ao verificar se o usuário já está na comunidade:", err);
+          return res.status(500).json({ error: "Erro ao verificar entrada." });
+        }
+
+        if (results.length > 0) {
+          return res.status(400).json({ message: "Usuário já está na comunidade." });
+        }
+
+        // Insere o usuário na comunidade
+        connection.query(
+          `
+          INSERT INTO Comunidade_usuario (fk_id_comunidade, fk_id_usuario, status)
+          VALUES (?, ?, ?)
+          `,
+          [id, fk_id_usuario, status],
+          (insertErr) => {
+            if (insertErr) {
+              console.error("Erro ao inserir na comunidade:", insertErr);
+              return res.status(500).json({ error: "Erro ao entrar na comunidade." });
+            }
+
+            res.status(200).json({
+              message: status === "aceito" ? "Entrou na comunidade!" : "Solicitação pendente!",
+              status,
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    console.error("Erro no servidor:", error);
+    res.status(500).json({ error: "Erro ao processar a solicitação." });
+  }
+}
+
+
+function listarComunidadesUsuario(req, res) {
+  const { idUsuario } = req.params;
+
+  try {
+    connection.query(
+      `
+      SELECT c.id_comunidade, c.nome, c.descricao, c.tipo
+      FROM Comunidade_usuario AS cu
+      JOIN Comunidade AS c ON cu.fk_id_comunidade = c.id_comunidade
+      WHERE cu.fk_id_usuario = ? AND cu.status = 'aceito'
+      `,
+      [idUsuario],
+      (err, results) => {
+        if (err) {
+          console.error("Erro ao listar comunidades do usuário:", err);
+          return res.status(500).json({ error: "Erro ao listar comunidades do usuário." });
+        }
+
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    console.error("Erro inesperado no servidor:", error);
+    res.status(500).json({ error: "Erro inesperado ao listar comunidades do usuário." });
+  }
+}
+
+
+
 function obterComunidade(req, res) {
   const { id } = req.params;
 
@@ -64,21 +155,59 @@ function obterComunidade(req, res) {
   }
 }
 
+function listarUsuariosComunidade(req, res) {
+  const { idComunidade } = req.params;
 
-function entrarComunidade(req, res) {
-  const { id } = req.params;
-  const { fk_id_usuario } = req.body;
-  const status = req.body.tipo === "publica" ? "aceito" : "pendente";
-  try {
-    connection.query(
-      "INSERT INTO Comunidade_usuario (fk_id_comunidade, fk_id_usuario, status) VALUES (?, ?, ?)",
-      [id, fk_id_usuario, status]
-    );
-    res.status(200).json({ message: status === "aceito" ? "Entrou na comunidade!" : "Solicitação pendente!" });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao solicitar entrada" });
-  }
+  connection.query(
+    `
+    SELECT 
+      u.id_usuario, 
+      u.nome_login, 
+      u.email, 
+      cu.status 
+    FROM Comunidade_usuario AS cu
+    JOIN Usuario AS u ON cu.fk_id_usuario = u.id_usuario
+    WHERE cu.fk_id_comunidade = ?
+    `,
+    [idComunidade],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao listar usuários da comunidade:", error);
+        return res.status(500).json({ error: "Erro ao listar usuários da comunidade" });
+      }
+
+      res.json(results);
+    }
+  );
 }
+
+
+function atualizarStatusUsuario(req, res) {
+  const { idComunidade, idUsuario } = req.params;
+  const { status } = req.body; // Status: "aceito" ou "rejeitado"
+
+  if (!["aceito", "rejeitado"].includes(status)) {
+    return res.status(400).json({ error: "Status inválido" });
+  }
+
+  connection.query(
+    `
+    UPDATE Comunidade_usuario 
+    SET status = ? 
+    WHERE fk_id_comunidade = ? AND fk_id_usuario = ?
+    `,
+    [status, idComunidade, idUsuario],
+    (error) => {
+      if (error) {
+        console.error("Erro ao atualizar status:", error);
+        return res.status(500).json({ error: "Erro ao atualizar status do usuário" });
+      }
+
+      res.status(200).json({ message: `Usuário ${status} com sucesso.` });
+    }
+  );
+}
+
 
 function listarComentarios(req, res) {
   const { id } = req.params;
@@ -127,6 +256,30 @@ function listarComentarios(req, res) {
   }
 }
 
+function verificarStatusUsuario(req, res) {
+  const { idComunidade, idUsuario } = req.params;
+
+  connection.query(
+    `
+    SELECT status 
+    FROM Comunidade_usuario 
+    WHERE fk_id_comunidade = ? AND fk_id_usuario = ?
+    `,
+    [idComunidade, idUsuario],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao verificar status do usuário:", error);
+        return res.status(500).json({ error: "Erro ao verificar status do usuário" });
+      }
+
+      if (results.length === 0) {
+        return res.status(200).json({ status: "nao_inscrito" });
+      }
+
+      res.status(200).json({ status: results[0].status });
+    }
+  );
+}
 
 
 
@@ -276,4 +429,4 @@ function estatisticasIdade(req, res) {
 
 
 
-module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso };
+module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso, listarComunidadesUsuario, listarUsuariosComunidade, atualizarStatusUsuario, verificarStatusUsuario};

@@ -96,10 +96,34 @@ export default function ComunidadeListPage() {
     fetchComunidades();
   }, []);
 
-  // Função para o usuário entrar em uma comunidade
+  const handleVerificarStatus = async (comunidadeId: number) => {
+    if (!userId) {
+      alert("Usuário não está logado.");
+      return "nao_inscrito";
+    }
+
+    const response = await fetch(
+      `http://localhost:4000/api/comunidade/${comunidadeId}/usuario/${userId}/status`
+    );
+    const data = await response.json();
+    return data.status;
+  };
+
   const handleEntrar = async (comunidadeId: number, tipo: string) => {
     if (!userId) {
       alert("Usuário não está logado.");
+      return;
+    }
+
+    const status = await handleVerificarStatus(comunidadeId);
+
+    if (status === "aceito") {
+      router.push(`/comunidade/${comunidadeId}`);
+      return;
+    }
+
+    if (status === "pendente") {
+      alert("Solicitação pendente de aprovação.");
       return;
     }
 
@@ -112,7 +136,7 @@ export default function ComunidadeListPage() {
     if (tipo === "publica") {
       router.push(`/comunidade/${comunidadeId}`);
     } else {
-      alert("Solicitação pendente de aprovação");
+      alert("Solicitação enviada. Aguardando aprovação.");
     }
   };
 
@@ -170,11 +194,27 @@ export default function ComunidadeListPage() {
               <h2>{comunidade.nome}</h2>
               <p>{comunidade.descricao}</p>
               <button
-                onClick={() =>
-                  handleEntrar(comunidade.id_comunidade, comunidade.tipo)
-                }
+                onClick={async () => {
+                  const status = await handleVerificarStatus(
+                    comunidade.id_comunidade
+                  );
+
+                  if (status === "nao_inscrito") {
+                    handleEntrar(comunidade.id_comunidade, comunidade.tipo);
+                  } else if (status === "aceito") {
+                    router.push(`/comunidade/${comunidade.id_comunidade}`);
+                  } else {
+                    alert("Solicitação pendente.");
+                  }
+                }}
               >
-                {comunidade.tipo === "publica" ? "Entrar" : "Solicitar Entrada"}
+                {status === "nao_inscrito"
+                  ? comunidade.tipo === "publica"
+                    ? "Entrar"
+                    : "Solicitar Entrada"
+                  : status === "pendente"
+                  ? "Solicitado"
+                  : "Acessar"}
               </button>
             </div>
           ))

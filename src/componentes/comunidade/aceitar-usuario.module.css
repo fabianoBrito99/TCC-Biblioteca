@@ -1,0 +1,40 @@
+/* GerenciarUsuarios.module.css */
+.gerenciarUsuariosContainer {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.usuarioLista {
+  list-style: none;
+  padding: 0;
+}
+
+.usuarioItem {
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.acoes {
+  margin-top: 10px;
+}
+
+.aceitarBtn {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.rejeitarBtn {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
