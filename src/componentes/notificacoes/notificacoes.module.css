@@ -1,0 +1,91 @@
+/* Contêiner geral das notificações */
+.notificacoes {
+  position: relative;
+  display: inline-block;
+  z-index: 20;
+ 
+}
+
+/* Ícone do sininho */
+.bellContainer {
+  position: relative;
+  cursor: pointer;
+}
+
+.bellContainer svg {
+  color: #fffcfc;
+  cursor: pointer;
+}
+
+.bellContainer:hover svg {
+  color: #bccde7;
+}
+
+/* Contador de notificações */
+.counter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff3d3d;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 2px 6px;
+}
+
+/* Dropdown de notificações */
+.dropdown {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  z-index: 100;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* Cartão de notificação */
+.notificacaoCard {
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.notificacaoCard p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.notificacaoCard small {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.marcarLidaBtn {
+  margin-top: 5px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.marcarLidaBtn:hover {
+  background-color: #004bbd;
+}
+
+.noNotificacoes {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #494646;
+}

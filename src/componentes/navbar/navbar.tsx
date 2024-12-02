@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import styles from "@/componentes/navbar/navbar.module.css";
+import Notificacoes from "../notificacoes/notificacoes";
 
 type User = {
   id: string;
@@ -64,6 +65,9 @@ export default function Navbar() {
             height={40}
           />
         )}
+        <div  className={styles.notificacoes}>
+        <Notificacoes usuarioId={user?.id} />
+        </div>
 
         <div className={styles.inputContainer1}>
           <svg className={styles.icon} aria-hidden="true" viewBox="0 0 24 24">

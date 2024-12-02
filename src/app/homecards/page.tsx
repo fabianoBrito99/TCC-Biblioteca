@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchCategorias, fetchLivros } from "@/actions/categorias"; // Utilitários de API
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
+import Notificacoes from "@/componentes/notificacoes/notificacoes";
 
 interface Livro {
   id_livro: string;
@@ -55,7 +56,9 @@ const Home: React.FC = () => {
       <div id="categorias-section" className={styles.categoriasSection}>
         {categorias.map((categoria) => {
           const livrosFiltrados = livros.filter((livro) => {
-            const categoriaLivro = livro.categoria_principal?.trim().toLowerCase();
+            const categoriaLivro = livro.categoria_principal
+              ?.trim()
+              .toLowerCase();
             const categoriaSelecionada = categoria.trim().toLowerCase();
             return categoriaLivro === categoriaSelecionada;
           });
@@ -63,6 +66,8 @@ const Home: React.FC = () => {
           // Renderizar os livros filtrados
           return (
             <div key={categoria}>
+              <div>
+              </div>
               <CategoriaSwiper
                 categoria_principal={categoria}
                 livros={livrosFiltrados} // Passando os livros filtrados

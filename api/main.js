@@ -9,6 +9,7 @@ const avaliacaoRoutes = require('./routes/avaliacoes.routes');
 const sugestoesRoutes = require('./routes/sugestoes.routes'); 
 const doelivroRoutes = require('./routes/doelivro.routes'); 
 const comunidadeRoutes = require('./routes/comunidade.routes'); 
+const noticacoesRoutes = require('./routes/notificacoes.routes'); 
 
 
 const app = express();
@@ -32,7 +33,7 @@ app.use(
         callback(new Error("Não permitido por CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -50,6 +51,7 @@ app.use("/api", avaliacaoRoutes);
 app.use("/api", sugestoesRoutes); 
 app.use("/api", doelivroRoutes); 
 app.use("/api", comunidadeRoutes); 
+app.use("/api", noticacoesRoutes); 
 
 
 const PORT = 4000;

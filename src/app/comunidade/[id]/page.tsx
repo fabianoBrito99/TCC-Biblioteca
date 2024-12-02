@@ -6,6 +6,7 @@ import Comentarios from "@/componentes/comunidade/comentarios";
 import ProgressoForm from "@/componentes/comunidade/progresso";
 import Graficos from "@/componentes/comunidade/graficos";
 import styles from "../comunidade.module.css";
+import Notificacoes from "@/componentes/notificacoes/notificacoes";
 
 interface Comunidade {
   id_comunidade: number;
@@ -111,6 +112,7 @@ export default function ComunidadeDetalhesPage() {
         <>
           <h1>{comunidade.nome}</h1>
           <p>{comunidade.objetivo}</p>
+
           <ProgressoForm
             comunidadeId={parseInt(id)}
             onProgressoAdicionado={atualizarProgresso} // Passando a função de atualização para o filho
