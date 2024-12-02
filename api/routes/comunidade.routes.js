@@ -15,17 +15,45 @@ router.post(
   comunidadeController.adicionarComentario
 );
 
-router.post("/comunidade/:id/progresso", comunidadeController.registrarProgresso);
+router.post(
+  "/comunidade/:id/progresso",
+  comunidadeController.registrarProgresso
+);
 
 router.get("/comunidade/:id/progresso", comunidadeController.listarProgresso);
-router.get("/comunidade/:id/estatisticas/idade", comunidadeController.estatisticasIdade);
+router.get(
+  "/comunidade/:id/estatisticas/idade",
+  comunidadeController.estatisticasIdade
+);
 
-router.get("/comunidade/usuario/:idUsuario", comunidadeController.listarComunidadesUsuario);
+router.get(
+  "/comunidade/usuario/:idUsuario",
+  comunidadeController.listarComunidadesUsuario
+);
 
-router.get("/comunidade/:id/usuarios", comunidadeController.listarUsuariosComunidade);
+router.get(
+  "/comunidade/:id/usuarios",
+  comunidadeController.listarUsuariosComunidade
+);
 
-router.patch("/comunidade/:id/usuarios/:idUsuario", comunidadeController.atualizarStatusUsuario);
+router.patch(
+  "/comunidade/:comunidadeId/usuarios/:idUsuario",
+  comunidadeController.atualizarStatusUsuario
+);
 
-router.get("/comunidade/:idComunidade/usuario/:idUsuario/status", comunidadeController.verificarStatusUsuario);
+router.get(
+  "/comunidade/:idComunidade/usuario/:idUsuario/status",
+  comunidadeController.verificarStatusUsuario
+);
+
+router.get(
+  "/comunidade/:idComunidade/solicitacoes",
+  comunidadeController.listarSolicitacoes
+);
+
+router.get(
+  "/comunidade/:id/verificar-admin/:userId",
+  comunidadeController.verificarAdmin
+);
 
 module.exports = router;

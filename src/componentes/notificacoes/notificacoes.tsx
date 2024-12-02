@@ -19,18 +19,25 @@ interface NotificacoesProps {
 const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId }) => {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
 
-  // Verifica se o ID do usuário está vindo via prop, caso contrário busca do localStorage
-  const usuarioId = propUsuarioId || localStorage.getItem("userId");
-
+  // Obter o ID do usuário no cliente
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userIdFromStorage = localStorage.getItem("userId");
+      setUsuarioId(propUsuarioId || userIdFromStorage);
+    }
+  }, [propUsuarioId]);
+
+  // Gerar notificações automaticamente
+  useEffect(() => {
+    if (!usuarioId) return;
+
     const gerarNotificacoes = async () => {
       try {
         const response = await fetch(
           `http://localhost:4000/api/notificacoes/gerar/${usuarioId}`,
-          {
-            method: "POST",
-          }
+          { method: "POST" }
         );
         if (!response.ok) throw new Error("Erro ao gerar notificações");
         console.log("Notificações geradas com sucesso");
@@ -39,17 +46,16 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
       }
     };
 
-    if (usuarioId) {
-      gerarNotificacoes();
-    }
+    gerarNotificacoes();
   }, [usuarioId]);
 
+  // Buscar notificações
   useEffect(() => {
     if (!usuarioId) {
       console.warn("Usuário não identificado. Nenhuma notificação será carregada.");
       return;
     }
-  
+
     const fetchNotificacoes = async () => {
       try {
         const response = await fetch(
@@ -62,25 +68,21 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
         console.error("Erro ao buscar notificações:", error);
       }
     };
-  
+
     fetchNotificacoes();
   }, [usuarioId]);
-  
-  const notificacoesNaoLidas = notificacoes.filter((n) => !n.lida).length;
 
+  // Marcar notificação como lida
   const handleMarcarLida = async (idNotificacao: number) => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/notificacoes/${idNotificacao}/lida`,
-        {
-          method: "PATCH",
-        }
+        { method: "PATCH" }
       );
 
-      if (!response.ok)
-        throw new Error("Erro ao marcar notificação como lida.");
+      if (!response.ok) throw new Error("Erro ao marcar notificação como lida.");
 
-      // Atualiza o estado local para refletir a mudança
+      // Atualizar o estado local para refletir a mudança
       setNotificacoes((prev) =>
         prev.map((notificacao) =>
           notificacao.id_notificacao === idNotificacao
@@ -92,6 +94,8 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
       console.error("Erro ao marcar notificação como lida:", error);
     }
   };
+
+  const notificacoesNaoLidas = notificacoes.filter((n) => !n.lida).length;
 
   return (
     <div className={styles.notificacoes}>

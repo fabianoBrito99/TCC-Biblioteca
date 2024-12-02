@@ -40,8 +40,35 @@ export default function ComunidadeDetalhesPage() {
   const [progresso, setProgresso] = useState<Progresso[]>([]);
   const [idadeStats, setIdadeStats] = useState<EstatisticasIdade[]>([]);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const isAdmin = true; // Aqui você deve verificar se o usuário logado é o admin da comunidade
   const comunidadeId = parseInt(id);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Obtém o ID do usuário logado do localStorage
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(parseInt(storedUserId, 10));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!userId || !id) return;
+
+    const verificarAdmin = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:4000/api/comunidade/${id}/verificar-admin/${userId}`
+        );
+        const data = await response.json();
+        setIsAdmin(data.isAdmin);
+      } catch (error) {
+        console.error("Erro ao verificar admin:", error);
+      }
+    };
+
+    verificarAdmin();
+  }, [id, userId]);
 
   const fetchComentarios = async () => {
     try {

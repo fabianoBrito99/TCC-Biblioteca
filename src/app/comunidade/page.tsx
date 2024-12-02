@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/comunidade/comunidade.module.css";
@@ -12,30 +13,19 @@ interface Comunidade {
   tipo: string;
 }
 
+interface StatusUsuario {
+  [id_comunidade: number]: "nao_inscrito" | "pendente" | "aceito";
+}
+
 export default function ComunidadeListPage() {
   const [comunidades, setComunidades] = useState<Comunidade[]>([]);
+  const [statusUsuario, setStatusUsuario] = useState<StatusUsuario>({});
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [tipo, setTipo] = useState("publica");
-  const [userId, setUserId] = useState<number | null>(null); // Armazena o ID do usuário logado
+  const [userId, setUserId] = useState<number | null>(null);
   const router = useRouter();
-  const [comunidade, setComunidade] = useState<Comunidade | null>(null);
-  const [mensagem, setMensagem] = useState<string>("");
-
-  useEffect(() => {
-    const fetchComunidade = async () => {
-      const response = await fetch("http://localhost:4000/api/comunidade/1");
-      const data = await response.json();
-
-      if (data.message) {
-        setMensagem(data.message); // Exibe mensagem caso não existam comunidades
-      } else {
-        setComunidade(data);
-      }
-    };
-    fetchComunidade();
-  }, []);
 
   // Obtém o ID do usuário logado do localStorage
   useEffect(() => {
@@ -44,6 +34,39 @@ export default function ComunidadeListPage() {
       setUserId(parseInt(storedUserId));
     }
   }, []);
+
+  // Função para carregar comunidades e status do usuário
+  useEffect(() => {
+    const fetchComunidades = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/api/comunidade");
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          setComunidades(data);
+
+          if (userId) {
+            // Verifica o status do usuário para cada comunidade
+            const statuses: StatusUsuario = {};
+            for (const comunidade of data) {
+              const statusResponse = await fetch(
+                `http://localhost:4000/api/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
+              );
+              const statusData = await statusResponse.json();
+              statuses[comunidade.id_comunidade] = statusData.status;
+            }
+            setStatusUsuario(statuses);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar comunidades:", error);
+      }
+    };
+
+    if (userId) {
+      fetchComunidades();
+    }
+  }, [userId]);
 
   // Função para criar uma nova comunidade
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +77,6 @@ export default function ComunidadeListPage() {
       return;
     }
 
-    // Verifica os dados enviados
     const comunidadeData = {
       nome,
       descricao,
@@ -62,7 +84,6 @@ export default function ComunidadeListPage() {
       tipo,
       id_adm: userId,
     };
-    console.log("Dados enviados para criação de comunidade:", comunidadeData);
 
     const response = await fetch("http://localhost:4000/api/comunidade", {
       method: "POST",
@@ -71,51 +92,34 @@ export default function ComunidadeListPage() {
     });
 
     if (response.ok) {
+      const { id } = await response.json();
+
+      // Adicionar automaticamente o administrador à comunidade
+      await fetch(`http://localhost:4000/api/comunidade/${id}/entrar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fk_id_usuario: userId, tipo: "publica" }),
+      });
+
       alert("Comunidade criada com sucesso!");
-      fetchComunidades(); // Atualiza a lista de comunidades
+      setStatusUsuario((prev) => ({
+        ...prev,
+        [id]: "aceito",
+      }));
+      fetchComunidades();
     } else {
-      const errorData = await response.json();
-      console.error("Erro ao criar a comunidade:", errorData);
       alert("Erro ao criar a comunidade");
     }
   };
 
-  // Função para carregar todas as comunidades
-  const fetchComunidades = async () => {
-    const response = await fetch("http://localhost:4000/api/comunidade");
-    const data = await response.json();
-    console.log(data); // Verifique a estrutura da resposta
-    if (Array.isArray(data)) {
-      setComunidades(data);
-    } else {
-      console.error("Resposta inválida da API", data);
-    }
-  };
-
-  useEffect(() => {
-    fetchComunidades();
-  }, []);
-
-  const handleVerificarStatus = async (comunidadeId: number) => {
-    if (!userId) {
-      alert("Usuário não está logado.");
-      return "nao_inscrito";
-    }
-
-    const response = await fetch(
-      `http://localhost:4000/api/comunidade/${comunidadeId}/usuario/${userId}/status`
-    );
-    const data = await response.json();
-    return data.status;
-  };
-
+  // Função para entrar em uma comunidade
   const handleEntrar = async (comunidadeId: number, tipo: string) => {
     if (!userId) {
       alert("Usuário não está logado.");
       return;
     }
 
-    const status = await handleVerificarStatus(comunidadeId);
+    const status = statusUsuario[comunidadeId] || "nao_inscrito";
 
     if (status === "aceito") {
       router.push(`/comunidade/${comunidadeId}`);
@@ -135,8 +139,16 @@ export default function ComunidadeListPage() {
 
     if (tipo === "publica") {
       router.push(`/comunidade/${comunidadeId}`);
+      setStatusUsuario((prev) => ({
+        ...prev,
+        [comunidadeId]: "aceito",
+      }));
     } else {
       alert("Solicitação enviada. Aguardando aprovação.");
+      setStatusUsuario((prev) => ({
+        ...prev,
+        [comunidadeId]: "pendente",
+      }));
     }
   };
 
@@ -148,27 +160,21 @@ export default function ComunidadeListPage() {
           <Input
             label="Nome da Comunidade"
             type="text"
-            name="nome"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
           />
-
           <Input
             label="Descrição"
             type="text"
-            name="descricao"
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
           />
-
           <Input
             label="Objetivo"
             type="text"
-            name="objetivo"
             value={objetivo}
             onChange={(e) => setObjetivo(e.target.value)}
           />
-
           <label>
             Tipo
             <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
@@ -176,37 +182,23 @@ export default function ComunidadeListPage() {
               <option value="privada">Privada</option>
             </select>
           </label>
-
           <Button type="submit">Criar Comunidade</Button>
         </form>
       </div>
 
       <div className={styles.listaComunidade}>
         <h1 className={styles.titleCom}>Comunidades</h1>
-        {mensagem ? (
-          <h2>{mensagem}</h2>
-        ) : (
-          comunidades.map((comunidade) => (
-            <div
-              key={comunidade.id_comunidade}
-              className={styles.comunidadeCard}
-            >
+        {comunidades.map((comunidade) => {
+          const status = statusUsuario[comunidade.id_comunidade] || "nao_inscrito";
+
+          return (
+            <div key={comunidade.id_comunidade} className={styles.comunidadeCard}>
               <h2>{comunidade.nome}</h2>
               <p>{comunidade.descricao}</p>
               <button
-                onClick={async () => {
-                  const status = await handleVerificarStatus(
-                    comunidade.id_comunidade
-                  );
-
-                  if (status === "nao_inscrito") {
-                    handleEntrar(comunidade.id_comunidade, comunidade.tipo);
-                  } else if (status === "aceito") {
-                    router.push(`/comunidade/${comunidade.id_comunidade}`);
-                  } else {
-                    alert("Solicitação pendente.");
-                  }
-                }}
+                onClick={() =>
+                  handleEntrar(comunidade.id_comunidade, comunidade.tipo)
+                }
               >
                 {status === "nao_inscrito"
                   ? comunidade.tipo === "publica"
@@ -217,8 +209,8 @@ export default function ComunidadeListPage() {
                   : "Acessar"}
               </button>
             </div>
-          ))
-        )}
+          );
+        })}
       </div>
     </div>
   );

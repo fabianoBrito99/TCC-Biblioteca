@@ -101,13 +101,61 @@ function entrarComunidade(req, res) {
 }
 
 
+function listarUsuariosComunidade(req, res) {
+  const { id } = req.params;
+
+  connection.query(
+    `
+    SELECT 
+      u.id_usuario, 
+      u.nome_login, 
+      u.email, 
+      cu.status 
+    FROM Comunidade_usuario AS cu
+    JOIN Usuario AS u ON cu.fk_id_usuario = u.id_usuario
+    WHERE cu.fk_id_comunidade = ?
+    `,
+    [id],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar usuários da comunidade:", error);
+        return res.status(500).json({ error: "Erro ao buscar usuários." });
+      }
+
+      res.status(200).json(results);
+    }
+  );
+}
+
+function verificarAdmin(req, res) {
+  const { id, userId } = req.params;
+
+  connection.query(
+    "SELECT id_adm FROM Comunidade WHERE id_comunidade = ?",
+    [id],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao verificar admin:", error);
+        return res.status(500).json({ error: "Erro ao verificar admin." });
+      }
+
+      if (results.length > 0 && results[0].id_adm === parseInt(userId)) {
+        res.status(200).json({ isAdmin: true });
+      } else {
+        res.status(403).json({ isAdmin: false });
+      }
+    }
+  );
+}
+
+
 function listarComunidadesUsuario(req, res) {
   const { idUsuario } = req.params;
 
   try {
     connection.query(
       `
-      SELECT c.id_comunidade, c.nome, c.descricao, c.tipo
+      SELECT DISTINCT c.id_comunidade, c.nome, c.descricao, c.tipo
       FROM Comunidade_usuario AS cu
       JOIN Comunidade AS c ON cu.fk_id_comunidade = c.id_comunidade
       WHERE cu.fk_id_usuario = ? AND cu.status = 'aceito'
@@ -127,7 +175,6 @@ function listarComunidadesUsuario(req, res) {
     res.status(500).json({ error: "Erro inesperado ao listar comunidades do usuário." });
   }
 }
-
 
 
 function obterComunidade(req, res) {
@@ -182,31 +229,33 @@ function listarUsuariosComunidade(req, res) {
 }
 
 
+// Atualiza o status do usuário em uma comunidade
 function atualizarStatusUsuario(req, res) {
-  const { idComunidade, idUsuario } = req.params;
-  const { status } = req.body; // Status: "aceito" ou "rejeitado"
-
-  if (!["aceito", "rejeitado"].includes(status)) {
-    return res.status(400).json({ error: "Status inválido" });
-  }
+  const { idUsuario } = req.params;
+  const { status } = req.body;
+  const comunidadeId = req.params.comunidadeId;
 
   connection.query(
-    `
-    UPDATE Comunidade_usuario 
-    SET status = ? 
-    WHERE fk_id_comunidade = ? AND fk_id_usuario = ?
-    `,
-    [status, idComunidade, idUsuario],
-    (error) => {
+    `UPDATE Comunidade_usuario 
+     SET status = ? 
+     WHERE fk_id_comunidade = ? AND fk_id_usuario = ?`,
+    [status, comunidadeId, idUsuario],
+    (error, results) => {
       if (error) {
-        console.error("Erro ao atualizar status:", error);
+        console.error("Erro ao atualizar status do usuário:", error);
         return res.status(500).json({ error: "Erro ao atualizar status do usuário" });
       }
 
-      res.status(200).json({ message: `Usuário ${status} com sucesso.` });
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ message: "Usuário ou comunidade não encontrado" });
+      }
+
+      res.status(200).json({ message: "Status atualizado com sucesso" });
     }
   );
 }
+
+
 
 
 function listarComentarios(req, res) {
@@ -277,6 +326,31 @@ function verificarStatusUsuario(req, res) {
       }
 
       res.status(200).json({ status: results[0].status });
+    }
+  );
+}
+
+function listarSolicitacoes(req, res) {
+  const { idComunidade } = req.params;
+
+  connection.query(
+    `
+    SELECT 
+      cu.fk_id_usuario AS id_usuario,
+      u.nome_login AS nome_usuario,
+      cu.status
+    FROM Comunidade_usuario AS cu
+    JOIN Usuario AS u ON cu.fk_id_usuario = u.id_usuario
+    WHERE cu.fk_id_comunidade = ? AND cu.status = 'pendente'
+    `,
+    [idComunidade],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao listar solicitações:", error);
+        return res.status(500).json({ error: "Erro ao listar solicitações." });
+      }
+
+      res.status(200).json(results);
     }
   );
 }
@@ -429,4 +503,4 @@ function estatisticasIdade(req, res) {
 
 
 
-module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso, listarComunidadesUsuario, listarUsuariosComunidade, atualizarStatusUsuario, verificarStatusUsuario};
+module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso, listarComunidadesUsuario, listarUsuariosComunidade, atualizarStatusUsuario, verificarStatusUsuario, listarSolicitacoes, verificarAdmin};

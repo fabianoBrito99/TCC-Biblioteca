@@ -2,7 +2,8 @@
   display: block;
   position: fixed;
   top: 0px;
-  background: linear-gradient(to right, #2c69ec, #0b1957);
+  background: linear-gradient(to right, #6d99f7, #4e63c4);
+  box-shadow: 0 4px 6px rgba(0, 36, 241, 0.308);
   height: 60px;
   width: 100%;
   position: fixed;

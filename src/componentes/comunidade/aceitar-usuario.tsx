@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import styles from "./aceitar-usuario.module.css";
 
@@ -11,30 +12,31 @@ interface Usuario {
 
 interface GerenciarUsuariosProps {
   comunidadeId: number;
-  isAdmin: boolean; // Verifica se o usuário logado é o admin da comunidade
+  isAdmin: boolean;
 }
 
 const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isAdmin }) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Buscar todas as solicitações pendentes
   useEffect(() => {
-    const fetchUsuarios = async () => {
+    const fetchSolicitacoes = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/comunidade/${comunidadeId}/usuarios`
+          `http://localhost:4000/api/comunidade/${comunidadeId}/solicitacoes`
         );
-        if (!response.ok) throw new Error("Erro ao buscar usuários da comunidade");
+        if (!response.ok) throw new Error("Erro ao buscar solicitações da comunidade");
         const data = await response.json();
-        setUsuarios(data);
+        setUsuarios(data); // Atualiza o estado com as solicitações pendentes
       } catch (error) {
-        console.error(error.message);
+        console.error("Erro ao buscar solicitações:", error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsuarios();
+    fetchSolicitacoes();
   }, [comunidadeId]);
 
   const handleAtualizarStatus = async (idUsuario: number, novoStatus: string) => {
@@ -47,19 +49,22 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
           body: JSON.stringify({ status: novoStatus }),
         }
       );
-
-      if (!response.ok) throw new Error("Erro ao atualizar status do usuário");
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao atualizar status do usuário");
+      }
+  
+      // Remove o usuário da lista local
       setUsuarios((prevUsuarios) =>
-        prevUsuarios.map((usuario) =>
-          usuario.id_usuario === idUsuario
-            ? { ...usuario, status: novoStatus }
-            : usuario
-        )
+        prevUsuarios.filter((usuario) => usuario.id_usuario !== idUsuario)
       );
     } catch (error) {
       console.error("Erro ao atualizar status:", error.message);
+      alert("Erro ao processar solicitação. Tente novamente.");
     }
   };
+  
 
   if (!isAdmin) {
     return <p>Você não tem permissão para acessar esta página.</p>;
@@ -71,20 +76,19 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
 
   return (
     <div className={styles.gerenciarUsuariosContainer}>
-      <h2>Gerenciar Usuários da Comunidade</h2>
-      <ul className={styles.usuarioLista}>
-        {usuarios.map((usuario) => (
-          <li key={usuario.id_usuario} className={styles.usuarioItem}>
-            <p>
-              <strong>Nome:</strong> {usuario.nome_login}
-            </p>
-            <p>
-              <strong>Email:</strong> {usuario.email}
-            </p>
-            <p>
-              <strong>Status:</strong> {usuario.status}
-            </p>
-            {usuario.status === "pendente" && (
+      <h2>Solicitações Pendentes</h2>
+      {usuarios.length === 0 ? (
+        <p>Não há solicitações pendentes no momento.</p>
+      ) : (
+        <ul className={styles.usuarioLista}>
+          {usuarios.map((usuario) => (
+            <li key={usuario.id_usuario} className={styles.usuarioItem}>
+              <p>
+                <strong>Nome:</strong> {usuario.nome_login || usuario.nome_usuario}
+              </p>
+              <p>
+                <strong>Status:</strong> {usuario.status}
+              </p>
               <div className={styles.acoes}>
                 <button
                   className={styles.aceitarBtn}
@@ -99,10 +103,10 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
                   Rejeitar
                 </button>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
