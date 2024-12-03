@@ -85,9 +85,11 @@ async function show(request, response) {
           );
         }
       );
+      
     }
   );
 }
+
 
 
 
@@ -189,5 +191,31 @@ function login(request, response) {
 }
 
 
+const atualizarTipoUsuario = (req, res) => {
+  const { id } = req.params;
+  const { tipo_usuario } = req.body;
 
-module.exports = { list, show, login, create};
+  connection.query(
+    `
+    UPDATE Usuario
+    SET tipo_usuario = ?
+    WHERE id_usuario = ?
+    `,
+    [tipo_usuario, id],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao atualizar tipo de usuário:", error);
+        return res.status(500).json({ error: "Erro ao atualizar tipo de usuário" });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      res.status(200).json({ message: "Tipo de usuário atualizado com sucesso" });
+    }
+  );
+};
+
+
+module.exports = { list, show, login, create, atualizarTipoUsuario,};

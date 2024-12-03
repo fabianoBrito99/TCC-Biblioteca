@@ -113,10 +113,10 @@
   z-index: 2;
 }
 
-.menu3Pontinhos {
+.menuIconContainer {
   position: relative;
   left: 8px;
-  top: -140px;
+ top: -60px;
   width: 40px;
   height: 35px;
   cursor: pointer;
@@ -124,8 +124,8 @@
   z-index: 99; 
 }
 
-.menu3Pontinhos.rotated {
-  transform: rotate(60deg);
+.menuIconContainer.rotated {
+  transform: rotate(160deg);
 }
 
 .inputContainer1 {

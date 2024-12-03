@@ -79,3 +79,43 @@
     /* Perna esquerda */ 0% 100% /* Fim das pernas */
   );
 }
+
+.editarBtn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  padding: 20px;
+  margin-left: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.editarBtn:hover {
+  text-decoration: underline;
+}
+
+.tipoSelect {
+  margin-top: 20px;
+  margin-right: 10px;
+  padding: 5px;
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  z-index: 30;
+  cursor: pointer;
+}
+
+.salvarBtn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.salvarBtn:hover {
+  background-color: #218838;
+}
