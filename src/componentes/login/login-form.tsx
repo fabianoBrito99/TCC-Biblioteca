@@ -9,7 +9,8 @@ import ErrorMessage from "../helper/error-message";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./login-form.module.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaPencilAlt } from "react-icons/fa";
+import Image from "next/image";
 
 interface LoginResponse {
   id_usuario: string;
@@ -84,7 +85,6 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            
           />
 
           {/* Ícone para exibir/ocultar a senha */}
@@ -99,12 +99,21 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
 
+          {/* Ícone do marca-texto */}
+          <div
+            className={`${styles.markerIcon} ${
+              showPassword ? styles.animateMarker : ""
+            }`}
+          >
+            <Image src="/img/marcatexto.png" alt="Perfil" width={140} height={940} />
+          </div>
+
           {/* Animação de marca-texto */}
-          <span
+          <div
             className={`${styles.highlightEffect} ${
               showPassword ? styles.visible : ""
             }`}
-          ></span>
+          ></div>
         </div>
         {error && <ErrorMessage error={error} />}
         <FormButton isSubmitting={isSubmitting} />

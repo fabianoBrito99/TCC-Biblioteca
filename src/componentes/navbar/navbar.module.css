@@ -124,8 +124,8 @@
   z-index: 99; 
 }
 
-.menuIconContainer.rotated {
-  transform: rotate(160deg);
+.menuIcon.rotated {
+  transform: rotate(60deg);
 }
 
 .inputContainer1 {
