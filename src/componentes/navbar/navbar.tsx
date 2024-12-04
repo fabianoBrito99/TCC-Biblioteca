@@ -144,10 +144,15 @@ export default function Navbar() {
           <ComunidadesUsuario usuarioId={user?.id} />
         </div>
 
+        <div>
+          <img className={styles.logo} src="/img/Component9.svg" alt="" />
+        </div>
+
         {/* Menu Toggle */}
         <div className={styles.menuIconContainer}>
           <FaBars 
-            size={35}
+            size={45}
+            color="#fff"
             onClick={toggleMenu}
             className={styles.menuIcon}
           />

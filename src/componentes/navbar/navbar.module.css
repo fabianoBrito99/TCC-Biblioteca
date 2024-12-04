@@ -2,12 +2,12 @@
   display: block;
   position: fixed;
   top: 0px;
-  background: linear-gradient(to right, #6d99f7, #4e63c4);
-  box-shadow: 0 4px 6px rgba(0, 36, 241, 0.308);
-  height: 60px;
+  background: linear-gradient(to right, #3c58d4,#5b71d6, #ffffff,#fff,#5b71d6, #3c58d4);
+  box-shadow: 0 8px 8px rgba(0, 0, 2, 0.308);
+  height: 80px;
   width: 100%;
   position: fixed;
-  z-index: 1; /* Lower z-index so it stays behind the menu */
+  z-index: 3; /* Lower z-index so it stays behind the menu */
 }
 
 .navMenu {
@@ -20,6 +20,7 @@
   transition: height 0.5s ease;
   overflow: hidden;
   border-radius: 0 0 70px 0;
+  z-index: 3;
 }
 
 .menuContent {
@@ -27,13 +28,15 @@
 }
 
 .navMenu.navOpen {
-  height: 100vh; 
+  margin-top: 50px;
+  height: 100vh;
 }
 
 .navMenu ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  
 }
 
 .menuContent {
@@ -62,6 +65,7 @@
   margin-bottom: 10px;
   cursor: pointer;
   font-family: 'Days One', sans-serif;
+  z-index: 100;
 }
 
 .navMenu.navOpen .navItem {
@@ -97,9 +101,9 @@
   position: absolute;
   right: 10px;
   border-radius: 40%;
-  top: 5px;
-  height: 40px;
-  width: 50px;
+  top: 8px;
+  height: 60px;
+  width: 70px;
   z-index: 100;
 }
 
@@ -110,21 +114,20 @@
   color: rgb(55, 69, 82);
   border-radius: 5px;
   border: 1px solid rgb(0, 136, 255);
-  z-index: 2;
 }
 
 .menuIconContainer {
   position: relative;
   left: 8px;
- top: -60px;
+ top: -219px;
   width: 40px;
-  height: 35px;
+  height: 55px;
   cursor: pointer;
   transition: transform 0.4s ease;
   z-index: 99; 
 }
 
-.menuIcon.rotated {
+.menuIconContainer.rotated {
   transform: rotate(60deg);
 }
 
@@ -204,21 +207,23 @@
 
 .notificacoes{
   position: relative;
-  left: 1970px;
-  top: 15px;
+  left: 1730px;
+  top: 25px;
 }
 .comunidadeUser{
   position: relative;
-  left: 2000px;
-  top: -15px;
+  left: 1770px;
+  top: -18px;
   z-index: 10;
 }
 
 
 .logo{
+  height: 140px;
   position: relative;
-  left: 800px;
-  top: -45px;
+  left: 760px;
+  top: -129px;
+  z-index: 1;
 }
 
 

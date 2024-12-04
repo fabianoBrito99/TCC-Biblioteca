@@ -104,7 +104,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
         className={styles.bellContainer}
         onClick={() => setShowDropdown((prev) => !prev)}
       >
-        <FaBell size={24} />
+        <FaBell size={34} />
         {notificacoesNaoLidas > 0 && (
           <span className={styles.counter}>{notificacoesNaoLidas}</span>
         )}

@@ -44,7 +44,7 @@ const ComunidadesUsuario: React.FC<ComunidadesUsuarioProps> = ({ usuarioId }) =>
         className={styles.toggleButton}
         onClick={() => setMostrarLista(!mostrarLista)}
       >
-        <FaUsers size={28}  />
+        <FaUsers size={38}  />
       </button>
       {mostrarLista && (
         <div className={styles.listaComunidades}>
