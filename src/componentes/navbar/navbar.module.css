@@ -2,7 +2,15 @@
   display: block;
   position: fixed;
   top: 0px;
-  background: linear-gradient(to right, #3c58d4,#5b71d6, #ffffff,#fff,#5b71d6, #3c58d4);
+  background: linear-gradient(
+    to right,
+    #3c58d4,
+    #5b71d6,
+    #ffffff,
+    #fff,
+    #5b71d6,
+    #3c58d4
+  );
   box-shadow: 0 8px 8px rgba(0, 0, 2, 0.308);
   height: 80px;
   width: 100%;
@@ -11,12 +19,12 @@
 }
 
 .navMenu {
-  background: linear-gradient(to bottom,#426bc2, #e9f3ff);
+  background: linear-gradient(to bottom, #426bc2, #e9f3ff);
   width: 250px;
-  height: 0; 
+  height: 0;
   position: fixed;
   left: 0;
-  z-index: 100; 
+  z-index: 100;
   transition: height 0.5s ease;
   overflow: hidden;
   border-radius: 0 0 70px 0;
@@ -36,35 +44,31 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  
 }
 
 .menuContent {
   display: flex;
   flex-direction: column;
- 
-
 }
 
 .navItem {
   display: flex;
-  align-items: center; 
+  align-items: center;
   justify-content: center;
-  padding: 5px; 
+  padding: 5px;
 }
-.navItem a{
+.navItem a {
   display: flex;
   align-items: start;
   justify-content: start;
   gap: 10px;
   color: #000000;
-
 }
 
 .navMenu li {
   margin-bottom: 10px;
   cursor: pointer;
-  font-family: 'Days One', sans-serif;
+  font-family: "Days One", sans-serif;
   z-index: 100;
 }
 
@@ -108,7 +112,11 @@
 }
 
 .navHover .menuContent li:hover {
-  background: linear-gradient(to left, rgba(118, 150, 255, 0.801), rgba(255, 255, 255, 0.938));
+  background: linear-gradient(
+    to left,
+    rgba(118, 150, 255, 0.801),
+    rgba(255, 255, 255, 0.938)
+  );
   padding: 5px;
   margin: 0;
   color: rgb(55, 69, 82);
@@ -117,14 +125,14 @@
 }
 
 .menuIconContainer {
-  position: relative;
+  position: absolute;
   left: 8px;
- top: -219px;
+  top: 10px;
   width: 40px;
   height: 55px;
   cursor: pointer;
   transition: transform 0.4s ease;
-  z-index: 99; 
+  z-index: 99;
 }
 
 .menuIconContainer.rotated {
@@ -172,7 +180,7 @@
   z-index: 1;
 }
 
-.inputContainer1 .input:focus, 
+.inputContainer1 .input:focus,
 .inputContainer1 .input:hover {
   outline: none;
   border-color: rgba(97, 113, 253, 0.664);
@@ -186,7 +194,7 @@
   background-color: #4bdbe6;
   position: absolute;
   z-index: 1000;
-  width: 510px; 
+  width: 510px;
   top: 45px;
   right: 80px;
   border-radius: 10px;
@@ -202,39 +210,28 @@
 }
 
 .navMenu {
-  z-index: 2; 
+  z-index: 2;
 }
 
-.notificacoes{
-  position: relative;
-  left: 1730px;
+.notificacoes {
+  position: absolute;
+  right: 150px;
   top: 25px;
 }
-.comunidadeUser{
-  position: relative;
-  left: 1770px;
-  top: -18px;
+.comunidadeUser {
+  position: absolute;
+  right: 90px;
+  top: 18px;
   z-index: 10;
 }
 
-
-.logo{
+.logo {
   height: 140px;
-  position: relative;
+  position: absolute;
   left: 760px;
-  top: -129px;
+  top: -37px;
   z-index: 1;
 }
-
-
-
-
-
-
-
-
-
-
 
 /* Fumaça */
 .smoke {
@@ -256,9 +253,8 @@
   font-weight: bold;
   text-align: left;
   color: #dbdfb6;
- 
 }
-.text .sobrenome{
+.text .sobrenome {
   top: 12px;
   left: -99px;
   font-size: 13px;
@@ -285,7 +281,8 @@
 }
 
 .text .biblioteca::before {
-  left: -15px; border-radius: 0% 50% 50% 0%;
+  left: -15px;
+  border-radius: 0% 50% 50% 0%;
 }
 
 .text .biblioteca::after {
@@ -306,8 +303,129 @@
   }
 }
 
-.logoFogo{
+.logoFogo {
   position: relative;
   top: -50px;
   left: -80px;
+}
+
+/* Media Queries para dispositivos menores */
+@media (max-width: 1500px) {
+.logo{
+  left: 660px;
+}
+
+
+}
+
+@media (max-width: 1224px) {
+  .logo{
+    left: 360px;
+  }
+}
+
+@media (max-width: 1024px) {
+
+
+  .navMenu {
+    width: 200px;
+    border-radius: 0;
+  }
+
+  .menuContent {
+    padding-top: 40px;
+  }
+
+  .navItem a {
+    font-size: 14px;
+  }
+
+  .logo{
+    
+    left: 360px;
+  }
+
+ 
+}
+
+@media (max-width: 820px) {
+  .logo{
+    left: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav100 {
+    height: 60px;
+  }
+
+  .navMenu {
+    width: 150px;
+  }
+
+  .menuContent {
+    padding-top: 30px;
+  }
+
+  .navItem a {
+    font-size: 12px;
+  }
+  .logo{
+    width: 35%;
+    left: 260px;
+    top: -45px;
+  }
+  .perfil{
+    height: 50px;
+    width: 60px;
+  }
+}
+@media (max-width: 620px) {
+  .logo{
+    width: 30%;
+    left: 180px;
+  }
+}
+@media (max-width: 500px) {
+  .logo{
+    width: 30%;
+    left: 130px;
+  }
+}
+@media (max-width: 480px) {
+  .nav100 {
+    height: 50px;
+  }
+
+  .navMenu {
+    width: 100px;
+  }
+
+  .menuContent {
+    padding-top: 20px;
+  }
+
+  .navItem a {
+    font-size: 10px;
+  }
+  .notificacoes, .comunidadeUser{
+    top: 10px;
+  }
+
+.logo{
+  width: 30%;
+  left: 130px;
+}
+.perfil{
+  height: 40px;
+  width: 50px;
+}
+
+}
+
+@media (max-width: 400px) {
+  .logo{
+    width: 30%;
+    left: 70px;
+  }
 }

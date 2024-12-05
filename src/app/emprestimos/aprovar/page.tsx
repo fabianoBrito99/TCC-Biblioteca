@@ -42,7 +42,7 @@ export default function AprovarEmprestimo() {
   return (
     <div className={styles.container}>
       <div className={styles.listaEmprestimo}>
-        <h1>Lista de Aprovação dos Empréstimos</h1>
+        <h1>Aprovar Empréstimos</h1>
       </div>
       <div id="emprestimos-container" className={styles.emprestimosContainer}>
         {emprestimos.map((emprestimo) => (

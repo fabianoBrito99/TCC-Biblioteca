@@ -104,7 +104,9 @@ export default function SuggestionPage() {
         </div>
 
         <div>
-          <h1 className={styles.titleDoe}>Sugira um Livro ou Autor</h1>
+        <div className={styles.sugiraDoe}>
+        <h1>Sugira um Livro ou Autor</h1>
+      </div>
 
           {/* Navegação de abas */}
           <div className={styles.tabNavigation}>
@@ -165,7 +167,12 @@ export default function SuggestionPage() {
             <Button type="submit">Enviar Sugestão</Button>
           </form>
         </div>
+        <div className={styles.sugestoes}>
+        <h1>Sugestões de outros Usuarios</h1>
       </div>
+      </div>
+
+
 
       <div className={styles.sugestoes}>
         {sugestoes.map((sugestao) => (

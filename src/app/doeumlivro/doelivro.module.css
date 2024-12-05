@@ -1,7 +1,7 @@
 .suggestionPage {
   padding: 0px;
   max-width: 1000px;
-  margin-top: 30px;
+  margin-top: 80px;
 }
 .doe {
   margin-bottom: 50px;
@@ -12,10 +12,25 @@
 .doe img {
 }
 
-.titleDoe {
+.listaEmprestimo {
+  display: flex;
+  justify-content: center;
+  margin-top: 60px;
+}
+
+.emprestimosContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+}
+
+/*pagina aprovar */
+
+.sugiraDoe h1 {
   font-family: var(--type-second);
   line-height: 1;
-  font-size: 3rem;
+  font-size: 2rem;
   margin: 1rem 0;
   position: relative;
   z-index: 1;
@@ -24,16 +39,16 @@
   justify-content: center;
 }
 
-.titleDoe::after {
+.sugiraDoe h1::before {
   content: "";
   display: block;
-  width: 1.9rem; /* Largura do quadrado */
-  height: 1.7rem; /* Altura do quadrado + pernas */
+  width: 1.3rem;
+  height: 1.2rem;
   background: linear-gradient(to top, #625bec, #a9a8ca);
-  position: absolute;
-  bottom: -2px; /* Ajusta a posição vertical */
-  left: 503px;
-  transform: translateX(-50%); /* Centraliza o elemento */
+  position: relative;
+  bottom: -10px;
+  left: 35px;
+  transform: translateX(-50%);
   z-index: -1;
   clip-path: polygon(
     0% 0%,
@@ -46,7 +61,7 @@
   );
 }
 
-.titleSug {
+.sugestoes h1 {
   font-family: var(--type-second);
   line-height: 1;
   font-size: 2rem;
@@ -58,17 +73,26 @@
   justify-content: center;
 }
 
-.titleSug::after {
+.sugestoes h1::before {
   content: "";
   display: block;
-  width: 1rem;
-  height: 1rem;
-  background: rgb(0, 140, 255);
-  position: absolute;
-  bottom: 4px;
-  left: 0px;
-  border-radius: 0.2rem;
+  width: 1.3rem;
+  height: 1.2rem;
+  background: linear-gradient(to top, #625bec, #a9a8ca);
+  position: relative;
+  bottom: -10px;
+  left: 35px;
+  transform: translateX(-50%);
   z-index: -1;
+  clip-path: polygon(
+    0% 0%,
+    /* Canto superior esquerdo */ 100% 0%,
+    /* Canto superior direito */ 100% 100%,
+    /* Início das pernas */ 90% 100%,
+    /* Perna direita */ 50% 70%,
+    /* Centro da base */ 10% 100%,
+    /* Perna esquerda */ 0% 100% /* Fim das pernas */
+  );
 }
 
 .suggestionForm {
@@ -137,14 +161,7 @@
   padding: 20px 220px;
   margin-top: 50px;
 }
-.sugestoes {
-  display: flex;
-flex-wrap: wrap;
-gap: 20px;
-  width: 99vw;
-  align-items: center;
-  justify-content: center;
-}
+
 .gridDoe img {
   display: flex;
   margin-left: auto;
@@ -198,4 +215,112 @@ gap: 20px;
 .suggestionForm input,
 .suggestionForm button {
   margin-bottom: 10px;
+}
+
+/* Layouts responsivos */
+@media (max-width: 1200px) {
+  .gridDoe {
+    padding: 20px 100px;
+  }
+  .suggestionCard {
+    padding: 15px 100px;
+    height: auto;
+  }
+  .pix {
+    bottom: -40px;
+    left: -100px;
+  }
+  .qrcode {
+    bottom: -80px;
+    left: -300px;
+  }
+}
+
+@media (max-width: 800px) {
+  .sugestoes h1::before {
+    bottom: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .suggestionPage {
+    margin-top: 0;
+  }
+  .sugestoes h1::before {
+    bottom: -10px;
+  }
+  .gridDoe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    padding: 20px 30px;
+    overflow-x: hidden;
+  }
+  .suggestionCard {
+    padding: 15px 20px;
+    height: auto;
+  }
+  .doe {
+    font-size: 1rem;
+  }
+  .titleDoe {
+    font-size: 2rem;
+  }
+  .pix {
+    left: 10px;
+    margin-bottom: 20px;
+  }
+
+  .qrcode {
+    margin-bottom: 20px;
+    left: -140px;
+  }
+}
+@media (max-width: 600px) {
+  .sugestoes{
+    font-size: 1rem;
+  }
+  .sugestoes h1::before {
+    width: 1.5rem;
+    bottom: 10px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .sugestoes h1{
+    font-size: 1.1rem;
+  }
+  .sugestoes h1::before {
+    width: 0.8rem;
+    height: 0.7rem;
+    bottom: -8px;
+    left: 25px;
+  }
+  .sugiraDoe h1{
+    font-size: 1.5rem;
+  }
+  .sugiraDoe h1::before{
+    width: 1.2rem;
+  }
+
+
+  .gridDoe {
+    grid-template-columns: 1fr;
+    padding: 20px 20px;
+  }
+  .gridDoe {
+    padding: 20px;
+  }
+  .suggestionCard {
+    padding: 15px;
+  }
+  .titleDoe {
+    font-size: 1.5rem;
+  }
+  .tabNavigation button {
+    padding: 8px 15px;
+  }
 }
