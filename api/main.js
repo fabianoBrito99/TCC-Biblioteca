@@ -10,6 +10,7 @@ const sugestoesRoutes = require('./routes/sugestoes.routes');
 const doelivroRoutes = require('./routes/doelivro.routes'); 
 const comunidadeRoutes = require('./routes/comunidade.routes'); 
 const noticacoesRoutes = require('./routes/notificacoes.routes'); 
+const relatorioRoutes = require('./routes/relatorios.routes'); 
 
 
 const app = express();
@@ -52,6 +53,7 @@ app.use("/api", sugestoesRoutes);
 app.use("/api", doelivroRoutes); 
 app.use("/api", comunidadeRoutes); 
 app.use("/api", noticacoesRoutes); 
+app.use("/api", relatorioRoutes); 
 
 
 const PORT = 4000;

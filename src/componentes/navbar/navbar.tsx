@@ -15,7 +15,8 @@ import {
   FaBookReader,
   FaBookOpen,
   FaStream,
-  FaSignInAlt
+  FaSignInAlt,
+  FaTable 
 } from "react-icons/fa"; // Importa ícones do react-icons
 import styles from "@/componentes/navbar/navbar.module.css";
 import Notificacoes from "../notificacoes/notificacoes";
@@ -43,7 +44,9 @@ export default function Navbar() {
     { path: "/homecards", label: "Home", icon: <FaHome /> },
     { path: "/doeumlivro", label: "Sugire/Doe um Livro", icon: <FaBible /> },
     { path: "/comunidade", label: "Comunidade", icon: <FaBookReader /> },
+    { path: "/relatorios", label: "Relatorios", icon: <FaTable   /> },
     { path: "/login", label: "Sair", icon: <FaSignInAlt  /> },
+   
   ];
 
   const permissoes = {
@@ -57,7 +60,8 @@ export default function Navbar() {
       "/homecards",
       "/doeumlivro",
       "/comunidade",
-      "/login",
+      "/relatorios",
+      "/login",  
     ],
     voluntario: [
       "/homecards",
