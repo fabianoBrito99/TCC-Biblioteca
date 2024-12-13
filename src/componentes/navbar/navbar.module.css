@@ -226,10 +226,10 @@
 }
 
 .logo {
-  height: 140px;
+  height: 75px;
   position: absolute;
-  left: 760px;
-  top: -37px;
+  left: 790px;
+  top: 5px;
   z-index: 1;
 }
 
