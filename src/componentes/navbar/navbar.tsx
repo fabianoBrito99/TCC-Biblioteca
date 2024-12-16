@@ -149,7 +149,7 @@ export default function Navbar() {
         </div>
 
         <div>
-          <img className={styles.logo} src="/img/Frame5.png" alt="" />
+          <img className={styles.logo} src="/img/Frame8.png" alt="" />
         </div>
 
         {/* Menu Toggle */}
