@@ -127,58 +127,7 @@
   height: 5%;
 }
 
-.formFixo {
-  position: relative;
-  top: -20px;
-}
 
-.cep {
-  position: relative;
-  right: 50px;
-  width: 50%;
-}
-.rua {
-  position: relative;
-  left: 190px;
-  bottom: 77px;
-  width: 70%;
-}
-.bairro {
-  position: relative;
-  right: 50px;
-  bottom: 70px;
-  width: 50%;
-}
-.cidade {
-  position: relative;
-  left: 190px;
-  bottom: 225px;
-  width: 70%;
-}
-.estado {
-  position: relative;
-  right: 50px;
-  bottom: 225px;
-  width: 50%;
-}
-.num {
-  position: relative;
-  left: 190px;
-  bottom: 70px;
-  width: 70%;
-}
-.dataNasc {
-  position: relative;
-  right: 50px;
-  bottom: 210px;
-  width: 50%;
-}
-.foto {
-  position: relative;
-  left: 190px;
-  bottom: 290px;
-  width: 70%;
-}
 
 .checkboxLabel {
   display: flex;
@@ -337,22 +286,19 @@
 
 .capaPreview {
   background: #14b1ff;
-  margin-bottom: 10px;
+  margin-bottom: 210px;
   padding: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  width: 100px;
-  height: 100px;
+ 
   margin-left: 10px;
-  bottom: 235px;
+  bottom: 0px;
   position: fixed;
 }
 .capaPreview img {
   width: 10%;
   height: 5%;
 }
+
+
 
 .formFixo {
   position: relative;
@@ -400,6 +346,25 @@
   bottom: 210px;
   width: 50%;
 }
+
+.igrejaLocal{
+  display: flex;
+  align-items: center;
+  position: relative;
+  right: 50px;
+  bottom: 300px;
+  width: 50%;
+}
+.igrejaLocal label{
+  position: relative;
+  left: 30px;
+}
+.igrejaLocal input{
+  position: relative;
+  top: 20px;
+  left: -25px;
+}
+
 .foto {
   position: relative;
   left: 190px;

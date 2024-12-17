@@ -44,6 +44,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [estado, setEstado] = useState("");
   const [igrejaLocal, setIgrejaLocal] = useState(false); // Checkbox
 
+
+
   // Efeito para gerar a pré-visualização da imagem
   useEffect(() => {
     if (fotoPerfil) {
@@ -52,6 +54,16 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
       reader.readAsDataURL(fotoPerfil);
     }
   }, [fotoPerfil]);
+
+   // Efeito para gerar a pré-visualização da imagem
+    useEffect(() => {
+      if (fotoPerfil) {
+        const objectUrl = URL.createObjectURL(fotoPerfil);
+        setCapaPreview(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+      }
+      setCapaPreview(null);
+    }, [fotoPerfil]);
 
   // Função para conversão de arquivo para base64
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,23 +252,25 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                   onChange={(e) => setCidade(e.target.value)}
                 />
               </div>
-              <div className={styles.estado}>
-                <Input
-                  label="Estado"
-                  name="estado"
-                  type="text"
-                  value={estado}
-                  onChange={(e) => setEstado(e.target.value)}
-                />
-              </div>
-              <div className={styles.dataNasc}>
-                <Input
-                  label="Data Nascimento"
-                  name="data_nascimento"
-                  type="date"
-                  value={data_nascimento}
-                  onChange={(e) => setDataNascimento(e.target.value)}
-                />
+              <div className={styles.estado_data}>
+                <div className={styles.estado}>
+                  <Input
+                    label="Estado"
+                    name="estado"
+                    type="text"
+                    value={estado}
+                    onChange={(e) => setEstado(e.target.value)}
+                  />
+                </div>
+                <div className={styles.dataNasc}>
+                  <Input
+                    label="Data Nascimento"
+                    name="data_nascimento"
+                    type="date"
+                    value={data_nascimento}
+                    onChange={(e) => setDataNascimento(e.target.value)}
+                  />
+                </div>
               </div>
               <div className={styles.foto}>
                 <Input
@@ -266,7 +280,15 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                   accept="image/*"
                   onChange={handleFileChange}
                 />
-                {capaPreview && <img src={capaPreview} alt="Preview" />}
+                {capaPreview && (
+                  <div className={styles.capaContainerLivro}>
+                    <img
+                      src={capaPreview}
+                      alt="Preview foto de perfil"
+                      className={styles.capaPreview}
+                    />
+                  </div>
+                )}
               </div>
               <div className={styles.igrejaLocal}>
                 <label>
@@ -275,7 +297,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                     checked={igrejaLocal}
                     onChange={() => setIgrejaLocal(!igrejaLocal)}
                   />
-                  Igreja Local
+                  Membro IMUB?
                 </label>
               </div>
             </>
