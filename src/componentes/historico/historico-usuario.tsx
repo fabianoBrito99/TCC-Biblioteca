@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import styles from "./historico.module.css";
+import Image from "next/image";
 
 interface Historico {
   id_historico: number;
@@ -27,8 +28,8 @@ const HistoricoUsuario: React.FC<{ userId: string }> = ({ userId }) => {
         }
         const data = await response.json();
         setHistorico(data);
-      } catch (error) {
-        setError(error.message || "Erro desconhecido.");
+      } catch{
+        setError("Erro desconhecido.");
       } finally {
         setLoading(false);
       }
@@ -57,7 +58,7 @@ const HistoricoUsuario: React.FC<{ userId: string }> = ({ userId }) => {
         <div key={item.id_historico} className={styles.emprestimoHistorico}>
           <div className={styles.fotoLivro}>
             {item.foto_capa ? (
-              <img src={item.foto_capa} alt={item.nome_livro} />
+              <Image src={item.foto_capa} alt={item.nome_livro} width={200} height={300} />
             ) : (
               <div className={styles.noImage}>Sem capa</div>
             )}

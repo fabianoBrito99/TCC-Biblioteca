@@ -5,6 +5,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useRouter } from "next/navigation";
 import styles from "./livroCategorias.module.css";
+import Image from "next/image";
 
 interface Livro {
   id_livro: string;
@@ -68,10 +69,12 @@ const CategoriaSwiper: React.FC<CategoriaSwiperProps> = ({
               style={{ cursor: "pointer" }}
             >
               <div className={styles.cardLivro}>
-                <img
+                <Image
                   src={livro.foto_capa}
                   alt={livro.nome_livro}
                   className="livro-capa"
+                  width={150}
+                  height={300}
                 />
                 <h2>{livro.nome_livro}</h2>
                 <h4>Autor: {livro.autor}</h4>

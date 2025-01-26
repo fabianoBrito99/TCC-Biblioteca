@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./aprovar-empretismo.module.css";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import Image from "next/image";
 
 interface EmprestimoProps {
   emprestimo: {
@@ -61,10 +62,12 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({
     <div className={`${styles.container}`}>
       <div className={`${styles.emprestimoCard}`}>
         <div className={styles.fotoLivro}>
-          <img
+          <Image
             src={emprestimo.foto_capa}
             alt="Foto do Livro"
             style={{ width: "100px", height: "auto" }}
+            width={100}
+            height={300}
           />
         </div>
         <div className={styles.grid2}>
@@ -74,7 +77,7 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({
           </h3>
           <div className={styles.botoes}>
             <button className={styles.aprovar} onClick={aprovarEmprestimo}>
-              <FaCheck size={20} color="#fdf8e2" />
+              <FaCheck className={styles.icon} size={20} color="#fdf8e2" />
             </button>
             <button className={styles.rejeitar} onClick={rejeitarEmprestimo}>
               <FaTimes size={20} color="#fdf8e2" />

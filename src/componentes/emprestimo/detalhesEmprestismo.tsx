@@ -1,21 +1,28 @@
-// componentes/emprestimo/detalhesEmprestimo.tsx
-
 import { useEffect, useState } from "react";
 import styles from "./detalhesEmprestismo.module.css";
+import Image from "next/image";
 
 interface DetalhesEmprestimoProps {
   idEmprestimo: string;
 }
 
+interface Emprestimo {
+  foto_capa: string;
+  nome_usuario: string;
+  nome_livro: string;
+  data_emprestimo: string;
+  devolucao: string | null; // Pode ser string ou null
+}
+
 const DetalhesEmprestimo = ({ idEmprestimo }: DetalhesEmprestimoProps) => {
-  const [emprestimo, setEmprestimo] = useState<any>(null);
+  const [emprestimo, setEmprestimo] = useState<Emprestimo | null>(null);
 
   useEffect(() => {
     const carregarDetalhesEmprestimo = async (id: string) => {
       try {
         const response = await fetch(`http://localhost:4000/api/emprestimos/${id}`);
         const data = await response.json();
-        setEmprestimo(data.dados);
+        setEmprestimo(data.dados); // Aqui você usa a tipagem correta para 'data.dados'
       } catch (error) {
         console.error('Erro ao carregar os detalhes do empréstimo:', error);
       }
@@ -51,7 +58,7 @@ const DetalhesEmprestimo = ({ idEmprestimo }: DetalhesEmprestimoProps) => {
       <div id="detalhes-emprestimo-container" className={styles.detalhesContainer}>
         <div className={styles.gridContainer}>
           <div className={styles.grid1}>
-            <img src={emprestimo.foto_capa} alt="Capa do Livro" style={{ maxWidth: '200px' }} />
+            <Image src={emprestimo.foto_capa} alt="Capa do Livro" style={{ maxWidth: '200px' }} width={150} height={300} />
           </div>
           <div className={styles.grid2}>
             <h1><strong>Usuário:</strong> {emprestimo.nome_usuario}</h1>

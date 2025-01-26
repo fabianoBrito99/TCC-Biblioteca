@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./listaUsuario.module.css";
+import Image from "next/image";
 
 interface Usuario {
   id_usuario: number;
@@ -27,8 +28,8 @@ const UsuariosList: React.FC = () => {
         }
         const data = await response.json();
         setUsuarios(data.dados || []);
-      } catch (error) {
-        setError(error.message || "Erro desconhecido");
+      } catch {
+        setError("Erro desconhecido");
       } finally {
         setLoading(false);
       }
@@ -50,10 +51,12 @@ const UsuariosList: React.FC = () => {
             className={styles.usuarioCard}
             onClick={() => router.push(`/usuario/${usuario.id_usuario}`)}
           >
-            <img
+            <Image
              src={`data:image/png;base64,${usuario.foto_usuario}`}
               alt={usuario.nome_login}
               className={styles.usuarioFoto}
+              width={1000}
+              height={1000}
             />
             <div className={styles.usuarioInfo}>
               <h3>{usuario.nome_login}</h3>

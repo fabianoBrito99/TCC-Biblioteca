@@ -1,8 +1,9 @@
-"use client";
+"use client"
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
+import Image from "next/image";
 
 interface User {
   id_usuario: string;
@@ -27,8 +28,7 @@ interface Endereco {
 export default function ContaPage({ params }: { params: { id: string } }) {
   const [user, setUser] = useState<User | null>(null);
   const [endereco, setEndereco] = useState<Endereco | null>(null);
-  const [fotoBase64, setFotoBase64] = useState<string | null>(null);
-  const router = useRouter();
+  const [fotoBase64, setFotoBase64] = useState<string | null>(null); // Correção aqui
   const userId = params.id;
 
   // Função para converter Blob para Base64
@@ -58,7 +58,7 @@ export default function ContaPage({ params }: { params: { id: string } }) {
             const base64Foto = await convertBlobToBase64(
               data.usuario.foto_usuario
             );
-            setFotoBase64(base64Foto);
+            setFotoBase64(base64Foto); // Agora chamamos a função corretamente
           }
         } else {
           console.error("Erro ao buscar dados do usuário");
@@ -79,12 +79,17 @@ export default function ContaPage({ params }: { params: { id: string } }) {
     <div className={styles.contaContainer}>
       <div className={styles.grid}>
         <div className={styles.grid1}>
-          <img
-            src={`data:image/jpeg;base64,${user.foto_usuario}`}
-            alt="Foto de perfil"
-            width={100}
-            height={100}
-          />
+          {/* Se a foto estiver em base64, exiba-a */}
+          {fotoBase64 ? (
+            <Image
+              src={fotoBase64} // Usando a foto convertida em base64
+              alt="Foto de perfil"
+              width={100}
+              height={100}
+            />
+          ) : (
+            <div>Sem foto de perfil</div> // Mensagem alternativa caso não tenha foto
+          )}
         </div>
         <div className={styles.grid2}>
           <div className={styles.user}>
@@ -101,8 +106,6 @@ export default function ContaPage({ params }: { params: { id: string } }) {
               <strong>Data de Nascimento:</strong>{" "}
               {new Date(user.data_nascimento).toLocaleDateString()}
             </p>
-
-  
           </div>
 
           {endereco && (
@@ -135,7 +138,6 @@ export default function ContaPage({ params }: { params: { id: string } }) {
       <h2 className={styles.historico}>Histórico</h2>
 
       <div className={styles.historicoContainer}>
-
         <HistoricoUsuario userId={userId} />
       </div>
     </div>

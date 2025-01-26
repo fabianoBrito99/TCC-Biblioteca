@@ -7,17 +7,15 @@ import {
   VictoryLabel,
 } from "victory";
 import styles from "./graficos.module.css";
-import { start } from "repl";
 
 interface Progresso {
   nome_usuario: string;
-  paginas_lidas: string; // Agora é string, como no seu exemplo
+  paginas_lidas: number;
 }
 
 interface EstatisticasIdade {
   faixa_etaria: string;
   quantidade: number;
-  paginas_lidas: string;
 }
 
 interface GraficosProps {
@@ -25,13 +23,13 @@ interface GraficosProps {
   idadeStats: EstatisticasIdade[];
 }
 
+
 const generateColor = (value: number, maxValue: number) => {
   const intensity = Math.floor((value / maxValue) * 150);
   return `rgba(22, ${250 - intensity}, ${255 - intensity}, 1)`;
 };
 
 const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
-  // Converte as páginas lidas para números
   const minPaginas = Math.min(
     ...progresso.map((item) => Number(item.paginas_lidas))
   );
@@ -39,17 +37,15 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
     ...progresso.map((item) => Number(item.paginas_lidas))
   );
 
-  // Garantindo que idadeStats seja corretamente formatado
   const idadeStatsWithNumber = idadeStats.map((item) => ({
     faixa_etaria: item.faixa_etaria,
-    paginas_lidas: Number(item.paginas_lidas), // Converte para número
+    paginas_lidas: Number(item.quantidade),
   }));
 
   const maxQuantidade = Math.max(
     ...idadeStatsWithNumber.map((item) => item.paginas_lidas)
   );
 
-  // Calcular a soma total para porcentagens
   const totalQuantidade = idadeStatsWithNumber.reduce(
     (sum, item) => sum + item.paginas_lidas,
     0
@@ -60,10 +56,10 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
       <div>
         <VictoryChart domainPadding={20}>
           <VictoryLabel
-            text="Quem está lendo mais" // Texto do título
-            x={225} // Posição horizontal do título (ajuste conforme necessário)
-            y={30} // Posição vertical do título (ajuste conforme necessário)
-            textAnchor="middle" // Centraliza o texto
+            text="Quem está lendo mais"
+            x={225}
+            y={30}
+            textAnchor="middle"
             style={{ fontSize: 16, fontWeight: "bold", fill: "#001f5c" }}
           />
           <VictoryAxis
@@ -77,9 +73,10 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
             style={{
               tickLabels: { fontSize: 10, fill: "#001f5c" },
             }}
-            tickFormat={(x) => `${x}`}
+            tickFormat={(x: string) => `${x}`}
             domain={{ y: [minPaginas - 5, maxPaginas + 5] }}
           />
+
           <VictoryBar
             data={progresso.map((item) => ({
               x: item.nome_usuario,
@@ -89,7 +86,6 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
             labels={({ datum }) => `${datum.y} páginas`}
             style={{
               data: {
-                fill: ({ datum }: any) => datum.fill,
                 width: 25,
               },
               labels: {
@@ -101,14 +97,12 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
           />
         </VictoryChart>
       </div>
-      
-      {/* Gráfico de Faixa Etária */}
+
       <div className={styles.chartContainer}>
-        {/* Título do gráfico de pizza */}
         <VictoryLabel
           text="Título do Gráfico de Faixa Etária"
-          x="50%" // Centraliza horizontalmente
-          y={50} // Posiciona o título um pouco acima do gráfico
+          x={200}
+          y={50}
           textAnchor="middle"
           style={{
             fontSize: 26,
@@ -116,8 +110,6 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
             fill: "#001f5c",
           }}
         />
-
-        {/* Gráfico de Pizza */}
         <VictoryPie
           data={idadeStatsWithNumber.map((item) => ({
             x: item.faixa_etaria,
@@ -141,7 +133,6 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
         />
       </div>
 
-      {/* Legenda */}
       <div className={styles.legenda}>
         <h4>Legenda</h4>
         {idadeStatsWithNumber.map((item) => {

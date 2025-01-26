@@ -1,4 +1,3 @@
-import LoginResetarForm from "@/componentes/login/login-resetar-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,7 +11,7 @@ type ResetarSeachParams = {
   };
 };
 export default async function ResetarPage({
-  searchParams,
+  //searchParams,
 }: ResetarSeachParams) {
   return (
     <div className="animeLeft">

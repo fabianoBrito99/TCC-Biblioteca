@@ -119,16 +119,15 @@ background-color: #fdf8e2;
   justify-content: center;
 }
 
-.containerComu h1::after {
+.containerComu h1::before {
   content: "";
   display: block;
   width: 1.3rem; /* Largura do quadrado */
   height: 1.2rem; /* Altura do quadrado + pernas */
   background:linear-gradient(to top, #625bec, #a9a8ca);
-  position: absolute;
-  bottom: -2px; /* Ajusta a posição vertical */
-  left: 931px;
-  transform: translateX(-50%); /* Centraliza o elemento */
+  position: relative;
+  bottom: -9px; /* Ajusta a posição vertical */
+  left: 19px;
   z-index: -1;
   clip-path: polygon(
     0% 0%,     /* Canto superior esquerdo */
@@ -171,4 +170,7 @@ background-color: #fdf8e2;
   background: transparent;
 }
 
+.containerComu{
+  margin-top: 90px;
+}
 

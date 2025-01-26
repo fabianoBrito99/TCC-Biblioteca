@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import {  usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
-  FaBell,
   FaUser,
   FaBook,
   FaPlus,
@@ -14,13 +13,13 @@ import {
   FaBible,
   FaBookReader,
   FaBookOpen,
-  FaStream,
   FaSignInAlt,
-  FaTable 
+  FaTable,
 } from "react-icons/fa"; // Importa ícones do react-icons
 import styles from "@/componentes/navbar/navbar.module.css";
 import Notificacoes from "../notificacoes/notificacoes";
 import ComunidadesUsuario from "../comunidade/listar-comunidade-do-usuario";
+import Image from "next/image";
 
 type User = {
   id: string;
@@ -31,7 +30,6 @@ type User = {
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
   const pathname = usePathname();
 
   // Rotas e permissões
@@ -39,14 +37,17 @@ export default function Navbar() {
     { path: "/livros", label: "Livros", icon: <FaBook /> },
     { path: "/cadastrarLivro", label: "Cadastrar Livro", icon: <FaPlus /> },
     { path: "/emprestimos", label: "Empréstimos", icon: <FaBook /> },
-    { path: "/emprestimos/aprovar", label: "Aprovar Empréstimos", icon: <FaBookOpen /> },
+    {
+      path: "/emprestimos/aprovar",
+      label: "Aprovar Empréstimos",
+      icon: <FaBookOpen />,
+    },
     { path: "/usuario", label: "Usuários", icon: <FaUsers /> },
     { path: "/homecards", label: "Home", icon: <FaHome /> },
     { path: "/doeumlivro", label: "Sugire/Doe um Livro", icon: <FaBible /> },
     { path: "/comunidade", label: "Comunidade", icon: <FaBookReader /> },
-    { path: "/relatorios", label: "Relatorios", icon: <FaTable   /> },
-    { path: "/login", label: "Sair", icon: <FaSignInAlt  /> },
-   
+    { path: "/relatorios", label: "Relatorios", icon: <FaTable /> },
+    { path: "/login", label: "Sair", icon: <FaSignInAlt /> },
   ];
 
   const permissoes = {
@@ -61,7 +62,7 @@ export default function Navbar() {
       "/doeumlivro",
       "/comunidade",
       "/relatorios",
-      "/login",  
+      "/login",
     ],
     voluntario: [
       "/homecards",
@@ -71,7 +72,7 @@ export default function Navbar() {
       "/emprestimos/aprovar",
       "/login",
     ],
-    leitor: ["/homecards", "/doeumlivro", "/comunidade", "/login",],
+    leitor: ["/homecards", "/doeumlivro", "/comunidade", "/login"],
   };
 
   // Buscar o usuário logado
@@ -108,14 +109,16 @@ export default function Navbar() {
     );
   };
 
-  {/* 
+  {
+    /* 
   // Protege o acesso às rotas diretamente pela URL
   useEffect(() => {
     if (!verificarAcesso(pathname)) {
       router.push("/homecards"); // Redireciona para uma página permitida
     }
   }, [pathname, user]);
-*/}
+*/
+  }
   const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   const fecharMenu = () => setMenuOpen(false);
@@ -128,7 +131,7 @@ export default function Navbar() {
         {/* Avatar do usuário */}
         {user ? (
           <Link href={`/conta/${user.id}`}>
-            <img
+            <Image
               className={styles.perfil}
               src={`data:image/jpeg;base64,${user.foto_usuario}`}
               alt="Perfil"
@@ -149,12 +152,12 @@ export default function Navbar() {
         </div>
 
         <div>
-          <img className={styles.logo} src="/img/Frame8.png" alt="" />
+          <Image className={styles.logo} src="/img/Frame8.png" alt="" width={300} height={100}/>
         </div>
 
         {/* Menu Toggle */}
         <div className={styles.menuIconContainer}>
-          <FaBars 
+          <FaBars
             size={45}
             color="#fff"
             onClick={toggleMenu}

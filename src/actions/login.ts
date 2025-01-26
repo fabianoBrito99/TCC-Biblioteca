@@ -10,7 +10,7 @@ export interface LoginResponse {
   error: string;
 }
 
-export default async function login(state: {}, formData: FormData): Promise<LoginResponse> {
+export default async function login(state: object, formData: FormData): Promise<LoginResponse> {
   const email = formData.get('username') as string | null;
   const password = formData.get('password') as string | null;
 

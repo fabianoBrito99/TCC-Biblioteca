@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './empretismo.module.css';
+import Image from 'next/image';
 
 interface EmprestimoProps {
   emprestimo: {
@@ -55,7 +56,7 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({ emprestimo, onClick }) => {
   return (
     <div className={`${styles.emprestimoCard} ${classeCor}`} onClick={onClick}>
       <div className={styles.fotoLivro}>
-        <img src={emprestimo.foto_capa} alt="Foto do Livro" style={{ width: '100px', height: 'auto' }} />
+        <Image src={emprestimo.foto_capa} alt="Foto do Livro" style={{ width: '100px', height: 'auto' }} width={100} height={300}/>
       </div>
       <div className={styles.grid2}>
         <h2>Usuário: {emprestimo.nome_usuario}</h2>

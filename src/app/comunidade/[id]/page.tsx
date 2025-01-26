@@ -1,12 +1,10 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Comentarios from "@/componentes/comunidade/comentarios";
 import ProgressoForm from "@/componentes/comunidade/progresso";
 import Graficos from "@/componentes/comunidade/graficos";
 import styles from "../comunidade.module.css";
-import Notificacoes from "@/componentes/notificacoes/notificacoes";
 import GerenciarUsuarios from "@/componentes/comunidade/aceitar-usuario";
 
 interface Comunidade {
@@ -32,6 +30,9 @@ interface Comentario {
   nome_usuario: string;
   foto_usuario: string;
   data_comentario: string;
+  curtidas: number;
+  usuario_curtiu: boolean;
+  fk_id_usuario: string;
 }
 
 export default function ComunidadeDetalhesPage() {
@@ -40,7 +41,8 @@ export default function ComunidadeDetalhesPage() {
   const [progresso, setProgresso] = useState<Progresso[]>([]);
   const [idadeStats, setIdadeStats] = useState<EstatisticasIdade[]>([]);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const comunidadeId = parseInt(id);
+  const comunidadeId = typeof id === "string" ? parseInt(id, 10) : NaN;
+
   const [userId, setUserId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -70,7 +72,7 @@ export default function ComunidadeDetalhesPage() {
     verificarAdmin();
   }, [id, userId]);
 
-  const fetchComentarios = async () => {
+  const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${id}/comentarios`
@@ -81,22 +83,29 @@ export default function ComunidadeDetalhesPage() {
     } catch (error) {
       console.error("Erro ao buscar comentários:", error);
     }
-  };
+  }, [id]);
 
-  const fetchProgresso = async () => {
+  const fetchProgresso = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${id}/progresso`
       );
       if (!response.ok) throw new Error("Erro ao buscar progresso");
-      const data = await response.json();
-      setProgresso(data);
+      const data: Progresso[] = await response.json(); // Aqui você pode garantir que o tipo é Progresso[]
+  
+      const progresso = data.map((item) => ({
+        ...item,
+        paginas_lidas: Number(item.paginas_lidas), // Convertendo para número
+      }));
+  
+      setProgresso(progresso);
     } catch (error) {
       console.error("Erro ao buscar progresso:", error);
     }
-  };
+  }, [id]);
+  
 
-  const fetchEstatisticasIdade = async () => {
+  const fetchEstatisticasIdade = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${id}/estatisticas/idade`
@@ -107,22 +116,9 @@ export default function ComunidadeDetalhesPage() {
     } catch (error) {
       console.error("Erro ao buscar estatísticas de idade:", error);
     }
-  };
-
-  const atualizarProgresso = () => {
-    fetchProgresso(); // Atualiza os dados de progresso
-  };
-
-  useEffect(() => {
-    if (!id) return;
-
-    fetchComunidade();
-    fetchProgresso();
-    fetchEstatisticasIdade();
-    fetchComentarios();
   }, [id]);
 
-  const fetchComunidade = async () => {
+  const fetchComunidade = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${id}`
@@ -133,6 +129,25 @@ export default function ComunidadeDetalhesPage() {
     } catch (error) {
       console.error("Erro na requisição da comunidade:", error);
     }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    fetchComunidade();
+    fetchProgresso();
+    fetchEstatisticasIdade();
+    fetchComentarios();
+  }, [
+    id,
+    fetchComunidade,
+    fetchProgresso,
+    fetchEstatisticasIdade,
+    fetchComentarios,
+  ]);
+
+  const atualizarProgresso = () => {
+    fetchProgresso(); // Atualiza os dados de progresso
   };
 
   return (
@@ -143,14 +158,14 @@ export default function ComunidadeDetalhesPage() {
           <p>{comunidade.objetivo}</p>
 
           <ProgressoForm
-            comunidadeId={parseInt(id)}
+            comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
             onProgressoAdicionado={atualizarProgresso} // Passando a função de atualização para o filho
           />
           <Graficos progresso={progresso} idadeStats={idadeStats} />
           <div className={styles.containerLateral}>
             <Comentarios
-              comunidadeId={parseInt(id)}
-              comentarios={comentarios}
+              comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
+              comentarios={comentarios as Comentario[]}
               atualizarComentarios={fetchComentarios}
             />
           </div>

@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 import styles from "./usuarioDetalhes.module.css";
+import Image from "next/image";
+
 
 interface Usuario {
   id_usuario: number;
@@ -34,7 +36,7 @@ export default function UsuarioDetalhes({
         }
         const data = await response.json();
         setUsuario(data.usuario);
-      } catch (err) {
+      } catch {
         setError("Erro ao buscar dados do usuário");
       } finally {
         setLoading(false);
@@ -78,10 +80,12 @@ export default function UsuarioDetalhes({
       {usuario && (
         <>
           <div className={styles.usuarioDetalhes}>
-            <img
+            <Image
               src={`data:image/png;base64,${usuario.foto_usuario}`}
               alt={usuario.nome_login}
               className={styles.usuarioFoto}
+              width={1000}
+              height={1000}
             />
             <div className={styles.usuarioInfo}>
               <h2>{usuario.nome_login}</h2>

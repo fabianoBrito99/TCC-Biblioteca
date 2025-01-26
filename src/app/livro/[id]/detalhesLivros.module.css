@@ -72,7 +72,8 @@
 
 /* Centralizar o Tab Navigation */
 .tabContainer {
-  margin-top: 100px;
+  margin-top: 130px;
+  margin-right: 1px;
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -175,11 +176,11 @@
 .conatinerLateral {
   position: relative;
   width: 31vw;
-  height: 70vh;
+  height: 68vh;
   background: #fff;
   overflow-y: auto;
   padding: 10px;
-  margin-top: -20px;
+  margin-top: 0px;
   margin-right: -20px;
   margin-bottom: 50px;
 
@@ -331,15 +332,23 @@
   width: 90%;
   max-width: 500px;
   padding: 10px;
-  background-color: #4CAF50; /* Cor de fundo do botão */
-  color: white; /* Cor do texto */
+  background: linear-gradient(
+    to left,
+    rgba(0, 110, 255, 0.678),
+    rgb(107, 105, 248)
+  );
+  color: white;
   border: none;
   cursor: pointer;
   text-align: center;
 }
 
 .botaoEnviarAvaliacao:hover {
-  background-color: #45a049; /* Cor de fundo ao passar o mouse */
+  background: linear-gradient(
+    to left,
+    rgba(0, 98, 226, 0.678),
+    rgb(118, 116, 255)
+  );
 }
 
 

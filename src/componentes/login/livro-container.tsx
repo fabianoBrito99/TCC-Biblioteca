@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import LoginForm from "./login-form";
 import LoginCriarForm from "./login-criar-form";
 import styles from "./livro-container.module.css";
+import Image from "next/image";
 
 export default function BookContainer() {
   const [isLogin, setIsLogin] = useState(true);
@@ -44,7 +45,7 @@ export default function BookContainer() {
                 <span className={styles.biblioteca}>BIBLIOTECA</span>
               </p>
             </div>{" "}
-            <img
+            <Image
               className={styles.logoFogo}
               src="/img/logoFogo.png"
               alt="Logo"

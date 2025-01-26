@@ -29,8 +29,8 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
         if (!response.ok) throw new Error("Erro ao buscar solicitações da comunidade");
         const data = await response.json();
         setUsuarios(data); // Atualiza o estado com as solicitações pendentes
-      } catch (error) {
-        console.error("Erro ao buscar solicitações:", error.message);
+      } catch{
+        console.error("Erro ao buscar solicitações:");
       } finally {
         setLoading(false);
       }
@@ -59,8 +59,8 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
       setUsuarios((prevUsuarios) =>
         prevUsuarios.filter((usuario) => usuario.id_usuario !== idUsuario)
       );
-    } catch (error) {
-      console.error("Erro ao atualizar status:", error.message);
+    } catch{
+      console.error("Erro ao atualizar status");
       alert("Erro ao processar solicitação. Tente novamente.");
     }
   };
@@ -84,7 +84,7 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
           {usuarios.map((usuario) => (
             <li key={usuario.id_usuario} className={styles.usuarioItem}>
               <p>
-                <strong>Nome:</strong> {usuario.nome_login || usuario.nome_usuario}
+                <strong>Nome:</strong> {usuario.nome_login || usuario.nome_login}
               </p>
               <p>
                 <strong>Status:</strong> {usuario.status}

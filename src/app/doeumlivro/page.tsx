@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Input from "@/componentes/forms/input";
 import Button from "@/componentes/forms/button";
 import styles from "./doelivro.module.css";
+import Image from "next/image";
 
 type Sugestao = {
   id_sugestao: number;
@@ -94,7 +95,7 @@ export default function SuggestionPage() {
             <span className={styles.qrcode}>QrCode👇</span>
           </p>
 
-          <img
+          <Image
             className={styles.perfil}
             src="/img/qrcode.png"
             alt="Perfil"
@@ -179,10 +180,12 @@ export default function SuggestionPage() {
           <div key={sugestao.id_sugestao} className={styles.suggestionCard}>
             <div className={styles.userInfo}>
               {sugestao.foto_usuario ? (
-                <img
+                <Image
                   src={`data:image/jpeg;base64,${sugestao.foto_usuario}`}
                   alt={`${sugestao.nome_usuario} foto`}
                   className={styles.userPhoto}
+                  width={300}
+                  height={300}
                 />
               ) : (
                 <div className={styles.defaultUserPhoto}></div>

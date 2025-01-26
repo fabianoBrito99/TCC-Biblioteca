@@ -1,8 +1,10 @@
+"use client"
 import React, { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
 import styles from "./login-form.module.css";
+import Image from "next/image";
 
 function FormButton() {
   const { pending } = useFormStatus();
@@ -282,10 +284,12 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                 />
                 {capaPreview && (
                   <div className={styles.capaContainerLivro}>
-                    <img
+                    <Image
                       src={capaPreview}
                       alt="Preview foto de perfil"
                       className={styles.capaPreview}
+                      width={1000}
+                      height={1000}
                     />
                   </div>
                 )}

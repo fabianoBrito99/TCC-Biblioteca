@@ -10,6 +10,30 @@ import {
 } from "victory";
 import styles from "./graficos2.module.css";
 
+interface Emprestimo {
+  usuario: string;
+  livro: string;
+  dataPrevista: string;
+  status: string;
+}
+
+interface FaixaEtaria {
+  faixa_etaria?: string;
+  faixa?: string;
+  quantidade: number;
+}
+
+interface LivroEmprestado {
+  mes: string;
+  quantidade: number;
+}
+
+interface DadosGraficos {
+  livrosEmprestados: LivroEmprestado[];
+  faixaEtaria: FaixaEtaria[];
+  emprestimosAtrasados: Emprestimo[];
+}
+
 const Relatorios = () => {
   const hoje = new Date();
   const dataFimDefault = hoje.toISOString().split("T")[0];
@@ -20,9 +44,11 @@ const Relatorios = () => {
   const [dataInicio, setDataInicio] = useState(dataInicioDefault);
   const [dataFim, setDataFim] = useState(dataFimDefault);
   const [rangeSelecionado, setRangeSelecionado] = useState("30 dias");
-  const [dadosGraficos, setDadosGraficos] = useState<any>(null);
-  const [carregando, setCarregando] = useState(false);
+  const [carregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [dadosGraficos, setDadosGraficos] = useState<DadosGraficos | null>(
+    null
+  );
 
   const ranges = [
     { label: "30 dias", dias: 30 },
@@ -76,8 +102,8 @@ const Relatorios = () => {
     }
   }, [dataInicio, dataFim]);
 
-  const formatarFaixaEtaria = (faixa: any) => {
-    return faixa?.faixa_etaria || faixa?.faixa || "Desconhecida";
+  const formatarFaixaEtaria = (faixa: FaixaEtaria) => {
+    return faixa.faixa_etaria || faixa.faixa || "Desconhecida";
   };
 
   return (
@@ -150,7 +176,7 @@ const Relatorios = () => {
 
           <div>
             <VictoryPie
-              data={dadosGraficos.faixaEtaria.map((faixa: any) => ({
+              data={dadosGraficos.faixaEtaria.map((faixa: FaixaEtaria) => ({
                 x: formatarFaixaEtaria(faixa),
                 y: faixa.quantidade,
                 label: `${faixa.quantidade} livros`,
@@ -174,7 +200,7 @@ const Relatorios = () => {
             </thead>
             <tbody>
               {dadosGraficos.emprestimosAtrasados.map(
-                (item: any, idx: number) => (
+                (item: Emprestimo, idx: number) => (
                   <tr key={idx}>
                     <td>{item.usuario}</td>
                     <td>{item.livro}</td>

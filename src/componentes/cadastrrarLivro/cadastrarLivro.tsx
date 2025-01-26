@@ -4,6 +4,7 @@ import { useFormStatus } from "react-dom";
 import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
 import styles from "./cadastrarLivro.module.css";
+import Image from "next/image";
 
 function FormButton() {
   const { pending } = useFormStatus();
@@ -97,22 +98,22 @@ export default function CadastrarLivro({ onToggle }: CadastrarLivroProps) {
     fetchSuggestions();
   }, []);
 
-  const handleInputChange =
-    (
-      setter: React.Dispatch<React.SetStateAction<string>>,
-      suggestions: string[],
-      setSuggestions: React.Dispatch<React.SetStateAction<string[]>>
-    ) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setter(value);
+  // const handleInputChange =
+  //   (
+  //     setter: React.Dispatch<React.SetStateAction<string>>,
+  //     suggestions: string[],
+  //     setSuggestions: React.Dispatch<React.SetStateAction<string[]>>
+  //   ) =>
+  //   (e: React.ChangeEvent<HTMLInputElement>) => {
+  //     const value = e.target.value;
+  //     setter(value);
 
-      // Filtrar as sugestões, mas sempre exibir se tiver sugestões disponíveis
-      const filtered = suggestions.filter((sugestao) =>
-        sugestao.toLowerCase().includes(value.toLowerCase())
-      );
-      setSuggestions(value ? filtered : suggestions);
-    };
+  //     // Filtrar as sugestões, mas sempre exibir se tiver sugestões disponíveis
+  //     const filtered = suggestions.filter((sugestao) =>
+  //       sugestao.toLowerCase().includes(value.toLowerCase())
+  //     );
+  //     setSuggestions(value ? filtered : suggestions);
+  //   };
 
   // Efeito para gerar a pré-visualização da imagem
   useEffect(() => {
@@ -483,10 +484,12 @@ export default function CadastrarLivro({ onToggle }: CadastrarLivroProps) {
             />
             {capaPreview && (
               <div className={styles.capaContainerLivro}>
-                <img
+                <Image
                   src={capaPreview}
                   alt="Preview da capa do livro"
                   className={styles.capaPreview}
+                  width={200}
+                  height={400}
                 />
               </div>
             )}

@@ -9,14 +9,9 @@ import ErrorMessage from "../helper/error-message";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./login-form.module.css";
-import { FaEye, FaEyeSlash, FaPencilAlt } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Image from "next/image";
 
-interface LoginResponse {
-  id_usuario: string;
-  nome_login: string;
-  email: string;
-}
 
 function FormButton({ isSubmitting }: { isSubmitting: boolean }) {
   return (

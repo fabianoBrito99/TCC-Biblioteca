@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/comunidade/comunidade.module.css";
 import Input from "@/componentes/forms/input";
@@ -36,37 +36,37 @@ export default function ComunidadeListPage() {
   }, []);
 
   // Função para carregar comunidades e status do usuário
-  useEffect(() => {
-    const fetchComunidades = async () => {
-      try {
-        const response = await fetch("http://localhost:4000/api/comunidade");
-        const data = await response.json();
+  const fetchComunidades = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/comunidade");
+      const data = await response.json();
 
-        if (Array.isArray(data)) {
-          setComunidades(data);
+      if (Array.isArray(data)) {
+        setComunidades(data);
 
-          if (userId) {
-            // Verifica o status do usuário para cada comunidade
-            const statuses: StatusUsuario = {};
-            for (const comunidade of data) {
-              const statusResponse = await fetch(
-                `http://localhost:4000/api/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
-              );
-              const statusData = await statusResponse.json();
-              statuses[comunidade.id_comunidade] = statusData.status;
-            }
-            setStatusUsuario(statuses);
+        if (userId) {
+          const statuses: StatusUsuario = {};
+          for (const comunidade of data) {
+            const statusResponse = await fetch(
+              `http://localhost:4000/api/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
+            );
+            const statusData = await statusResponse.json();
+            statuses[comunidade.id_comunidade] = statusData.status;
           }
+          setStatusUsuario(statuses);
         }
-      } catch (error) {
-        console.error("Erro ao buscar comunidades:", error);
       }
-    };
+    } catch (error) {
+      console.error("Erro ao buscar comunidades:", error);
+    }
+  }, [userId]); // Dependência de userId
 
+  useEffect(() => {
     if (userId) {
       fetchComunidades();
     }
-  }, [userId]);
+  }, [userId, fetchComunidades]);
+
 
   // Função para criar uma nova comunidade
   const handleSubmit = async (e: React.FormEvent) => {

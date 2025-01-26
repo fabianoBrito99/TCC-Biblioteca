@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import styles from "./detalhesLivros.module.css";
 import Image from "next/image";
+import { useCallback } from "react";
 
 interface Resposta {
   id_resposta: number;
@@ -69,111 +70,52 @@ export default function DetalhesLivro() {
     }
   }, []);
 
+  const fetchLivro = useCallback(async () => {
+    try {
+      const response = await fetch(`http://localhost:4000/livro/${id}`);
+      if (!response.ok) throw new Error("Erro na resposta da API");
+      const data = await response.json();
+      if (data.erro) {
+        setErro(data.erro);
+      } else {
+        setLivro(data);
+      }
+    } catch (error) {
+      setErro((error as Error).message);
+    }
+  }, [id]);
+
+  const fetchComentarios = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/livro/${id}/comentarios?usuarioId=${usuarioId}`
+      );
+      const data = await response.json();
+      setComentarios(data);
+    } catch (error) {
+      console.error("Erro ao carregar comentários:", error);
+    }
+  }, [id, usuarioId]);
+
+  const fetchAvaliacoes = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/livro/${id}/avaliacoes`
+      );
+      const data = await response.json();
+      setAvaliacoes(data.avaliacoes || []);
+    } catch (error) {
+      console.error("Erro ao carregar avaliações:", error);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       fetchLivro();
       fetchComentarios();
       fetchAvaliacoes();
     }
-  }, [id]);
-
-  const fetchLivro = async () => {
-    try {
-      const response = await fetch(`http://localhost:4000/livro/${id}`);
-      if (!response.ok) throw new Error("Erro na resposta da API");
-      const data = await response.json();
-      data.erro ? setErro(data.erro) : setLivro(data);
-    } catch (error) {
-      setErro((error as Error).message);
-    }
-  };
-  const fetchComentarios = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:4000/api/livro/${id}/comentarios?usuarioId=${usuarioId}`
-      );
-      const data = await response.json();
-
-      console.log("Comentários recebidos da API:", data);
-
-      const comentariosConvertidos = await Promise.all(
-        data.map(async (comentario: Comentario) => {
-          // Verifica se o usuário curtiu o comentário no localStorage
-          const usuarioCurtiu =
-            localStorage.getItem(
-              `comentario-curtido-${comentario.id_comentario}-${usuarioId}`
-            ) !== null;
-
-          console.log(
-            `comentario.id_comentario: ${comentario.id_comentario}, usuarioCurtiu (localStorage): ${usuarioCurtiu}`
-          );
-
-          const respostasConvertidas = await Promise.all(
-            comentario.respostas?.map(async (resposta: Resposta) => {
-              if (
-                resposta.foto_usuario_resposta &&
-                Array.isArray(resposta.foto_usuario_resposta.data)
-              ) {
-                const blob = new Blob([
-                  new Uint8Array(resposta.foto_usuario_resposta.data),
-                ]);
-                const reader = new FileReader();
-                resposta.foto_usuario_resposta = await new Promise<string>(
-                  (resolve) => {
-                    reader.onload = () => resolve(reader.result as string);
-                    reader.readAsDataURL(blob);
-                  }
-                );
-              }
-              return resposta;
-            }) || []
-          );
-
-          if (
-            comentario.foto_usuario_comentario &&
-            Array.isArray(comentario.foto_usuario_comentario.data)
-          ) {
-            const blob = new Blob([
-              new Uint8Array(comentario.foto_usuario_comentario.data),
-            ]);
-            const reader = new FileReader();
-            comentario.foto_usuario_comentario = await new Promise<string>(
-              (resolve) => {
-                reader.onload = () => resolve(reader.result as string);
-                reader.readAsDataURL(blob);
-              }
-            );
-          }
-
-          const dataComentario = comentario.data_comentario
-            ? new Date(comentario.data_comentario).toLocaleDateString()
-            : "Data não disponível";
-
-          // Verifique a lógica de curtir baseado no `localStorage` e na API
-          const usuarioCurtiuAPI = comentario.usuario_curtiu; // Vem da API
-          console.log(`usuarioCurtiuAPI (da API): ${usuarioCurtiuAPI}`);
-
-          const usuarioCurtiuFinal = usuarioCurtiuAPI || usuarioCurtiu;
-
-          console.log(
-            `usuarioCurtiuFinal (estado final): ${usuarioCurtiuFinal}`
-          );
-          return {
-            ...comentario,
-            data_comentario: dataComentario,
-            curtidas: comentario.curtidas || 0,
-            usuario_curtiu: usuarioCurtiuFinal, // Aqui iniciamos baseado na verificação
-            respostas: respostasConvertidas,
-          };
-        })
-      );
-
-      console.log("Comentários convertidos:", comentariosConvertidos);
-      setComentarios(comentariosConvertidos);
-    } catch (error) {
-      console.error("Erro ao carregar comentários:", error);
-    }
-  };
+  }, [id, fetchLivro, fetchComentarios, fetchAvaliacoes]);
 
   // Função para curtir/descurtir comentário
   const handleCurtirComentario = async (idComentario: number) => {
@@ -219,18 +161,6 @@ export default function DetalhesLivro() {
       setMensagemCurtida(data.message);
     } catch (error) {
       alert("Erro ao curtir/descurtir comentário: " + (error as Error).message);
-    }
-  };
-
-  const fetchAvaliacoes = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:4000/api/livro/${id}/avaliacoes`
-      );
-      const data = await response.json();
-      setAvaliacoes(data.avaliacoes || []);
-    } catch (error) {
-      console.error("Erro ao carregar avaliações:", error);
     }
   };
 
@@ -336,9 +266,6 @@ export default function DetalhesLivro() {
 
   if (erro) return <p>{erro}</p>;
 
-  // Renderização continua igual
-  console.log("cor_cima:", livro?.cor_cima);
-  console.log("cor_baixo:", livro?.cor_baixo);
   return (
     <div
       className={styles.containerConsLiv}
@@ -347,12 +274,16 @@ export default function DetalhesLivro() {
       }}
     >
       <div className={styles.grid}>
-        <img
-          id="livro-capa"
-          src={livro?.foto_capa}
-          alt="Capa do livro"
-          className={styles.gridImg}
-        />
+        {livro?.foto_capa && (
+          <Image
+            id="livro-capa"
+            src={livro.foto_capa}
+            alt="Capa do livro"
+            className={styles.gridImg}
+            width={150}
+            height={300}
+          />
+        )}
         <div className={styles.livroInfo}>
           <h2 className={styles.categoria}>{livro?.categoria_principal}</h2>
           <h1>{livro?.nome_livro}</h1>
@@ -559,7 +490,7 @@ export default function DetalhesLivro() {
                       <span
                         key={star}
                         className={`${styles.estrela} ${
-                          aval.nota >= star
+                          aval.avaliacao >= star
                             ? styles.estrelaAtiva
                             : styles.estrelaInativa
                         }`}

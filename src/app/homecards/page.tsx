@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { fetchCategorias, fetchLivros } from "@/actions/categorias"; // Utilitários de API
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
-import Notificacoes from "@/componentes/notificacoes/notificacoes";
 
 interface Livro {
   id_livro: string;

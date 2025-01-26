@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "./comentarios.module.css";
-import { useParams } from "next/navigation";
 import Input from "../forms/input";
-import Button from "../forms/button";
 import { FaPaperPlane } from "react-icons/fa";
 
 interface Comentario {
@@ -19,6 +17,8 @@ interface Comentario {
 
 interface ComentariosProps {
   comunidadeId: number;
+  comentarios: Comentario[];
+  atualizarComentarios: () => Promise<void>;
 }
 
 const generateColorFromName = (name: string | undefined) => {
@@ -39,7 +39,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [comentario, setComentario] = useState("");
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
-  const { id } = useParams();
+
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -51,13 +51,13 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
     }
   }, []);
 
-  const fetchComentarios = async () => {
+  const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${comunidadeId}/comentarios`
       );
-      const data = await response.json();
-
+      const data: Comentario[] = await response.json();
+  
       if (Array.isArray(data)) {
         setComentarios(data);
       } else {
@@ -67,12 +67,17 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
     } catch (error) {
       console.error("Erro ao buscar comentários:", error);
     }
-  };
+  }, [comunidadeId]);
+  
+  
+  useEffect(() => {
+    fetchComentarios();
+  }, [fetchComentarios]);
 
   // useEffect para buscar os comentários ao carregar ou quando o `comunidadeId` mudar
   useEffect(() => {
     fetchComentarios();
-  }, [comunidadeId]);
+  }, [comunidadeId, fetchComentarios]);
 
   // Função para enviar um novo comentário
   const handleEnviarComentario = async () => {

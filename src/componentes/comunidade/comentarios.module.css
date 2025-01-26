@@ -93,7 +93,7 @@
 .comentariosFixo {
   position: fixed;
   bottom: 0px;
-  width: 15%;
+  width: 14%;
   z-index: 2;
 }
 
@@ -106,8 +106,8 @@
   );
   border-radius: 15px;
   border: 2px solid #fff;
-  padding: 15px 30px;
-  bottom: 20px;
+  padding: 14px 27px;
+  bottom: 15px;
   right: 5px;
 }
 .buttonEnviar:hover {
@@ -120,20 +120,6 @@
   border-color: rgba(4, 78, 175, 0.507);
   box-shadow: 0 0 0 1px rgb(2, 67, 247);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -226,7 +212,7 @@
   content: "";
   position: absolute;
   top:10px; 
-  left: 265px; /* Posição à direita do card */
+  left: 225px; 
   width: 0;
   height: 0;
   border-style: solid;
