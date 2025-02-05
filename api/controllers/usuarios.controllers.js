@@ -109,15 +109,19 @@ async function create(request, response) {
     bairro,
     cidade,
     estado,
+    sexo, // Recebe "Masculino" ou "Feminino"
   } = request.body;
 
   // Converte a imagem Base64 para Buffer para armazenar como Blob
   const fotoBuffer = foto_usuario ? Buffer.from(foto_usuario.split(",")[1], 'base64') : null;
 
+  // Normaliza o valor do sexo para "M" ou "F"
+  const sexoNormalizado = sexo === "Masculino" ? "M" : sexo === "Feminino" ? "F" : null;
+
   connection.query(
-    `INSERT INTO Usuario (nome_login, email, senha, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [nome_login, email, senha, telefone, data_nascimento, igreja_local, fotoBuffer, tipo_usuario],
+    `INSERT INTO Usuario (nome_login, email, senha, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario, sexo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, "leitor", ?)`,
+    [nome_login, email, senha, telefone, data_nascimento, igreja_local, fotoBuffer, tipo_usuario, sexoNormalizado],
     function (err, resultadoUsuario) {
       if (err) {
         console.error("Erro ao criar usuário:", err);
@@ -152,6 +156,7 @@ async function create(request, response) {
     }
   );
 }
+
 
 
 

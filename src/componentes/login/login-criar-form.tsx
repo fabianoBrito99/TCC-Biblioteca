@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Button from "@/componentes/forms/button";
@@ -32,6 +32,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [sexo, setSexo] = useState("");
   const [data_nascimento, setDataNascimento] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [capaPreview, setCapaPreview] = useState<string | null>(null);
@@ -46,8 +47,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [estado, setEstado] = useState("");
   const [igrejaLocal, setIgrejaLocal] = useState(false); // Checkbox
 
-
-
   // Efeito para gerar a pré-visualização da imagem
   useEffect(() => {
     if (fotoPerfil) {
@@ -57,15 +56,15 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     }
   }, [fotoPerfil]);
 
-   // Efeito para gerar a pré-visualização da imagem
-    useEffect(() => {
-      if (fotoPerfil) {
-        const objectUrl = URL.createObjectURL(fotoPerfil);
-        setCapaPreview(objectUrl);
-        return () => URL.revokeObjectURL(objectUrl);
-      }
-      setCapaPreview(null);
-    }, [fotoPerfil]);
+  // Efeito para gerar a pré-visualização da imagem
+  useEffect(() => {
+    if (fotoPerfil) {
+      const objectUrl = URL.createObjectURL(fotoPerfil);
+      setCapaPreview(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+    setCapaPreview(null);
+  }, [fotoPerfil]);
 
   // Função para conversão de arquivo para base64
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,6 +122,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
         data_nascimento,
         foto_usuario: fotoBase64, // Envia a imagem como base64
         igreja_local: igrejaLocal,
+        sexo,
         cep,
         rua,
         numero,
@@ -205,6 +205,28 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
               />
+              <label htmlFor="sexo">Sexo</label>
+              <select
+                id="sexo"
+                name="sexo"
+                value={sexo}
+                onChange={(e) => setSexo(e.target.value)}
+              >
+                <option value="">Selecione</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Feminino">Feminino</option>
+              </select>
+
+              <div className={styles.igrejaLocal}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={igrejaLocal}
+                    onChange={() => setIgrejaLocal(!igrejaLocal)}
+                  />
+                  Membro IMUB?
+                </label>
+              </div>
             </>
           ) : (
             <>
@@ -294,26 +316,18 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                   </div>
                 )}
               </div>
-              <div className={styles.igrejaLocal}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={igrejaLocal}
-                    onChange={() => setIgrejaLocal(!igrejaLocal)}
-                  />
-                  Membro IMUB?
-                </label>
-              </div>
             </>
           )}
-          <FormButton />
+          <div className={styles.btCad}><FormButton /></div> 
         </form>
       </div>
-      <h2 className={styles.subtitle}>Faça Login</h2>
-      <p className={styles.conta}>Já possui conta? Faça Login.</p>
-      <button className={styles.button2} onClick={onToggle}>
-        Login
-      </button>
+      <div className={styles.ptBaixo}>
+        <h2 className={styles.subtitle}>Faça Login</h2>
+        <p className={styles.conta}>Já possui conta? Faça Login.</p>
+        <button className={styles.button2} onClick={onToggle}>
+          Login
+        </button>
+      </div>
     </div>
   );
 }

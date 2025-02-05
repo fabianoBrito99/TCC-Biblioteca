@@ -19,10 +19,12 @@
 }
 
 .navMenu {
-  background: linear-gradient(to bottom, #426bc2, #e9f3ff);
+  background: linear-gradient(to bottom, #fcf5cf, #fffee9);
   width: 250px;
   height: 0;
-  position: fixed;
+  position:fixed ;
+  top: 10px;
+  bottom: 0;
   left: 0;
   z-index: 100;
   transition: height 0.5s ease;
@@ -38,6 +40,8 @@
 .navMenu.navOpen {
   margin-top: 50px;
   height: 100vh;
+  border-radius: 0 0 140px 0;
+
 }
 
 .navMenu ul {
@@ -111,17 +115,18 @@
   z-index: 100;
 }
 
+
 .navHover .menuContent li:hover {
   background: linear-gradient(
     to left,
-    rgba(118, 150, 255, 0.801),
+    #e7d570,
     rgba(255, 255, 255, 0.938)
   );
   padding: 5px;
   margin: 0;
   color: rgb(55, 69, 82);
-  border-radius: 5px;
-  border: 1px solid rgb(0, 136, 255);
+  border-radius: 0 20% 20% 0px;
+  border: 1px solid rgb(215, 218, 250);
 }
 
 .menuIconContainer {
