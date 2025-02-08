@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import styles from "./conta.module.css";
@@ -50,15 +50,16 @@ export default function ContaPage({ params }: { params: { id: string } }) {
           setUser(data.usuario);
           setEndereco(data.endereco);
 
-          // Verificar se a foto do usuário é um Blob e converter se necessário
-          if (
-            data.usuario.foto_usuario &&
-            data.usuario.foto_usuario instanceof Blob
-          ) {
-            const base64Foto = await convertBlobToBase64(
-              data.usuario.foto_usuario
-            );
-            setFotoBase64(base64Foto); // Agora chamamos a função corretamente
+          // Verificar se a foto é uma string base64 ou Blob
+          if (data.usuario.foto_usuario) {
+            if (typeof data.usuario.foto_usuario === "string") {
+              setFotoBase64(data.usuario.foto_usuario);
+            } else if (data.usuario.foto_usuario instanceof Blob) {
+              const base64Foto = await convertBlobToBase64(
+                data.usuario.foto_usuario
+              );
+              setFotoBase64(base64Foto);
+            }
           }
         } else {
           console.error("Erro ao buscar dados do usuário");
@@ -79,16 +80,15 @@ export default function ContaPage({ params }: { params: { id: string } }) {
     <div className={styles.contaContainer}>
       <div className={styles.grid}>
         <div className={styles.grid1}>
-          {/* Se a foto estiver em base64, exiba-a */}
           {fotoBase64 ? (
             <Image
-              src={fotoBase64} // Usando a foto convertida em base64
+              src={`data:image/png;base64,${fotoBase64}`}
               alt="Foto de perfil"
               width={100}
               height={100}
             />
           ) : (
-            <div>Sem foto de perfil</div> // Mensagem alternativa caso não tenha foto
+            <div>Sem foto de perfil</div>
           )}
         </div>
         <div className={styles.grid2}>

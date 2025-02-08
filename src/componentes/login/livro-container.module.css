@@ -223,7 +223,7 @@
 .text p {
   position: relative;
   top: -110px;
-  left: 130px;
+  left: 100px;
   margin: 0;
   font-size: 3rem;
   font-weight: bold;
@@ -231,10 +231,10 @@
   color: #363631;
 }
 .text .sobrenome {
-  top: 32px;
-  left: -249px;
+  top: 45px;
+  left: 0;
   font-size: 1.7rem;
-  position: relative;
+  position: absolute;
   font-family: --type-tree;
 }
 .text .biblioteca {
@@ -243,7 +243,7 @@
   position: relative;
   top: 20px;
   color: #6d5a5a;
-  left: 39px;
+  left: 35px;
 }
 
 .text .biblioteca::before,
@@ -262,7 +262,7 @@
 }
 
 .text .biblioteca::after {
-  left: 160px;
+  left: 130px;
   border-radius: 100% 0% 0% 0%;
 }
 
@@ -270,5 +270,5 @@
 .logoFogo {
   position: relative;
   top: 250px;
-  left: 70px;
+  left: 10px;
 }

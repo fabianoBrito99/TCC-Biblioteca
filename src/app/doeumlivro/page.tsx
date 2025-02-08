@@ -168,7 +168,7 @@ export default function SuggestionPage() {
             <Button type="submit">Enviar Sugestão</Button>
           </form>
         </div>
-        <div className={styles.sugestoes}>
+        <div className={styles.sugestoes1}>
         <h1>Sugestões de outros Usuarios</h1>
       </div>
       </div>

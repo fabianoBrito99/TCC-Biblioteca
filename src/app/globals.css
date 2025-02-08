@@ -9,6 +9,7 @@ body {
   --type-second: var(--type-second-spectral), Georgia;
   --type-tree: var(--type-tree), Bungee Spice;
   font-family: var(--type-first);
+  background: #fdf8e2;
 }
 
 h1,

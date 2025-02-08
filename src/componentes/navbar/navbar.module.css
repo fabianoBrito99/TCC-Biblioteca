@@ -19,7 +19,7 @@
 }
 
 .navMenu {
-  background: linear-gradient(to bottom, #fcf5cf, #fffee9);
+  background: linear-gradient(to bottom, #fff5c2, #fffee9);
   width: 250px;
   height: 0;
   position:fixed ;
@@ -41,6 +41,7 @@
   margin-top: 50px;
   height: 100vh;
   border-radius: 0 0 140px 0;
+  box-shadow: 0 0px 16px rgb(116, 104, 0);
 
 }
 

@@ -1,6 +1,6 @@
 .criarComunidade{
 margin-top: 50px;
-background-image: linear-gradient(to left, #4bc4fc, #4bc4fc, #e4f5fa, #ffffff);
+background-image: linear-gradient(to bottom, #4bc4fc, #4bc4fc, #e4f5fa, #ffffff);
 padding: 20px;
 width: 100vw;
 overflow-y: auto;
@@ -14,22 +14,26 @@ align-items: center;
 .container input{
 width: 80%;
 }
+
+.listaComunidade{
+  display: flex;
+  flex-wrap: wrap;
+}
 .comunidadeCard{
   display: flex;
-  padding: 30px;
+  gap: 30px;
+  margin: 10px;
+  padding: 50px;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-image: linear-gradient(to left, #a7e3ff, #e4f5fa, #e4f5fa, #a7e3ff);
+  background-image: linear-gradient(to left, #fdf8e2, #e4f5fa, #e4f5fa, #fdf8e2);
   margin-bottom: 20px;
-  width: 80vw;
-  margin-left: auto;
-  margin-right: auto;
   border-radius: 30px;
 
 }
 .comunidadeCard:hover{
-  background-image: linear-gradient(to left, #e4f5fa, #a7e3ff, #a7e3ff, #e4f5fa);
+  background-image: linear-gradient(to left, #e4f5fa, #fdf8e2, #fdf8e2, #e4f5fa);
   border: 1px solid #4882ff;
 }
 .comunidadeCard button{
@@ -50,12 +54,21 @@ width: 80%;
   display: block;
   width: 1.75rem;
   height: 1.5rem;
-  background: rgb(0, 140, 255);
+  background: linear-gradient(to top, #625bec, #aaa7f5);
   position: absolute;
   bottom: 4px;
-  left: 190px;
+  left: 0px;
   border-radius: 0.2rem;
   z-index: -1;
+  clip-path: polygon(
+    0% 0%,
+    /* Canto superior esquerdo */ 100% 0%,
+    /* Canto superior direito */ 100% 100%,
+    /* Início das pernas */ 90% 100%,
+    /* Perna direita */ 50% 70%,
+    /* Centro da base */ 10% 100%,
+    /* Perna esquerda */ 0% 100% /* Fim das pernas */
+  );
 }
 
 .titleCriar {
@@ -84,17 +97,26 @@ width: 80%;
 }
 
 
-.titleCom::after {
+.titleCom::before {
   content: "";
   display: block;
   width: 1.2rem;
   height: 1rem;
-  background: rgb(0, 140, 255);
-  position: absolute;
-  bottom: 4px;
-  left: 340px;
+  background: linear-gradient(to top, #625bec, #a9a8ca);
+  position: relative;
+  bottom: -10px;
+  left: 20px;
   border-radius: 0.2rem;
   z-index: -1;
+  clip-path: polygon(
+    0% 0%,
+    /* Canto superior esquerdo */ 100% 0%,
+    /* Canto superior direito */ 100% 100%,
+    /* Início das pernas */ 90% 100%,
+    /* Perna direita */ 50% 70%,
+    /* Centro da base */ 10% 100%,
+    /* Perna esquerda */ 0% 100% /* Fim das pernas */
+  );
 }
 
 
@@ -173,4 +195,5 @@ background-color: #fdf8e2;
 .containerComu{
   margin-top: 90px;
 }
+
 

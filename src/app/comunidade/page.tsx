@@ -185,9 +185,12 @@ export default function ComunidadeListPage() {
           <Button type="submit">Criar Comunidade</Button>
         </form>
       </div>
+      <div>
+      <h1 className={styles.titleCom}>Comunidades</h1>
+      </div>
 
       <div className={styles.listaComunidade}>
-        <h1 className={styles.titleCom}>Comunidades</h1>
+       
         {comunidades.map((comunidade) => {
           const status = statusUsuario[comunidade.id_comunidade] || "nao_inscrito";
 

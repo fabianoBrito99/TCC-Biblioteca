@@ -61,7 +61,8 @@
   );
 }
 
-.sugestoes h1 {
+
+.sugestoes1 h1 {
   font-family: var(--type-second);
   line-height: 1;
   font-size: 2rem;
@@ -73,7 +74,7 @@
   justify-content: center;
 }
 
-.sugestoes h1::before {
+.sugestoes1 h1::before {
   content: "";
   display: block;
   width: 1.3rem;
@@ -95,6 +96,13 @@
   );
 }
 
+.sugestoes{
+  width: 98vw;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 15px;
+  gap: 20px;
+}
 .suggestionForm {
   display: flex;
   flex-direction: column;
@@ -109,9 +117,9 @@
 }
 
 .suggestionCard {
-  padding: 15px 150px;
+  
+  padding: 35px;
   border: 1px solid #ddd;
-  height: 300px;
   border-radius: 5px;
   background: #fafafa;
   margin-bottom: 10px;

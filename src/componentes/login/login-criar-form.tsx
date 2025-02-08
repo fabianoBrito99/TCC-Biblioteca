@@ -205,17 +205,19 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
               />
-              <label htmlFor="sexo">Sexo</label>
-              <select
-                id="sexo"
-                name="sexo"
-                value={sexo}
-                onChange={(e) => setSexo(e.target.value)}
-              >
-                <option value="">Selecione</option>
-                <option value="Masculino">Masculino</option>
-                <option value="Feminino">Feminino</option>
-              </select>
+              <div className={styles.sexo}>
+                <label htmlFor="sexo">Sexo</label>
+                <select
+                  id="sexo"
+                  name="sexo"
+                  value={sexo}
+                  onChange={(e) => setSexo(e.target.value)}
+                >
+                  <option value="">Selecione</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                </select>
+              </div>
 
               <div className={styles.igrejaLocal}>
                 <label>
@@ -318,7 +320,9 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               </div>
             </>
           )}
-          <div className={styles.btCad}><FormButton /></div> 
+          <div className={styles.btCad}>
+            <FormButton />
+          </div>
         </form>
       </div>
       <div className={styles.ptBaixo}>

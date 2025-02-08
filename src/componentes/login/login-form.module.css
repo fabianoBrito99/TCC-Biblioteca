@@ -364,13 +364,34 @@
 }
 .igrejaLocal label{
   position: relative;
-  left: 30px;
+  left: 22px;
+  bottom: 20px;
 }
 .igrejaLocal input{
   position: relative;
   top: 20px;
   left: -25px;
 }
+.sexo{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  
+}
+.sexo label{
+  margin: 2px;
+}
+.sexo select{
+  padding: 10px;
+  border-radius: 8px;
+ border-color: #4c00ff;
+}
+
+.sexo select:focus{
+  border-width: 2px;
+  border-color: #001aff;
+}
+
 
 .foto {
   position: relative;
