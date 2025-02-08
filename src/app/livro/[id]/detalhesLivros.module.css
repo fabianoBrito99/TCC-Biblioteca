@@ -72,7 +72,7 @@
 
 /* Centralizar o Tab Navigation */
 .tabContainer {
-  margin-top: 100px;
+  margin-top: 130px;
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -175,11 +175,11 @@
 .conatinerLateral {
   position: relative;
   width: 31vw;
-  height: 70vh;
+  height: 67vh;
   background: #fff;
   overflow-y: auto;
   padding: 10px;
-  margin-top: -20px;
+  margin-top: 15px;
   margin-right: -20px;
   margin-bottom: 50px;
 

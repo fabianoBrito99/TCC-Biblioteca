@@ -232,7 +232,7 @@
 }
 .text .sobrenome {
   top: 32px;
-  left: -249px;
+  left: -195px;
   font-size: 1.7rem;
   position: relative;
   font-family: --type-tree;
@@ -262,7 +262,7 @@
 }
 
 .text .biblioteca::after {
-  left: 160px;
+  left: 130px;
   border-radius: 100% 0% 0% 0%;
 }
 
@@ -447,5 +447,5 @@
 .logoFogo {
   position: relative;
   top: 250px;
-  left: 70px;
+  left: 10px;
 }

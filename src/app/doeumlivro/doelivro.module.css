@@ -47,7 +47,7 @@
   background: linear-gradient(to top, #625bec, #a9a8ca);
   position: relative;
   bottom: -10px;
-  left: 35px;
+  left: 30px;
   transform: translateX(-50%);
   z-index: -1;
   clip-path: polygon(
@@ -81,7 +81,7 @@
   background: linear-gradient(to top, #625bec, #a9a8ca);
   position: relative;
   bottom: -10px;
-  left: 35px;
+  left: 30px;
   transform: translateX(-50%);
   z-index: -1;
   clip-path: polygon(
@@ -111,7 +111,8 @@
 .suggestionCard {
   padding: 15px 150px;
   border: 1px solid #ddd;
-  height: 300px;
+  width: 500px;
+  height: 200px;
   border-radius: 5px;
   background: #fafafa;
   margin-bottom: 10px;
@@ -172,12 +173,12 @@
 .pix {
   position: relative;
   bottom: -60px;
-  left: -150px;
+  left: 480px;
 }
 .qrcode {
   position: relative;
   bottom: -110px;
-  left: -520px;
+  left: 190px;
   color: #333;
 }
 

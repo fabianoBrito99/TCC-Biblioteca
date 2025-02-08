@@ -48,7 +48,7 @@
   border: none;
   cursor: pointer;
   position: relative;
-  left:870px ;
+  left:699px ;
   top: -60px;
   font-size: 1rem;
   margin-left: 5px; /* Para espaçamento */
@@ -86,14 +86,23 @@ cursor: pointer;
   .titleCadastrar::after {
     content: '';
     display: block;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 2rem;
+    height: 1.7rem;
     background: rgb(0, 140, 255);
     position: absolute;
-    bottom: 5px;
-    left: 258px;
+    bottom:-1px;
+    left: 203px;
     border-radius: 0.2rem;
     z-index: -1;
+    clip-path: polygon(
+      0% 0%,     /* Canto superior esquerdo */
+      100% 0%,   /* Canto superior direito */
+      100% 100%,  /* Início das pernas */
+      90% 100%,  /* Perna direita */
+      50% 70%,   /* Centro da base */
+      10% 100%,  /* Perna esquerda */
+      0% 100%     /* Fim das pernas */
+    );
   }
 
   .capaContainerLivro{
@@ -130,8 +139,8 @@ cursor: pointer;
     border: none;
     cursor: pointer;
     position: relative;
-    left:870px ;
-    top: -60px;
+    left:699px ;
+    top: -53px;
     font-size: 1rem;
     margin-left: 5px; /* Para espaçamento */
     padding: 0 2rem;

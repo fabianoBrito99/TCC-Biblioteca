@@ -92,8 +92,8 @@
 
 .comentariosFixo {
   position: fixed;
-  bottom: 0px;
-  width: 15%;
+  bottom: 5px;
+  width: 14%;
   z-index: 2;
 }
 
@@ -108,7 +108,7 @@
   border: 2px solid #fff;
   padding: 15px 30px;
   bottom: 20px;
-  right: 5px;
+  right: 1px;
 }
 .buttonEnviar:hover {
   background: linear-gradient(
@@ -226,11 +226,11 @@
   content: "";
   position: absolute;
   top:10px; 
-  left: 265px; /* Posição à direita do card */
+  left: 229px; /* Posição à direita do card */
   width: 0;
   height: 0;
   border-style: solid;
-  border-width: 15px 0 15px 20px;
+  border-width: 15px 0 15px 10px;
   border-color: transparent transparent transparent #75b8b0;
 }
 
