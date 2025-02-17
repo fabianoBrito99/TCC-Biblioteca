@@ -2,7 +2,7 @@
 
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { fetchCategorias, fetchLivros } from "@/actions/categorias"; // Utilitários de API
+import { fetchCategorias, fetchLivros } from "@/actions/categorias"; 
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 

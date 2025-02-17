@@ -41,8 +41,11 @@
   border-radius: 0.2rem;
 }
 .h1Login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 10px;
-  margin-left: 120px;
+  
 }
 
 .button2 {
@@ -147,7 +150,7 @@
 }
 .btCad{
   position: fixed;
-  bottom: 200px;
+  bottom: 187px;
 }
 .facaLogin {
   position: fixed;
@@ -222,7 +225,6 @@
 }
 .h1Login {
   margin-bottom: 30px;
-  margin-left: 10px;
 }
 
 .button2 {
@@ -311,7 +313,7 @@
 }
 .ptBaixo{
   position: fixed;
-  bottom: 30px;
+  bottom: 50px;
 }
 
 .cep {
@@ -358,24 +360,26 @@
 
 .igrejaLocal{
   display: flex;
+  font-size: 1.2rem;
   align-items: center;
   padding: 20px 0;
  
 }
 .igrejaLocal label{
   position: relative;
-  left: 22px;
-  bottom: 20px;
+  left: 29px;
+  bottom: 29px;
 }
 .igrejaLocal input{
   position: relative;
-  top: 20px;
-  left: -25px;
+  width: 20px;
+  height: 20px;
+  top: 22px;
+  left: -29px;
 }
 .sexo{
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   
 }
 .sexo label{

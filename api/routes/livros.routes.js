@@ -19,4 +19,11 @@ router.post("/livro/:livroId/categoria", livrosController.addCategoria);
 // Rotas para autores
 router.get("/livro/:livroId/autores", livrosController.ListaAutorLivro);
 
+router.get("/livro/categoria/:categoria", livrosController.sugestoesLivro);
+
+
+
+
+
+
 module.exports = router;

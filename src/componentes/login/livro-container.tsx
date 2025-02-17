@@ -31,13 +31,6 @@ export default function BookContainer() {
           }`}
         >
           <div className={styles.logo}>
-            <div className={styles.smokes}>
-              <div className={styles.smoke}></div>
-              <div className={styles.smoke}></div>
-              <div className={styles.smoke}></div>
-              <div className={styles.smoke}></div>
-              <div className={styles.smoke}></div>
-            </div>
             <div className={styles.text}>
               <p>
                 HELENA

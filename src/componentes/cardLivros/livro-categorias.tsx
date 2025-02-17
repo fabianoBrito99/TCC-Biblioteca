@@ -76,9 +76,9 @@ const CategoriaSwiper: React.FC<CategoriaSwiperProps> = ({
                   width={150}
                   height={300}
                 />
-                <h2>{livro.nome_livro}</h2>
-                <h4>Autor: {livro.autor}</h4>
-                <p>
+                <h2 className={styles.tituloLivro}>{livro.nome_livro}</h2>
+                <h4 className={styles.autor }>Autor: {livro.autor}</h4>
+                <p className={styles.avaliacao }>
                   {[1, 2, 3, 4, 5].map((star) => {
                     const media = livro.media_avaliacoes; // Média do livro
                     const isFull = media >= star; // Estrela completa

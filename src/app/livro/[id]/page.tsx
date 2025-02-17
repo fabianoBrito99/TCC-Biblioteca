@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import styles from "./detalhesLivros.module.css";
 import Image from "next/image";
 import { useCallback } from "react";
+import SugestoesLivros from "@/componentes/sugestoes/sugestoes";
 
 interface Resposta {
   id_resposta: number;
@@ -273,36 +274,56 @@ export default function DetalhesLivro() {
         background: `linear-gradient(to bottom, ${livro?.cor_cima}, ${livro?.cor_baixo})`,
       }}
     >
-      <div className={styles.grid}>
-        {livro?.foto_capa && (
-          <Image
-            id="livro-capa"
-            src={livro.foto_capa}
-            alt="Capa do livro"
-            className={styles.gridImg}
-            width={150}
-            height={300}
-          />
-        )}
-        <div className={styles.livroInfo}>
-          <h2 className={styles.categoria}>{livro?.categoria_principal}</h2>
-          <h1>{livro?.nome_livro}</h1>
-          <h2>Autor: {livro?.nome_autor}</h2>
-          <h2>Quantidade de páginas: {livro?.quantidade_paginas}</h2>
+      <div className={styles.container2}>
+        <div className={styles.grid}>
+          {livro?.foto_capa && (
+            <div className={styles.imageContainer}>
+              {!livro?.quantidade_estoque && (
+                <span className={styles.indisponivel}>
+                  <span className={styles.indisponivelTexto}>LIVRO</span>
+                  <span className={styles.indisponivelPrincipal}>
+                    INDISPONÍVEL
+                  </span>
+                  <span className={styles.indisponivelTexto}>NO MOMENTO</span>
+                </span>
+              )}
 
-          <p>{livro?.descricao}</p>
-          <div className={styles.botaoReservarPos}>
-            {livro?.quantidade_estoque ? (
-              <button className={styles.botaoReservar} onClick={handleReservar}>
-                Reservar
-              </button>
-            ) : (
-              <button className={styles.botaoReservado} disabled>
-                Indisponível
-              </button>
-            )}
+              <Image
+                id="livro-capa"
+                src={livro.foto_capa}
+                alt="Capa do livro"
+                className={styles.gridImg}
+                width={150}
+                height={300}
+              />
+            </div>
+          )}
+          <div className={styles.livroInfo}>
+            <h2 className={styles.categoria}>{livro?.categoria_principal}</h2>
+            <h1>{livro?.nome_livro}</h1>
+            <h2>Autor: {livro?.nome_autor}</h2>
+            <h2>Quantidade de páginas: {livro?.quantidade_paginas}</h2>
+
+            <p>{livro?.descricao}</p>
+            <div className={styles.botaoReservarPos}>
+              {livro?.quantidade_estoque ? (
+                <button
+                  className={styles.botaoReservar}
+                  onClick={handleReservar}
+                >
+                  Reservar
+                </button>
+              ) : (
+                <button className={styles.botaoReservado} disabled>
+                  Indisponível
+                </button>
+              )}
+            </div>
           </div>
         </div>
+        {/* <div className={styles.sugestoes}>
+          {livro && <SugestoesLivros categoria={livro.categoria_principal} />}
+        </div> */}
       </div>
 
       <div className={styles.conatinerLateral}>

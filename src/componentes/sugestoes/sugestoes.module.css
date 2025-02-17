@@ -1,0 +1,73 @@
+.container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: flex;
+ 
+  justify-content: center;
+  gap: 15px;
+}
+
+.cardLivro {
+  background: #fff;
+  width: 280px;
+  height: 400px;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 10px 10px rgb(12, 8, 8);
+  transition: transform 0.2s ease-in-out;
+  margin: 0 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cardLivro:hover {
+  transform: scale(1.05);
+}
+
+.cardLivro img {
+  border-radius: 5px;
+  max-width: 80%;
+  height: auto;
+}
+
+.cardLivro h3 {
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.cardLivro p {
+  font-size: 14px;
+  color: #555;
+}
+
+.pagination {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.pagination button {
+  margin: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.pagination button:hover {
+  background-color: #0056b3;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

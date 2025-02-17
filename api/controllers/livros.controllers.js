@@ -437,6 +437,35 @@ function showEditora(request, response) {
   );
 }
 
+function sugestoesLivro(request, response) {
+  const categoria = request.query.categoria;
+
+  let query = `
+    SELECT Livro.id_livro, Livro.nome_livro, Livro.foto_capa, Autor.nome AS nome_autor
+    FROM Livro
+    LEFT JOIN Livro_Categoria ON Livro.id_livro = Livro_Categoria.fk_id_livros
+    LEFT JOIN Categoria ON Livro_Categoria.fk_id_categoria = Categoria.id_categoria
+    LEFT JOIN Autor_Livros ON Livro.id_livro = Autor_Livros.fk_id_livros
+    LEFT JOIN Autor ON Autor_Livros.fk_id_autor = Autor.id_autor
+  `;
+
+  let params = [];
+
+  if (categoria) {
+    query += ` WHERE Categoria.categoria_principal = ?`;
+    params.push(categoria);
+  }
+
+  connection.query(query, params, (err, resultado) => {
+    if (err) {
+      return response.status(500).json({ erro: "Erro ao buscar livros" });
+    }
+
+    return response.json({ livros: resultado });
+  });
+}
+
+
 module.exports = {
   show,
   list,
@@ -447,4 +476,5 @@ module.exports = {
   createEditora,
   listEditora,
   showEditora,
+  sugestoesLivro
 };
