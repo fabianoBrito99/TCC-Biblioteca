@@ -15,6 +15,7 @@ import {
   FaBookOpen,
   FaSignInAlt,
   FaTable,
+  FaClipboardList,
 } from "react-icons/fa"; // Importa ícones do react-icons
 import styles from "@/componentes/navbar/navbar.module.css";
 import Notificacoes from "../notificacoes/notificacoes";
@@ -35,6 +36,7 @@ export default function Navbar() {
   // Rotas e permissões
   const rotas = [
     { path: "/livros", label: "Livros", icon: <FaBook /> },
+    { path: "/indicacoes", label: "Indicações", icon: <FaClipboardList /> },
     { path: "/cadastrarLivro", label: "Cadastrar Livro", icon: <FaPlus /> },
     { path: "/emprestimos", label: "Empréstimos", icon: <FaBook /> },
     {
@@ -63,6 +65,7 @@ export default function Navbar() {
       "/comunidade",
       "/relatorios",
       "/login",
+      "/indicacoes",
     ],
     voluntario: [
       "/homecards",

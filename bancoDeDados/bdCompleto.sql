@@ -362,6 +362,13 @@ CREATE TABLE IF NOT EXISTS Notificacoes (
     FOREIGN KEY (fk_id_usuario) REFERENCES Usuario(id_usuario)
 );
 
+-- Tabela de indicações
+CREATE TABLE IF NOT EXISTS Indicacoes (
+    id_indicacao INT PRIMARY KEY AUTO_INCREMENT,
+    fk_id_livro INT NOT NULL,
+    FOREIGN KEY (fk_id_livro) REFERENCES Livro(id_livro)
+);
+
 
 INSERT INTO Notificacoes (mensagem, tipo, data_criacao, lida, fk_id_usuario)
 VALUES ('o prazo para devolver o livro está se aproximando, se atente para devolver no prazo🥰!', 'livro', NOW(), 0, 3);

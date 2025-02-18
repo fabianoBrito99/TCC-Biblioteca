@@ -11,6 +11,7 @@ const doelivroRoutes = require('./routes/doelivro.routes');
 const comunidadeRoutes = require('./routes/comunidade.routes'); 
 const noticacoesRoutes = require('./routes/notificacoes.routes'); 
 const relatorioRoutes = require('./routes/relatorios.routes'); 
+const indicacoesRoutes = require('./routes/indicacoes.routes'); 
 
 
 const app = express();
@@ -54,6 +55,7 @@ app.use("/api", doelivroRoutes);
 app.use("/api", comunidadeRoutes); 
 app.use("/api", noticacoesRoutes); 
 app.use("/api", relatorioRoutes); 
+app.use("/api", indicacoesRoutes); 
 
 
 const PORT = 4000;

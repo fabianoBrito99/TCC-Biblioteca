@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchCategorias, fetchLivros } from "@/actions/categorias"; 
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
+import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
 
 interface Livro {
   id_livro: string;
@@ -51,6 +52,10 @@ const Home: React.FC = () => {
         <title>Home</title>
         <link rel="icon" href="/icones/home-.png" />
       </Head>
+
+      <div className={styles.indicacoes}>
+        <IndicacoesDisplay />
+      </div>
 
       <div id="categorias-section" className={styles.categoriasSection}>
         {categorias.map((categoria) => {

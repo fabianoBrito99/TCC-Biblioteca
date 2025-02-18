@@ -1,0 +1,27 @@
+.container {
+  max-width: 500px;
+  margin: auto;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.button {
+  background-color: #ff4136;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}

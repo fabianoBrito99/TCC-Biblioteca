@@ -1,0 +1,78 @@
+.carouselContainer {
+  width: 99vw;
+  gap: 20px;
+
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+  text-align: left;
+  background: #645733;
+  color: #f5dede;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.grid1 {
+  display: flex;
+  margin-left: 30px;
+  flex-direction: column;
+}
+
+.grid2 {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+}
+
+.image,
+.image2 {
+  position: relative;
+  left: 50px;
+  bottom: 10px;
+  width: 30%;
+  border-radius: 10px;
+  transform: rotate(-10deg);
+  filter: grayscale(80%);
+}
+.image2{
+  transform: rotate(10deg);
+  left: -50px;
+}
+.image1 {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+
+.arrow1 {
+  position: relative;
+  top: 120px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #838080;
+  left: -470px;
+}
+
+.arrow2 {
+  position: relative;
+  bottom: 200px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #838080;
+}
+.arrow:hover {
+  color: #0070f3;
+}
+
+.autor{
+  margin-top: 20px;
+}

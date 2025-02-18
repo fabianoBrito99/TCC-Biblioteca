@@ -1,0 +1,50 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 300px;
+  margin: auto;
+  margin-top: 90px;
+}
+
+.input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.button {
+  background-color: #0070f3;
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.sugestoes{
+  margin-top: -20px;
+  border-radius: 2px;
+}
+.sugestoes li{
+  padding: 5px;
+  background-color: #fff;
+}
+
+.sugestoes li {
+  padding: 5px;
+  background-color: #fff;
+}
+
+.sugestoes li:nth-child(odd) {
+  background-color: #77caf3; 
+}
+
+.sugestoes li:nth-child(even) {
+  background-color: #ffffff; 
+}
+.sugestoes li:hover{
+  cursor: pointer;
+  background-color: #1100ff; 
+  color: #fff;
+
+}
