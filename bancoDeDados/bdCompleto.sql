@@ -369,6 +369,26 @@ CREATE TABLE IF NOT EXISTS Indicacoes (
     FOREIGN KEY (fk_id_livro) REFERENCES Livro(id_livro)
 );
 
+CREATE TABLE Objetivo (
+    id_objetivo INT PRIMARY KEY AUTO_INCREMENT,
+    fk_id_comunidade INT NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL,
+    total_paginas INT NOT NULL,
+    FOREIGN KEY (fk_id_comunidade) REFERENCES Comunidade(id_comunidade)
+);
+
+CREATE TABLE ProgressoObjetivo (
+    id_progresso INT PRIMARY KEY AUTO_INCREMENT,
+    fk_id_objetivo INT NOT NULL,
+    fk_id_usuario INT NOT NULL,
+    paginas_lidas INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (fk_id_objetivo) REFERENCES Objetivo(id_objetivo),
+    FOREIGN KEY (fk_id_usuario) REFERENCES Usuario(id_usuario)
+);
+
 
 INSERT INTO Notificacoes (mensagem, tipo, data_criacao, lida, fk_id_usuario)
 VALUES ('o prazo para devolver o livro está se aproximando, se atente para devolver no prazo🥰!', 'livro', NOW(), 0, 3);

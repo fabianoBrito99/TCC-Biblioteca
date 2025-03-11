@@ -44,6 +44,7 @@ interface Livro {
 interface Avaliacao {
   id_avaliacao: number;
   comentario: string;
+  nota: number;
   avaliacao: number;
   data_avaliacao: string;
   nome_usuario: string;
@@ -321,11 +322,16 @@ export default function DetalhesLivro() {
             </div>
           </div>
         </div>
-        {/* <div className={styles.sugestoes}>
-          {livro && <SugestoesLivros categoria={livro.categoria_principal} />}
-        </div> */}
       </div>
-
+      
+      <div  className={styles.sugestoesContainer}>
+      <div>
+        <h1>Você também pode gostar de...</h1>
+      </div>
+        <div className={styles.sugestoes}>
+          {livro && <SugestoesLivros categoria={livro.categoria_principal} />}
+        </div>
+      </div>
       <div className={styles.conatinerLateral}>
         <div className={styles.tabContainer}>
           <button
@@ -503,6 +509,7 @@ export default function DetalhesLivro() {
                       height={40}
                       className={styles.fotoUsuario}
                     />
+
                     <span>{aval.nome_usuario}</span>
                   </div>
                   <p>
@@ -511,7 +518,7 @@ export default function DetalhesLivro() {
                       <span
                         key={star}
                         className={`${styles.estrela} ${
-                          aval.avaliacao >= star
+                          aval.nota >= star
                             ? styles.estrelaAtiva
                             : styles.estrelaInativa
                         }`}

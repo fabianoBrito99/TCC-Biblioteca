@@ -6,6 +6,9 @@ import ProgressoForm from "@/componentes/comunidade/progresso";
 import Graficos from "@/componentes/comunidade/graficos";
 import styles from "../comunidade.module.css";
 import GerenciarUsuarios from "@/componentes/comunidade/aceitar-usuario";
+import CriarObjetivo from "@/componentes/comunidadeObjetivo/CriarObjetivo";
+import ProgressoObjetivo from "@/componentes/comunidadeObjetivo/ProgressoObjetivo";
+import RegistrarProgresso from "@/componentes/comunidadeObjetivo/RegistrarProgresso";
 
 interface Comunidade {
   id_comunidade: number;
@@ -92,18 +95,17 @@ export default function ComunidadeDetalhesPage() {
       );
       if (!response.ok) throw new Error("Erro ao buscar progresso");
       const data: Progresso[] = await response.json(); // Aqui você pode garantir que o tipo é Progresso[]
-  
+
       const progresso = data.map((item) => ({
         ...item,
         paginas_lidas: Number(item.paginas_lidas), // Convertendo para número
       }));
-  
+
       setProgresso(progresso);
     } catch (error) {
       console.error("Erro ao buscar progresso:", error);
     }
   }, [id]);
-  
 
   const fetchEstatisticasIdade = useCallback(async () => {
     try {
@@ -156,6 +158,48 @@ export default function ComunidadeDetalhesPage() {
         <>
           <h1>{comunidade.nome}</h1>
           <p>{comunidade.objetivo}</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          {isAdmin && <CriarObjetivo comunidadeId={comunidadeId} />}
+
+          <ProgressoObjetivo idObjetivo={1} />
+
+          <RegistrarProgresso
+            idObjetivo={1}
+            userId={userId || 0}
+            atualizarProgresso={atualizarProgresso}
+          />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
           <ProgressoForm
             comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}

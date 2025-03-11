@@ -28,7 +28,7 @@ function gerarNotificacoes(req, res) {
         const mensagem =
           emprestimo.dias_restantes > 0
             ? `O livro "${emprestimo.nome_livro}" deve ser devolvido em ${emprestimo.dias_restantes} dias.`
-            : `EEEIII PAIZÃO VAMOS DEVOLVER O LIVRO EM, JÁ VENCEU A DATA, O prazo para devolver o livro "${emprestimo.nome_livro}"😡😡`;
+            : `SEU LIVRO ESTÁ EM GRANDE ATRASO, JÁ VENCEU A DATA, O prazo para devolver o livro "${emprestimo.nome_livro}"`;
 
         connection.query(
           `

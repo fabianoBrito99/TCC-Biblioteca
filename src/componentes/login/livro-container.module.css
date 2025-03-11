@@ -159,7 +159,7 @@
   background:linear-gradient(to top, #625bec, #a9a8ca);
   position: absolute;
   bottom: -4px;
-  left: 18px;
+  left: 15px;
   border-radius: 0.2rem;
   z-index: -1;
   transform: translateX(-50%); /* Centraliza o elemento */

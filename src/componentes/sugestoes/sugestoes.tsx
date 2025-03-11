@@ -55,7 +55,7 @@ export default function SugestoesLivros({ categoria }: Props) {
 
   return (
     <div className={styles.container}>
-      <h2>Você também pode gostar de...</h2>
+  
       <div className={styles.grid}>
         {livrosExibidos.map((livro) => (
           <div 

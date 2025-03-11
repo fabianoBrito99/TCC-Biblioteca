@@ -89,9 +89,9 @@ export default function UsuarioDetalhes({
             />
             <div className={styles.usuarioInfo}>
               <h2>{usuario.nome_login}</h2>
-              <p>Email: {usuario.email}</p>
+              <p> <strong> Email:</strong> {usuario.email}</p>
               <p>
-                Tipo de Usuário:{" "}
+                <strong> Tipo de Usuário:</strong>{" "}
                 {editando ? (
                   <div className={styles.editContainer}>
                     <select

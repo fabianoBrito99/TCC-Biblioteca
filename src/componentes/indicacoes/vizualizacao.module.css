@@ -10,10 +10,11 @@
   gap: 20px;
   align-items: center;
   text-align: left;
-  background: #645733;
+  background: #4d4123;
   color: #f5dede;
   padding: 20px;
-  border-radius: 10px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 
 .grid1 {
@@ -45,7 +46,7 @@
 .image1 {
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 2;
+  z-index: 1;
 }
 
 

@@ -503,4 +503,71 @@ function estatisticasIdade(req, res) {
 
 
 
-module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso, listarComunidadesUsuario, listarUsuariosComunidade, atualizarStatusUsuario, verificarStatusUsuario, listarSolicitacoes, verificarAdmin};
+
+
+function criarObjetivo(req, res) {
+  const { fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas } = req.body;
+
+  connection.query(
+      "INSERT INTO Objetivo (fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas) VALUES (?, ?, ?, ?, ?, ?)",
+      [fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas],
+      (error, result) => {
+          if (error) {
+              console.error("Erro ao criar objetivo:", error);
+              return res.status(500).json({ error: "Erro ao criar objetivo" });
+          }
+          res.status(201).json({ id: result.insertId, message: "Objetivo criado com sucesso!" });
+      }
+  );
+}
+
+
+function registrarProgressoObjetivo(req, res) {
+  const { fk_id_objetivo, fk_id_usuario, paginas_lidas } = req.body;
+
+  // Verifica se fk_id_objetivo é um número válido
+  if (!fk_id_objetivo || isNaN(fk_id_objetivo)) {
+      return res.status(400).json({ error: "ID do objetivo inválido. Certifique-se de que é um número." });
+  }
+
+  connection.query(
+      "INSERT INTO ProgressoObjetivo (fk_id_objetivo, fk_id_usuario, paginas_lidas) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE paginas_lidas = paginas_lidas + VALUES(paginas_lidas)",
+      [parseInt(fk_id_objetivo, 10), fk_id_usuario, paginas_lidas],
+      (error, result) => {
+          if (error) {
+              console.error("Erro ao registrar progresso:", error);
+              return res.status(500).json({ error: "Erro ao registrar progresso" });
+          }
+          res.status(201).json({ message: "Progresso atualizado com sucesso!" });
+      }
+  );
+}
+
+
+
+function listarProgressoObjetivo(req, res) {
+  const { id_objetivo } = req.params;
+
+  connection.query(
+      `SELECT u.nome_login, p.paginas_lidas
+       FROM ProgressoObjetivo p
+       JOIN Usuario u ON p.fk_id_usuario = u.id_usuario
+       WHERE p.fk_id_objetivo = ?
+       ORDER BY p.paginas_lidas DESC
+       LIMIT 5`,
+      [id_objetivo],
+      (error, results) => {
+          if (error) {
+              console.error("Erro ao buscar progresso:", error);
+              return res.status(500).json({ error: "Erro ao buscar progresso" });
+          }
+          res.json(results);
+      }
+  );
+}
+
+
+
+
+
+module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso, listarComunidadesUsuario, listarUsuariosComunidade, atualizarStatusUsuario, verificarStatusUsuario, listarSolicitacoes, verificarAdmin, criarObjetivo, registrarProgressoObjetivo, listarProgressoObjetivo};

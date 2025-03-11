@@ -5,20 +5,21 @@
     rgba(136, 138, 255, 0.568)
   );
   width: 100vw;
-  height: 100vh;
-  display: flex;
+  height: 80vh;
   justify-content: center;
   align-items: center;
   padding: 20px;
   gap: 30px;
   z-index: 20;
+  margin-top: 80px;
+
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 20px;
-  width: 80%;
+  width: 70%;
   background: rgba(241, 238, 238, 0.897);
   backdrop-filter: blur(2000px);
   box-shadow: 0 2px 10px 3px rgba(0, 0, 0, 0.404);
@@ -201,15 +202,18 @@
 
 /* Contêiner lateral com tamanho fixo e barra de rolagem */
 .conatinerLateral {
-  position: relative;
-  width: 31vw;
-  height: 68vh;
+  position: fixed;
+  bottom: 120px;
+  right: 13px;
+  width: 28vw;
+  height: 65vh;
   background: #fff;
   overflow-y: auto;
-  padding: 10px;
+  padding: 11px;
   margin-top: 0px;
   margin-right: -20px;
   margin-bottom: 50px;
+
 }
 .conatinerLateral::-webkit-scrollbar {
   width: 0px;
@@ -514,8 +518,22 @@
   font-size: 12px;
 }
 
-.sugestoes{
 
+.sugestoesContainer{
+  margin-top: 50px;
+
+}
+.sugestoesContainer h1{
+  display: flex;
+  justify-content: center;
+  width: 60vw;
+ 
+
+}
+.sugestoes{
+  display: flex;
+  flex-direction: column;
   width: 60%;
   margin-top: 30px;
+
 }

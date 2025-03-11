@@ -15,7 +15,7 @@ export default async function login(state: object, formData: FormData): Promise<
   const password = formData.get('password') as string | null;
 
   try {
-    if (!email || !password) throw new Error('Preencha os dados.');
+    if (!email || !password) throw new Error(`Os campos não podem ser vazios`);
 
     const response = await fetch('http://localhost:4000/api/login', {
       method: 'POST',
@@ -25,7 +25,7 @@ export default async function login(state: object, formData: FormData): Promise<
       body: JSON.stringify({ email, senha: password }),
     });
 
-    if (!response.ok) throw new Error('Email ou senha inválidos.');
+    if (!response.ok) throw new Error('Usuário ou senha inválidos.');
     const data = await response.json();
 
     cookies().set('token', data.token, {

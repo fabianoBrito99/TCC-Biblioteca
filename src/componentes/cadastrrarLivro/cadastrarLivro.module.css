@@ -83,17 +83,28 @@ cursor: pointer;
     justify-content: center;
   }
   
-  .titleCadastrar::after {
+  .titleCadastrar::before {
     content: '';
     display: block;
-    width: 1.5rem;
-    height: 1.5rem;
-    background: rgb(0, 140, 255);
-    position: absolute;
-    bottom: 5px;
-    left: 258px;
+    width: 2rem;
+    height: 2rem;
+    position: relative;
+    bottom: -15px;
+    left: 48px;
     border-radius: 0.2rem;
     z-index: -1;
+    background:linear-gradient(to top, #625bec, #a9a8ca);
+  border-radius: 0.2rem;
+  transform: translateX(-50%); 
+  clip-path: polygon(
+    0% 0%,     /* Canto superior esquerdo */
+    100% 0%,   /* Canto superior direito */
+    100% 100%,  /* Início das pernas */
+    90% 100%,  /* Perna direita */
+    50% 70%,   /* Centro da base */
+    10% 100%,  /* Perna esquerda */
+    0% 100%     /* Fim das pernas */
+  );
   }
 
   .capaContainerLivro{

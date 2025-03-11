@@ -56,4 +56,12 @@ router.get(
   comunidadeController.verificarAdmin
 );
 
+
+
+
+router.post("/comunidade/objetivo", comunidadeController.criarObjetivo);
+router.post("/comunidade/objetivo/progresso", comunidadeController.registrarProgressoObjetivo);
+router.get("/comunidade/objetivo/:id_objetivo/progresso", comunidadeController.listarProgressoObjetivo);
+
+
 module.exports = router;
