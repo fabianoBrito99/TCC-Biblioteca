@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import styles from "./progresso.module.css";
 
@@ -29,12 +30,6 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   const gravidade = 0.4;
   const forcaPulo = -10;
 
-  const cores = ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3"];
-  const corDoUsuario = (nome: string) => {
-    const hash = [...nome].reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return cores[hash % cores.length];
-  };
-
   const desenharParte = (ctx: CanvasRenderingContext2D, fn: () => void) => {
     ctx.save();
     fn();
@@ -45,9 +40,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   };
 
   const hashCode = (str: string) => {
-    return str
-      .split("")
-      .reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+    return str.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
   };
 
   const intToRGB = (i: number) =>
@@ -56,12 +49,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     ((i >> 16) & 0xff).toString(16).padStart(2, "0") +
     ((i >> 8) & 0xff).toString(16).padStart(2, "0");
 
-  const desenharJesusParado = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    nome: string
-  ) => {
+  const desenharJesusParado = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
     ctx.fillStyle = "#fdf6e3";
     desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
     ctx.fillRect(x, y - 30, 16, 30);
@@ -89,19 +77,6 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     ctx.fillRect(x - 4, y - 26, 4, 10);
     desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
     ctx.fillRect(x + 16, y - 26, 4, 10);
-
-    // nome acima de Jesus parado com mesma cor que o correndo
-    const larguraNome = nome.length * 7 + 10;
-    const posTextoX = x - nome.length * 1;
-
-    ctx.fillStyle = corDoUsuario(nome);
-    ctx.beginPath();
-    ctx.roundRect(x - 20, 75, larguraNome, 18, 6); // bordas arredondadas
-    ctx.fill();
-
-    ctx.fillStyle = "black"; // texto branco
-    ctx.font = "10px Arial";
-    ctx.fillText(nome, posTextoX, 88);
   };
 
   const desenharJesusCorrendo = (
@@ -146,20 +121,14 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
     ctx.fillRect(x + 16, y - 26, 4, 10);
 
-    const larguraNome = nome.length * 7 + 10;
-    const posTextoX = x - nome.length * 3;
-
-    // fundo com cor fixa e borda arredondada
-    ctx.fillStyle = corDoUsuario(nome);
-    ctx.beginPath();
-    ctx.roundRect(x - 20, 75, larguraNome, 18, 6); // bordas arredondadas
-    ctx.fill();
-
-    // texto em branco
+    const corFundo = intToRGB(hashCode(nome));
+    ctx.fillStyle = corFundo;
+    ctx.fillRect(x - 20, 75, nome.length * 7 + 10, 18);
     ctx.fillStyle = "black";
     ctx.font = "10px Arial";
-    ctx.fillText(nome, posTextoX, 88);
+    ctx.fillText(nome, x - nome.length * 3, 88);
   };
+
 
   useEffect(() => {
     const carregarProgressoInicial = async () => {
@@ -221,51 +190,40 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         ctx.fillStyle = "black";
         ctx.font = "10px Arial";
         ctx.fillText(u.nome_login, posX - u.nome_login.length * 3, 88);
-        desenharJesusParado(ctx, posX, 130, u.nome_login);
+        desenharJesusParado(ctx, posX, 130);
       });
     };
 
     desenhar();
   }, [usuarios, animacaoAtiva]);
 
+
   useEffect(() => {
     if (!animacaoAtiva) return;
-
+  
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
+  
     let personagemX = 0;
     let personagemY = 130;
     let velocidadeY = 0;
-
+  
     const usuario = usuarios.find((u) => u.nome_login === usuarioAnimando);
-    let destinoX = usuario
+    const destinoX = usuario
       ? (usuario.paginas_lidas / usuario.total_paginas) * canvas.width
       : 50;
-
-    // ✅ Verifica se há outro usuário no mesmo ponto
-    const existeOutroNoMesmoPonto = usuarios.some(
-      (u) =>
-        u.nome_login !== usuarioAnimando &&
-        (u.paginas_lidas / u.total_paginas) * canvas.width === destinoX
-    );
-
-    // ✅ Se sim, desloca um pouco pra frente
-    if (existeOutroNoMesmoPonto) {
-      destinoX += 20; // desloca 20px pra frente
-    }
     const posicaoInicial = usuario ? destinoX - paginasInseridas * 10 : 50;
     personagemX = posicaoInicial;
-
+  
     console.log("🚀 Animando usuário:", usuarioAnimando);
     console.log("👉 Início:", posicaoInicial, "| Destino:", destinoX);
-
+  
     const cactos = Array.from({ length: paginasInseridas }, (_, i) => ({
       x: 300 + i * 100,
     }));
-
+  
     const desenharCacto = (x: number) => {
       ctx.fillStyle = "green";
       ctx.strokeStyle = "#5a3825";
@@ -288,23 +246,23 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fill();
       ctx.stroke();
     };
-
+  
     const loop = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  
       // fundo
       ctx.fillStyle = "#f7f7f7";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+  
       // chão
       ctx.fillStyle = "#b5651d";
       ctx.fillRect(0, 150, canvas.width, 50);
-
+  
       // desenhar cactos e verificar pulo
       cactos.forEach((c) => {
         c.x -= velocidadeCenario;
         desenharCacto(c.x);
-
+  
         if (
           c.x > personagemX &&
           c.x < personagemX + 50 &&
@@ -313,7 +271,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
           velocidadeY = forcaPulo;
         }
       });
-
+  
       // desenhar os outros usuários (menos o que está correndo)
       usuarios.forEach((u) => {
         const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
@@ -323,10 +281,10 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
           ctx.fillStyle = "black";
           ctx.font = "10px Arial";
           ctx.fillText(u.nome_login, pos - u.nome_login.length * 3, 88);
-          desenharJesusParado(ctx, pos, 130, u.nome_login);
+          desenharJesusParado(ctx, pos, 130);
         }
       });
-
+  
       // verificar se ultrapassou outro usuário e pular
       usuarios
         .filter((u) => u.nome_login !== usuarioAnimando)
@@ -340,7 +298,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
             velocidadeY = forcaPulo;
           }
         });
-
+  
       // física
       velocidadeY += gravidade;
       personagemY += velocidadeY;
@@ -348,7 +306,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         personagemY = 130;
         velocidadeY = 0;
       }
-
+  
       // mover para frente
       if (personagemX < destinoX) {
         personagemX += 2;
@@ -357,16 +315,19 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         setAnimacaoAtiva(false);
         setUsuarioAnimando("");
       }
-
+  
       // desenhar Jesus correndo com nome
       desenharJesusCorrendo(ctx, personagemX, personagemY, usuarioAnimando);
-
+  
       // loop
       if (animacaoAtiva) requestAnimationFrame(loop);
     };
-
+  
     requestAnimationFrame(loop);
   }, [animacaoAtiva, usuarios, usuarioAnimando]);
+  
+  
+  
 
   return (
     <canvas

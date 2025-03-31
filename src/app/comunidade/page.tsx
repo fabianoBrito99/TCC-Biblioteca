@@ -169,12 +169,6 @@ export default function ComunidadeListPage() {
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
           />
-          <Input
-            label="Objetivo"
-            type="text"
-            value={objetivo}
-            onChange={(e) => setObjetivo(e.target.value)}
-          />
           <label>
             Tipo
             <select value={tipo} onChange={(e) => setTipo(e.target.value)}>

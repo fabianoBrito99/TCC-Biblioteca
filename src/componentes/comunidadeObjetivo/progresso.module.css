@@ -1,0 +1,7 @@
+/* Container do jogo */
+.game-canvas {
+  display: block;
+  background-color: #f7f7f7;
+  border: 2px solid black;
+  margin: auto;
+}

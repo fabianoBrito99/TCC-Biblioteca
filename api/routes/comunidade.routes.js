@@ -57,11 +57,18 @@ router.get(
 );
 
 
+router.get("/comunidade/:idComunidade/objetivo-ativo", comunidadeController.verificarObjetivoAtivo);
 
 
 router.post("/comunidade/objetivo", comunidadeController.criarObjetivo);
+
 router.post("/comunidade/objetivo/progresso", comunidadeController.registrarProgressoObjetivo);
 router.get("/comunidade/objetivo/:id_objetivo/progresso", comunidadeController.listarProgressoObjetivo);
+
+router.get("/comunidade/:idComunidade/objetivo-ativo2", comunidadeController.obterObjetivoAtivo);
+
+router.post("/comunidade/:idComunidade/objetivo/progresso", comunidadeController.registrarProgressoObjetivo);
+
 
 
 module.exports = router;

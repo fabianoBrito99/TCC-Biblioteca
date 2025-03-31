@@ -197,4 +197,8 @@ background-color: #fdf8e2;
   margin-top: 90px;
 }
 
-
+.criarObjetivo{
+  left: 300px;
+  width: 90vw;
+  height: 8vh;
+}

@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Comentarios from "@/componentes/comunidade/comentarios";
-import ProgressoForm from "@/componentes/comunidade/progresso";
 import Graficos from "@/componentes/comunidade/graficos";
 import styles from "../comunidade.module.css";
 import GerenciarUsuarios from "@/componentes/comunidade/aceitar-usuario";
@@ -45,10 +44,23 @@ export default function ComunidadeDetalhesPage() {
   const [idadeStats, setIdadeStats] = useState<EstatisticasIdade[]>([]);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const comunidadeId = typeof id === "string" ? parseInt(id, 10) : NaN;
+  const [idObjetivo, setIdObjetivo] = useState<number | null>(null);
+  const [loadingObjetivo, setLoadingObjetivo] = useState(true);
 
   const [userId, setUserId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [progressoAtualizado, setProgressoAtualizado] = useState(false);
+  const [paginasInseridas, setPaginasInseridas] = useState<number>(0);
+  const [usuarioAtual, setUsuarioAtual] = useState("");
 
+
+  const handleProgressoSalvo = ({ paginas, nome }: { paginas: number; nome: string }) => {
+    setPaginasInseridas(paginas);
+    setUsuarioAtual(nome);
+    setProgressoAtualizado((prev) => !prev);
+  };
+  
+  
   // Obtém o ID do usuário logado do localStorage
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -56,6 +68,26 @@ export default function ComunidadeDetalhesPage() {
       setUserId(parseInt(storedUserId, 10));
     }
   }, []);
+
+  // Buscar o objetivo ativo da comunidade
+  useEffect(() => {
+    if (!comunidadeId) return;
+
+    fetch(
+      `http://localhost:4000/api/comunidade/${comunidadeId}/objetivo-ativo2`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.idObjetivo) {
+          console.log("ID do Objetivo carregado:", data.idObjetivo);
+          setIdObjetivo(Number(data.idObjetivo)); // Garante que seja número
+        } else {
+          setIdObjetivo(null);
+        }
+      })
+      .catch((error) => console.error("Erro ao buscar objetivo ativo:", error))
+      .finally(() => setLoadingObjetivo(false));
+  }, [comunidadeId]);
 
   useEffect(() => {
     if (!userId || !id) return;
@@ -89,23 +121,33 @@ export default function ComunidadeDetalhesPage() {
   }, [id]);
 
   const fetchProgresso = useCallback(async () => {
+    if (!idObjetivo) return;
+
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${id}/progresso`
+        `http://localhost:4000/api/comunidade/objetivo/${idObjetivo}/progresso`
       );
+
       if (!response.ok) throw new Error("Erro ao buscar progresso");
-      const data: Progresso[] = await response.json(); // Aqui você pode garantir que o tipo é Progresso[]
+
+      const data: Progresso[] = await response.json();
 
       const progresso = data.map((item) => ({
         ...item,
-        paginas_lidas: Number(item.paginas_lidas), // Convertendo para número
+        paginas_lidas: Number(item.paginas_lidas),
       }));
 
-      setProgresso(progresso);
+      console.log("Progresso atualizado:", progresso);
+      setProgresso(progresso); // Atualiza a interface
     } catch (error) {
       console.error("Erro ao buscar progresso:", error);
     }
-  }, [id]);
+  }, [idObjetivo]);
+
+  // Chama o fetchProgresso sempre que o idObjetivo mudar
+  useEffect(() => {
+    fetchProgresso();
+  }, [idObjetivo]);
 
   const fetchEstatisticasIdade = useCallback(async () => {
     try {
@@ -148,10 +190,6 @@ export default function ComunidadeDetalhesPage() {
     fetchComentarios,
   ]);
 
-  const atualizarProgresso = () => {
-    fetchProgresso(); // Atualiza os dados de progresso
-  };
-
   return (
     <div className={styles.containerComu}>
       {comunidade && (
@@ -159,52 +197,44 @@ export default function ComunidadeDetalhesPage() {
           <h1>{comunidade.nome}</h1>
           <p>{comunidade.objetivo}</p>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           {isAdmin && <CriarObjetivo comunidadeId={comunidadeId} />}
 
-          <ProgressoObjetivo idObjetivo={1} />
+          <div>
+            {loadingObjetivo ? (
+              <p>Carregando objetivo...</p>
+            ) : idObjetivo ? (
+              <>
+              {userId && idObjetivo && comunidadeId && (
+                <RegistrarProgresso
+                  comunidadeId={comunidadeId}
+                  idObjetivo={idObjetivo}
+                  userId={userId}
+                  onProgressoSalvo={handleProgressoSalvo} 
+                />
+              )}
 
-          <RegistrarProgresso
-            idObjetivo={1}
-            userId={userId || 0}
-            atualizarProgresso={atualizarProgresso}
-          />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          <ProgressoForm
+              {userId && idObjetivo && (
+                <ProgressoObjetivo
+                  idObjetivo={idObjetivo}
+                  progressoAtualizado={progressoAtualizado}
+                  paginasInseridas={paginasInseridas} 
+                  usuarioAtual={usuarioAtual}
+                />
+                )}
+              </>
+            ) : (
+              <p>Nenhum objetivo ativo no momento.</p>
+            )}
+          </div>
+          <div className={styles.criarObjetivo}>
+            {isAdmin && !idObjetivo && (
+              <CriarObjetivo comunidadeId={comunidadeId} />
+            )}
+          </div>
+          {/* <CriarObjetivo
             comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
-            onProgressoAdicionado={atualizarProgresso} // Passando a função de atualização para o filho
-          />
+          /> */}
+
           <Graficos progresso={progresso} idadeStats={idadeStats} />
           <div className={styles.containerLateral}>
             <Comentarios

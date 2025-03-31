@@ -1,11 +1,11 @@
 const connection = require("../config/mysql.config");
 
-function criarComunidade(req, res) { 
-  const { nome, descricao, objetivo, tipo, id_adm } = req.body;
+function criarComunidade(req, res) {
+  const { nome, descricao, tipo, id_adm } = req.body;
 
   connection.query(
-    "INSERT INTO Comunidade (nome, descricao, objetivo, tipo, id_adm) VALUES (?, ?, ?, ?, ?)",
-    [nome, descricao, objetivo, tipo, id_adm],
+    "INSERT INTO Comunidade (nome, descricao, tipo, id_adm) VALUES (?, ?, ?, ?)",
+    [nome, descricao, tipo, id_adm],
     (error, result) => {
       if (error) {
         console.error("Erro ao inserir comunidade:", error);
@@ -20,11 +20,18 @@ function criarComunidade(req, res) {
         [comunidadeId, id_adm],
         (error) => {
           if (error) {
-            console.error("Erro ao adicionar administrador na comunidade:", error);
-            return res.status(500).json({ error: "Erro ao adicionar administrador na comunidade" });
+            console.error(
+              "Erro ao adicionar administrador na comunidade:",
+              error
+            );
+            return res
+              .status(500)
+              .json({ error: "Erro ao adicionar administrador na comunidade" });
           }
 
-          res.status(201).json({ id: comunidadeId, message: "Comunidade criada!" });
+          res
+            .status(201)
+            .json({ id: comunidadeId, message: "Comunidade criada!" });
         }
       );
     }
@@ -40,7 +47,9 @@ function listarComunidades(req, res) {
 
       // Verifica se existem comunidades
       if (comunidades.length === 0) {
-        return res.status(404).json({ message: "Ainda não existem comunidades" });
+        return res
+          .status(404)
+          .json({ message: "Ainda não existem comunidades" });
       }
 
       res.json(comunidades);
@@ -65,12 +74,17 @@ function entrarComunidade(req, res) {
       [id, fk_id_usuario],
       (err, results) => {
         if (err) {
-          console.error("Erro ao verificar se o usuário já está na comunidade:", err);
+          console.error(
+            "Erro ao verificar se o usuário já está na comunidade:",
+            err
+          );
           return res.status(500).json({ error: "Erro ao verificar entrada." });
         }
 
         if (results.length > 0) {
-          return res.status(400).json({ message: "Usuário já está na comunidade." });
+          return res
+            .status(400)
+            .json({ message: "Usuário já está na comunidade." });
         }
 
         // Insere o usuário na comunidade
@@ -83,11 +97,16 @@ function entrarComunidade(req, res) {
           (insertErr) => {
             if (insertErr) {
               console.error("Erro ao inserir na comunidade:", insertErr);
-              return res.status(500).json({ error: "Erro ao entrar na comunidade." });
+              return res
+                .status(500)
+                .json({ error: "Erro ao entrar na comunidade." });
             }
 
             res.status(200).json({
-              message: status === "aceito" ? "Entrou na comunidade!" : "Solicitação pendente!",
+              message:
+                status === "aceito"
+                  ? "Entrou na comunidade!"
+                  : "Solicitação pendente!",
               status,
             });
           }
@@ -99,7 +118,6 @@ function entrarComunidade(req, res) {
     res.status(500).json({ error: "Erro ao processar a solicitação." });
   }
 }
-
 
 function listarUsuariosComunidade(req, res) {
   const { id } = req.params;
@@ -148,7 +166,6 @@ function verificarAdmin(req, res) {
   );
 }
 
-
 function listarComunidadesUsuario(req, res) {
   const { idUsuario } = req.params;
 
@@ -164,7 +181,9 @@ function listarComunidadesUsuario(req, res) {
       (err, results) => {
         if (err) {
           console.error("Erro ao listar comunidades do usuário:", err);
-          return res.status(500).json({ error: "Erro ao listar comunidades do usuário." });
+          return res
+            .status(500)
+            .json({ error: "Erro ao listar comunidades do usuário." });
         }
 
         res.json(results);
@@ -172,30 +191,35 @@ function listarComunidadesUsuario(req, res) {
     );
   } catch (error) {
     console.error("Erro inesperado no servidor:", error);
-    res.status(500).json({ error: "Erro inesperado ao listar comunidades do usuário." });
+    res
+      .status(500)
+      .json({ error: "Erro inesperado ao listar comunidades do usuário." });
   }
 }
-
 
 function obterComunidade(req, res) {
   const { id } = req.params;
 
   try {
     // Usando callback para tratar o resultado da query
-    connection.query("SELECT * FROM Comunidade WHERE id_comunidade = ?", [id], (error, results) => {
-      if (error) {
-        console.error("Erro ao buscar comunidade:", error); // Log do erro para depuração
-        return res.status(500).json({ error: "Erro ao buscar comunidade" });
-      }
+    connection.query(
+      "SELECT * FROM Comunidade WHERE id_comunidade = ?",
+      [id],
+      (error, results) => {
+        if (error) {
+          console.error("Erro ao buscar comunidade:", error); // Log do erro para depuração
+          return res.status(500).json({ error: "Erro ao buscar comunidade" });
+        }
 
-      // Verifica se a comunidade foi encontrada
-      if (!results || results.length === 0) {
-        return res.status(404).json({ error: "Comunidade não encontrada" });
-      }
+        // Verifica se a comunidade foi encontrada
+        if (!results || results.length === 0) {
+          return res.status(404).json({ error: "Comunidade não encontrada" });
+        }
 
-      // Retorna a comunidade encontrada
-      res.json(results[0]);
-    });
+        // Retorna a comunidade encontrada
+        res.json(results[0]);
+      }
+    );
   } catch (error) {
     console.error("Erro inesperado:", error); // Log para erros inesperados fora do callback
     res.status(500).json({ error: "Erro inesperado ao buscar comunidade" });
@@ -220,14 +244,15 @@ function listarUsuariosComunidade(req, res) {
     (error, results) => {
       if (error) {
         console.error("Erro ao listar usuários da comunidade:", error);
-        return res.status(500).json({ error: "Erro ao listar usuários da comunidade" });
+        return res
+          .status(500)
+          .json({ error: "Erro ao listar usuários da comunidade" });
       }
 
       res.json(results);
     }
   );
 }
-
 
 // Atualiza o status do usuário em uma comunidade
 function atualizarStatusUsuario(req, res) {
@@ -243,20 +268,21 @@ function atualizarStatusUsuario(req, res) {
     (error, results) => {
       if (error) {
         console.error("Erro ao atualizar status do usuário:", error);
-        return res.status(500).json({ error: "Erro ao atualizar status do usuário" });
+        return res
+          .status(500)
+          .json({ error: "Erro ao atualizar status do usuário" });
       }
 
       if (results.affectedRows === 0) {
-        return res.status(404).json({ message: "Usuário ou comunidade não encontrado" });
+        return res
+          .status(404)
+          .json({ message: "Usuário ou comunidade não encontrado" });
       }
 
       res.status(200).json({ message: "Status atualizado com sucesso" });
     }
   );
 }
-
-
-
 
 function listarComentarios(req, res) {
   const { id } = req.params;
@@ -298,7 +324,10 @@ function listarComentarios(req, res) {
       }
     );
   } catch (error) {
-    console.error("Erro inesperado ao listar comentários da comunidade:", error);
+    console.error(
+      "Erro inesperado ao listar comentários da comunidade:",
+      error
+    );
     res
       .status(500)
       .json({ error: "Erro inesperado ao listar comentários da comunidade" });
@@ -318,7 +347,9 @@ function verificarStatusUsuario(req, res) {
     (error, results) => {
       if (error) {
         console.error("Erro ao verificar status do usuário:", error);
-        return res.status(500).json({ error: "Erro ao verificar status do usuário" });
+        return res
+          .status(500)
+          .json({ error: "Erro ao verificar status do usuário" });
       }
 
       if (results.length === 0) {
@@ -354,8 +385,6 @@ function listarSolicitacoes(req, res) {
     }
   );
 }
-
-
 
 function adicionarComentario(req, res) {
   const { id } = req.params; // id da comunidade
@@ -411,12 +440,17 @@ function adicionarComentario(req, res) {
         if (commitErr) {
           connection.rollback(() => {
             console.error("Erro ao confirmar transação:", commitErr);
-            return res.status(500).json({ error: "Erro ao confirmar transação" });
+            return res
+              .status(500)
+              .json({ error: "Erro ao confirmar transação" });
           });
         } else {
           res
             .status(201)
-            .json({ id: comentarioId, message: "Comentário adicionado com sucesso!" });
+            .json({
+              id: comentarioId,
+              message: "Comentário adicionado com sucesso!",
+            });
         }
       });
     } catch (error) {
@@ -446,7 +480,6 @@ function registrarProgresso(req, res) {
     res.status(500).json({ error: "Erro ao registrar progresso" });
   }
 }
-
 
 function listarProgresso(req, res) {
   const { id } = req.params; // ID da comunidade
@@ -493,53 +526,158 @@ function estatisticasIdade(req, res) {
     (error, results) => {
       if (error) {
         console.error("Erro ao buscar estatísticas de idade:", error);
-        return res.status(500).json({ error: "Erro ao buscar estatísticas de idade" });
+        return res
+          .status(500)
+          .json({ error: "Erro ao buscar estatísticas de idade" });
       }
       res.json(results);
     }
   );
 }
 
-
-
-
-
-
 function criarObjetivo(req, res) {
-  const { fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas } = req.body;
+  const {
+    fk_id_comunidade,
+    titulo,
+    descricao,
+    data_inicio,
+    data_fim,
+    total_paginas,
+  } = req.body;
 
+  // Verifica se já existe um objetivo em aberto para a comunidade
   connection.query(
-      "INSERT INTO Objetivo (fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas) VALUES (?, ?, ?, ?, ?, ?)",
-      [fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas],
-      (error, result) => {
-          if (error) {
-              console.error("Erro ao criar objetivo:", error);
-              return res.status(500).json({ error: "Erro ao criar objetivo" });
-          }
-          res.status(201).json({ id: result.insertId, message: "Objetivo criado com sucesso!" });
+    "SELECT id_objetivo FROM Objetivo WHERE fk_id_comunidade = ? AND data_fim >= CURDATE()",
+    [fk_id_comunidade],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao verificar objetivo ativo:", error);
+        return res
+          .status(500)
+          .json({ error: "Erro ao verificar objetivo ativo" });
       }
+
+      if (results.length > 0) {
+        return res
+          .status(400)
+          .json({
+            error: "Já existe um objetivo em andamento para esta comunidade.",
+          });
+      }
+
+      // Insere o novo objetivo se não houver um ativo
+      connection.query(
+        "INSERT INTO Objetivo (fk_id_comunidade, titulo, descricao, data_inicio, data_fim, total_paginas) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          fk_id_comunidade,
+          titulo,
+          descricao,
+          data_inicio,
+          data_fim,
+          total_paginas,
+        ],
+        (insertError, result) => {
+          if (insertError) {
+            console.error("Erro ao criar objetivo:", insertError);
+            return res.status(500).json({ error: "Erro ao criar objetivo" });
+          }
+          res
+            .status(201)
+            .json({
+              id: result.insertId,
+              message: "Objetivo criado com sucesso!",
+            });
+        }
+      );
+    }
   );
 }
 
-
-function registrarProgressoObjetivo(req, res) {
-  const { fk_id_objetivo, fk_id_usuario, paginas_lidas } = req.body;
-
-  // Verifica se fk_id_objetivo é um número válido
-  if (!fk_id_objetivo || isNaN(fk_id_objetivo)) {
-      return res.status(400).json({ error: "ID do objetivo inválido. Certifique-se de que é um número." });
-  }
+function verificarObjetivoAtivo(req, res) {
+  const { idComunidade } = req.params;
 
   connection.query(
-      "INSERT INTO ProgressoObjetivo (fk_id_objetivo, fk_id_usuario, paginas_lidas) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE paginas_lidas = paginas_lidas + VALUES(paginas_lidas)",
-      [parseInt(fk_id_objetivo, 10), fk_id_usuario, paginas_lidas],
-      (error, result) => {
-          if (error) {
-              console.error("Erro ao registrar progresso:", error);
-              return res.status(500).json({ error: "Erro ao registrar progresso" });
-          }
-          res.status(201).json({ message: "Progresso atualizado com sucesso!" });
+    "SELECT id_objetivo FROM Objetivo WHERE fk_id_comunidade = ? AND data_fim >= CURDATE() LIMIT 1",
+    [idComunidade],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao verificar objetivo ativo:", error);
+        return res
+          .status(500)
+          .json({ error: "Erro ao verificar objetivo ativo." });
       }
+
+      res.status(200).json({ ativo: results.length > 0 });
+    }
+  );
+}
+
+function registrarProgressoObjetivo(req, res) {
+  const { fk_id_usuario, paginas_lidas } = req.body;
+  const { idComunidade } = req.params; // 🔥 Pegamos o ID da comunidade da URL
+
+  if (!fk_id_usuario || isNaN(fk_id_usuario) || !paginas_lidas || isNaN(paginas_lidas)) {
+    return res.status(400).json({ error: "ID do usuário ou quantidade de páginas inválido." });
+  }
+
+  // 🔥 Buscar o objetivo ATIVO mais recente na comunidade
+  connection.query(
+    `SELECT id_objetivo, total_paginas FROM Objetivo 
+     WHERE fk_id_comunidade = ? AND data_fim >= CURDATE()
+     ORDER BY data_fim ASC LIMIT 1`, 
+    [idComunidade], 
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar objetivo ativo:", error);
+        return res.status(500).json({ error: "Erro ao buscar objetivo ativo." });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: "Nenhum objetivo ativo encontrado para esta comunidade." });
+      }
+
+      const fk_id_objetivo = results[0].id_objetivo;
+      const total_paginas = results[0].total_paginas;
+
+      // 🔥 Buscar progresso total do usuário nesse objetivo
+      connection.query(
+        "SELECT paginas_lidas FROM ProgressoObjetivo WHERE fk_id_objetivo = ? AND fk_id_usuario = ?",
+        [fk_id_objetivo, fk_id_usuario],
+        (sumError, sumResults) => {
+          if (sumError) {
+            console.error("Erro ao calcular progresso total:", sumError);
+            return res.status(500).json({ error: "Erro ao calcular progresso total." });
+          }
+
+          const paginas_totais = sumResults.length > 0 ? sumResults[0].paginas_lidas : 0;
+          const novas_paginas_totais = paginas_totais + paginas_lidas;
+
+          // 🔥 Bloqueia se ultrapassar o limite permitido
+          if (novas_paginas_totais > total_paginas) {
+            return res.status(400).json({ error: "A quantidade inserida ultrapassa o total permitido pelo objetivo." });
+          }
+
+          // 🔥 Inserir ou atualizar progresso corretamente e retornar as páginas lidas no momento
+          connection.query(
+            `INSERT INTO ProgressoObjetivo (fk_id_objetivo, fk_id_usuario, paginas_lidas) 
+             VALUES (?, ?, ?) 
+             ON DUPLICATE KEY UPDATE paginas_lidas = paginas_lidas + VALUES(paginas_lidas)`,
+            [fk_id_objetivo, fk_id_usuario, paginas_lidas],
+            (insertError) => {
+              if (insertError) {
+                console.error("Erro ao registrar progresso:", insertError);
+                return res.status(500).json({ error: "Erro ao registrar progresso." });
+              }
+
+              res.status(201).json({
+                message: "Progresso atualizado com sucesso!",
+                paginas_inseridas: paginas_lidas, // 🔥 Agora retornamos explicitamente esse valor!
+              });
+            }
+          );
+        }
+      );
+    }
   );
 }
 
@@ -549,25 +687,66 @@ function listarProgressoObjetivo(req, res) {
   const { id_objetivo } = req.params;
 
   connection.query(
-      `SELECT u.nome_login, p.paginas_lidas
-       FROM ProgressoObjetivo p
-       JOIN Usuario u ON p.fk_id_usuario = u.id_usuario
-       WHERE p.fk_id_objetivo = ?
-       ORDER BY p.paginas_lidas DESC
-       LIMIT 5`,
-      [id_objetivo],
-      (error, results) => {
-          if (error) {
-              console.error("Erro ao buscar progresso:", error);
-              return res.status(500).json({ error: "Erro ao buscar progresso" });
-          }
-          res.json(results);
+    `SELECT u.nome_login, SUM(p.paginas_lidas) AS paginas_lidas, o.total_paginas
+     FROM ProgressoObjetivo p
+     JOIN Usuario u ON p.fk_id_usuario = u.id_usuario
+     JOIN Objetivo o ON p.fk_id_objetivo = o.id_objetivo
+     WHERE p.fk_id_objetivo = ?
+     GROUP BY u.id_usuario, u.nome_login, o.total_paginas
+     ORDER BY paginas_lidas DESC`,
+    [id_objetivo],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar progresso:", error);
+        return res.status(500).json({ error: "Erro ao buscar progresso" });
       }
+      res.json(results);
+    }
   );
 }
 
+function obterObjetivoAtivo(req, res) {
+  const { idComunidade } = req.params;
 
+  connection.query(
+    "SELECT id_objetivo FROM Objetivo WHERE fk_id_comunidade = ? AND data_fim >= CURDATE() LIMIT 1",
+    [idComunidade],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar objetivo ativo:", error);
+        return res.status(500).json({ error: "Erro ao buscar objetivo ativo" });
+      }
 
+      if (results.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "Nenhum objetivo ativo encontrado." });
+      }
 
+      res.status(200).json({ idObjetivo: results[0].id_objetivo });
+    }
+  );
+}
 
-module.exports = { criarComunidade, listarComunidades, obterComunidade, entrarComunidade, listarComentarios, adicionarComentario, listarProgresso, estatisticasIdade, registrarProgresso, listarComunidadesUsuario, listarUsuariosComunidade, atualizarStatusUsuario, verificarStatusUsuario, listarSolicitacoes, verificarAdmin, criarObjetivo, registrarProgressoObjetivo, listarProgressoObjetivo};
+module.exports = {
+  criarComunidade,
+  listarComunidades,
+  obterComunidade,
+  entrarComunidade,
+  listarComentarios,
+  adicionarComentario,
+  listarProgresso,
+  estatisticasIdade,
+  registrarProgresso,
+  listarComunidadesUsuario,
+  listarUsuariosComunidade,
+  atualizarStatusUsuario,
+  verificarStatusUsuario,
+  listarSolicitacoes,
+  verificarAdmin,
+  criarObjetivo,
+  verificarObjetivoAtivo,
+  registrarProgressoObjetivo,
+  listarProgressoObjetivo,
+  obterObjetivoAtivo,
+};
