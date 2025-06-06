@@ -230,42 +230,40 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
 
   useEffect(() => {
     if (!animacaoAtiva) return;
-
+  
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
+  
     let personagemX = 0;
     let personagemY = 130;
     let velocidadeY = 0;
-
+  
     const usuario = usuarios.find((u) => u.nome_login === usuarioAnimando);
     let destinoX = usuario
       ? (usuario.paginas_lidas / usuario.total_paginas) * canvas.width
       : 50;
-
-    // ✅ Verifica se há outro usuário no mesmo ponto
+  
+    const fimDosCactos = 300 + (paginasInseridas - 1) * 100;
+  
     const existeOutroNoMesmoPonto = usuarios.some(
       (u) =>
         u.nome_login !== usuarioAnimando &&
         (u.paginas_lidas / u.total_paginas) * canvas.width === destinoX
     );
-
-    // ✅ Se sim, desloca um pouco pra frente
     if (existeOutroNoMesmoPonto) {
-      destinoX += 20; // desloca 20px pra frente
+      destinoX += 20;
     }
+  
     const posicaoInicial = usuario ? destinoX - paginasInseridas * 10 : 50;
     personagemX = posicaoInicial;
-
-    console.log("🚀 Animando usuário:", usuarioAnimando);
-    console.log("👉 Início:", posicaoInicial, "| Destino:", destinoX);
-
+    const posicaoInicialJesus = personagemX; // <--- POSIÇÃO FIXA PARA REFERÊNCIA
+  
     const cactos = Array.from({ length: paginasInseridas }, (_, i) => ({
       x: 300 + i * 100,
     }));
-
+  
     const desenharCacto = (x: number) => {
       ctx.fillStyle = "green";
       ctx.strokeStyle = "#5a3825";
@@ -288,23 +286,19 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fill();
       ctx.stroke();
     };
-
+  
     const loop = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // fundo
       ctx.fillStyle = "#f7f7f7";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // chão
       ctx.fillStyle = "#b5651d";
       ctx.fillRect(0, 150, canvas.width, 50);
-
-      // desenhar cactos e verificar pulo
+  
+      // desenha cactos
       cactos.forEach((c) => {
         c.x -= velocidadeCenario;
         desenharCacto(c.x);
-
+  
         if (
           c.x > personagemX &&
           c.x < personagemX + 50 &&
@@ -313,34 +307,33 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
           velocidadeY = forcaPulo;
         }
       });
-
-      // desenhar os outros usuários (menos o que está correndo)
+  
+      // desenha outros usuarios como obstaculos ou nas pontas dos cactos
       usuarios.forEach((u) => {
+        if (u.nome_login === usuarioAnimando) return;
         const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
-        if (u.nome_login !== usuarioAnimando) {
-          ctx.fillStyle = "#ccc";
-          ctx.fillRect(pos - 20, 75, u.nome_login.length * 7 + 10, 18);
-          ctx.fillStyle = "black";
-          ctx.font = "10px Arial";
-          ctx.fillText(u.nome_login, pos - u.nome_login.length * 3, 88);
-          desenharJesusParado(ctx, pos, 130, u.nome_login);
+  
+        // se está no caminho do Jesus, vira obstáculo
+        const estaNoCaminho =
+          personagemX + 16 >= pos - 10 &&
+          personagemX <= pos + 10 &&
+          personagemY === 130;
+  
+        if (estaNoCaminho) {
+          velocidadeY = forcaPulo;
         }
+  
+        let posX = pos;
+  
+        if (pos <= posicaoInicialJesus) {
+          posX = 300 - 60; // <--- Comparando com posição fixa do início
+        } else if (pos > destinoX) {
+          posX = fimDosCactos + 100;
+        }
+  
+        desenharJesusParado(ctx, posX, 130, u.nome_login);
       });
-
-      // verificar se ultrapassou outro usuário e pular
-      usuarios
-        .filter((u) => u.nome_login !== usuarioAnimando)
-        .forEach((u) => {
-          const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
-          if (
-            personagemX + 16 >= pos - 10 &&
-            personagemX <= pos + 10 &&
-            personagemY === 130
-          ) {
-            velocidadeY = forcaPulo;
-          }
-        });
-
+  
       // física
       velocidadeY += gravidade;
       personagemY += velocidadeY;
@@ -348,23 +341,24 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         personagemY = 130;
         velocidadeY = 0;
       }
-
-      // mover para frente
+  
+      // movimento horizontal
       if (personagemX < destinoX) {
         personagemX += 2;
-      } else {
-        personagemX = destinoX;
+      }
+  
+      desenharJesusCorrendo(ctx, personagemX, personagemY, usuarioAnimando);
+  
+      const passouTodosOsCactos = cactos.every((c) => c.x + 10 < personagemX);
+      if (personagemX >= destinoX && personagemY === 130 && passouTodosOsCactos) {
         setAnimacaoAtiva(false);
         setUsuarioAnimando("");
+        return;
       }
-
-      // desenhar Jesus correndo com nome
-      desenharJesusCorrendo(ctx, personagemX, personagemY, usuarioAnimando);
-
-      // loop
-      if (animacaoAtiva) requestAnimationFrame(loop);
+  
+      requestAnimationFrame(loop);
     };
-
+  
     requestAnimationFrame(loop);
   }, [animacaoAtiva, usuarios, usuarioAnimando]);
 

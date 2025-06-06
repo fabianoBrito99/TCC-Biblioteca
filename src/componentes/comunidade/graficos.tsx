@@ -53,50 +53,9 @@ const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
 
   return (
     <div className={styles.graficos}>
-      <div>
-        <VictoryChart domainPadding={20}>
-          <VictoryLabel
-            text="Quem está lendo mais"
-            x={225}
-            y={30}
-            textAnchor="middle"
-            style={{ fontSize: 16, fontWeight: "bold", fill: "#001f5c" }}
-          />
-          <VictoryAxis
-            style={{
-              tickLabels: { fontSize: 12, angle: -45, fill: "#001f5c" },
-            }}
-            tickFormat={progresso.map((item) => item.nome_usuario)}
-          />
-          <VictoryAxis
-            dependentAxis
-            style={{
-              tickLabels: { fontSize: 10, fill: "#001f5c" },
-            }}
-            tickFormat={(x: string) => `${x}`}
-            domain={{ y: [minPaginas - 5, maxPaginas + 5] }}
-          />
-
-          <VictoryBar
-            data={progresso.map((item) => ({
-              x: item.nome_usuario,
-              y: Number(item.paginas_lidas),
-              fill: generateColor(Number(item.paginas_lidas), maxPaginas),
-            }))}
-            labels={({ datum }) => `${datum.y} páginas`}
-            style={{
-              data: {
-                width: 25,
-              },
-              labels: {
-                fill: "#001f5c",
-                fontSize: 12,
-                fontWeight: "bold",
-              },
-            }}
-          />
-        </VictoryChart>
-      </div>
+  <div>
+    top 5 que mais está lendo
+  </div>
 
       <div className={styles.chartContainer}>
         <VictoryLabel
