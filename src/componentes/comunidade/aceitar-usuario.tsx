@@ -5,8 +5,7 @@ import styles from "./aceitar-usuario.module.css";
 
 interface Usuario {
   id_usuario: number;
-  nome_login: string;
-  email: string;
+  nome_usuario: string;
   status: string;
 }
 
@@ -15,7 +14,10 @@ interface GerenciarUsuariosProps {
   isAdmin: boolean;
 }
 
-const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isAdmin }) => {
+const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
+  comunidadeId,
+  isAdmin,
+}) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,10 +28,11 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
         const response = await fetch(
           `http://localhost:4000/api/comunidade/${comunidadeId}/solicitacoes`
         );
-        if (!response.ok) throw new Error("Erro ao buscar solicitações da comunidade");
+        if (!response.ok)
+          throw new Error("Erro ao buscar solicitações da comunidade");
         const data = await response.json();
         setUsuarios(data); // Atualiza o estado com as solicitações pendentes
-      } catch{
+      } catch {
         console.error("Erro ao buscar solicitações:");
       } finally {
         setLoading(false);
@@ -39,7 +42,10 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
     fetchSolicitacoes();
   }, [comunidadeId]);
 
-  const handleAtualizarStatus = async (idUsuario: number, novoStatus: string) => {
+  const handleAtualizarStatus = async (
+    idUsuario: number,
+    novoStatus: string
+  ) => {
     try {
       const response = await fetch(
         `http://localhost:4000/api/comunidade/${comunidadeId}/usuarios/${idUsuario}`,
@@ -49,22 +55,23 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
           body: JSON.stringify({ status: novoStatus }),
         }
       );
-  
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Erro ao atualizar status do usuário");
+        throw new Error(
+          errorData.error || "Erro ao atualizar status do usuário"
+        );
       }
-  
+
       // Remove o usuário da lista local
       setUsuarios((prevUsuarios) =>
         prevUsuarios.filter((usuario) => usuario.id_usuario !== idUsuario)
       );
-    } catch{
+    } catch {
       console.error("Erro ao atualizar status");
       alert("Erro ao processar solicitação. Tente novamente.");
     }
   };
-  
 
   if (!isAdmin) {
     return <p>Você não tem permissão para acessar esta página.</p>;
@@ -80,32 +87,39 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({ comunidadeId, isA
       {usuarios.length === 0 ? (
         <p>Não há solicitações pendentes no momento.</p>
       ) : (
-        <ul className={styles.usuarioLista}>
-          {usuarios.map((usuario) => (
-            <li key={usuario.id_usuario} className={styles.usuarioItem}>
-              <p>
-                <strong>Nome:</strong> {usuario.nome_login || usuario.nome_login}
-              </p>
-              <p>
-                <strong>Status:</strong> {usuario.status}
-              </p>
-              <div className={styles.acoes}>
-                <button
-                  className={styles.aceitarBtn}
-                  onClick={() => handleAtualizarStatus(usuario.id_usuario, "aceito")}
-                >
-                  Aceitar
-                </button>
-                <button
-                  className={styles.rejeitarBtn}
-                  onClick={() => handleAtualizarStatus(usuario.id_usuario, "rejeitado")}
-                >
-                  Rejeitar
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className={styles.usuList}>
+          <ul className={styles.usuarioLista}>
+            {usuarios.map((usuario) => (
+              <li key={usuario.id_usuario} className={styles.usuarioItem}>
+                <p>
+                  <strong>Nome:</strong>{" "}
+                  {usuario.nome_usuario || usuario.nome_usuario}
+                </p>
+                <p>
+                  <strong>Status:</strong> {usuario.status}
+                </p>
+                <div className={styles.acoes}>
+                  <button
+                    className={styles.aceitarBtn}
+                    onClick={() =>
+                      handleAtualizarStatus(usuario.id_usuario, "aceito")
+                    }
+                  >
+                    Aceitar
+                  </button>
+                  <button
+                    className={styles.rejeitarBtn}
+                    onClick={() =>
+                      handleAtualizarStatus(usuario.id_usuario, "rejeitado")
+                    }
+                  >
+                    Rejeitar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

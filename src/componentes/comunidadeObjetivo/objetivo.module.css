@@ -55,7 +55,7 @@
   left: 0;
   width: 18%;
   height: 100%;
-  z-index: 1;
+  z-index: 10;
 }
 
 .modal form {
@@ -103,3 +103,11 @@
 
 
 
+@media (max-width: 400px) {
+
+  .modal2 {
+      width: 90%;
+      margin: 5px;
+  }
+
+}

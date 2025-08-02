@@ -1,0 +1,63 @@
+/* input.module.css */
+
+.wrapper {
+  position: relative;
+  margin: 3px 0;
+}
+.wrapper input{
+  margin-bottom: 20px;
+  border: 1px solid #7276af;
+  display: block;
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.8rem;
+  border-radius: 0.4rem;
+  background: #f0fffc;
+  transition: 0.2s;
+}
+.wrapper input:focus,
+.wrapper input:hover {
+  outline: none;
+  border-color: rgba(4, 78, 175, 0.507);
+  background: white;
+  box-shadow: 0 0 0 3px rgb(2, 67, 247);
+}
+
+.input {
+  border: 1px solid #7276af;
+  width: 80%;
+  padding: 15px 0 0 20px;
+  margin-bottom: 5px;
+  background: transparent;
+  color: #000000;
+  border: 1px solid #acacac;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.label {
+  position: absolute;
+  top: 15px;
+  left: 10px;
+  font-size: 1rem;
+  color: #3f3939;
+  pointer-events: none;
+  transition: 0.15s all ease;
+}
+
+/* Animação do label */
+.input:focus + .label,
+.input:not(:placeholder-shown) + .label {
+  transform: translateY(-28px);
+  border-radius: 3px;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(to right, rgb(68, 70, 194), rgb(0, 81, 255));
+  padding: 0 5px; /* Para evitar sobreposição */
+}
+
+.error {
+  color: #f31;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}

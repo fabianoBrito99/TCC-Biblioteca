@@ -21,31 +21,35 @@ width: 80%;
 }
 .comunidadeCard{
   display: flex;
+  flex-wrap: wrap;
+  width: 400px;
   gap: 30px;
   margin: 10px;
   padding: 50px;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-image: linear-gradient(to left, #fdf8e2, #e4f5fa, #e4f5fa, #fdf8e2);
+  background-image: linear-gradient(to left, #e4f5fa, #e2e7fd, #e2e7fd, #e4f5fa);
   margin-bottom: 20px;
   border-radius: 30px;
 
 }
 .comunidadeCard:hover{
-  background-image: linear-gradient(to left, #e4f5fa, #fdf8e2, #fdf8e2, #e4f5fa);
+ background-image: linear-gradient(to left, #fdf8e2, #e4f5fa, #e4f5fa, #fdf8e2);
   border: 1px solid #4882ff;
 }
 .comunidadeCard button{
-  background-image: linear-gradient(to left, #e4faec, #4bfcb8, #4bfcb8, #e4faec);
+  background-image: linear-gradient(to left, rgb(0, 110, 255), rgb(109, 107, 248));
+  color: #fff;
   padding: 10px 30px;
-  border: 1px solid #39f033;
+  border: 1px solid #00aeff00;
   border-radius: 5px;
 
 }
 .comunidadeCard button:hover{
-  background-image: linear-gradient(to left, #4bfcb8, #e4faec, #e4faec, #4bfcb8);
+  background-image: linear-gradient(to left, rgb(0, 110, 255), #c3c3fa, #c3c3fa, rgb(109, 107, 248));
   padding: 10px 30px;
+  color: #000;
 }
 
 
@@ -201,4 +205,26 @@ background-color: #fdf8e2;
   left: 300px;
   width: 90vw;
   height: 8vh;
+}
+
+.form input{
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 110%;
+}
+.form button{
+  width: 110%;
+}
+.form select{
+  padding: 2% 10%;
+}
+
+
+.leitura_diaria{
+  width: 50%;
+  height: 10%;
+  margin: 10%;
 }

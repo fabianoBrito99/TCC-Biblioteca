@@ -8,6 +8,9 @@ import GerenciarUsuarios from "@/componentes/comunidade/aceitar-usuario";
 import CriarObjetivo from "@/componentes/comunidadeObjetivo/CriarObjetivo";
 import ProgressoObjetivo from "@/componentes/comunidadeObjetivo/ProgressoObjetivo";
 import RegistrarProgresso from "@/componentes/comunidadeObjetivo/RegistrarProgresso";
+import TopLeitores from "@/componentes/comunidade/graficos";
+import LeituraDiaria from "@/componentes/comunidade/LeituraDiaria";
+import IndicadoresLeitura from "@/componentes/comunidade/IndicadoresLeitura";
 
 interface Comunidade {
   id_comunidade: number;
@@ -53,14 +56,18 @@ export default function ComunidadeDetalhesPage() {
   const [paginasInseridas, setPaginasInseridas] = useState<number>(0);
   const [usuarioAtual, setUsuarioAtual] = useState("");
 
-
-  const handleProgressoSalvo = ({ paginas, nome }: { paginas: number; nome: string }) => {
+  const handleProgressoSalvo = ({
+    paginas,
+    nome,
+  }: {
+    paginas: number;
+    nome: string;
+  }) => {
     setPaginasInseridas(paginas);
     setUsuarioAtual(nome);
     setProgressoAtualizado((prev) => !prev);
   };
-  
-  
+
   // Obtém o ID do usuário logado do localStorage
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -195,31 +202,29 @@ export default function ComunidadeDetalhesPage() {
       {comunidade && (
         <>
           <h1>{comunidade.nome}</h1>
-          <p>{comunidade.objetivo}</p>
-
-          {isAdmin && <CriarObjetivo comunidadeId={comunidadeId} />}
+          <p>{comunidade.descricao}</p>
 
           <div>
             {loadingObjetivo ? (
               <p>Carregando objetivo...</p>
             ) : idObjetivo ? (
               <>
-              {userId && idObjetivo && comunidadeId && (
-                <RegistrarProgresso
-                  comunidadeId={comunidadeId}
-                  idObjetivo={idObjetivo}
-                  userId={userId}
-                  onProgressoSalvo={handleProgressoSalvo} 
-                />
-              )}
+                {userId && idObjetivo && comunidadeId && (
+                  <RegistrarProgresso
+                    comunidadeId={comunidadeId}
+                    idObjetivo={idObjetivo}
+                    userId={userId}
+                    onProgressoSalvo={handleProgressoSalvo}
+                  />
+                )}
 
-              {userId && idObjetivo && (
-                <ProgressoObjetivo
-                  idObjetivo={idObjetivo}
-                  progressoAtualizado={progressoAtualizado}
-                  paginasInseridas={paginasInseridas} 
-                  usuarioAtual={usuarioAtual}
-                />
+                {userId && idObjetivo && (
+                  <ProgressoObjetivo
+                    idObjetivo={idObjetivo}
+                    progressoAtualizado={progressoAtualizado}
+                    paginasInseridas={paginasInseridas}
+                    usuarioAtual={usuarioAtual}
+                  />
                 )}
               </>
             ) : (
@@ -235,13 +240,32 @@ export default function ComunidadeDetalhesPage() {
             comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
           /> */}
 
-          <Graficos progresso={progresso} idadeStats={idadeStats} />
           <div className={styles.containerLateral}>
             <Comentarios
               comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
               comentarios={comentarios as Comentario[]}
               atualizarComentarios={fetchComentarios}
             />
+          </div>
+
+          <div>
+            <TopLeitores idComunidade={comunidadeId.toString()} />
+          </div>
+          <div>
+            {userId && (
+              <IndicadoresLeitura
+                idUsuario={userId}
+                idComunidade={comunidadeId}
+              />
+            )}
+          </div>
+
+          <div>
+            {userId && (
+              <div className={styles.leitura_diaria}>
+                <LeituraDiaria idUsuario={userId} idComunidade={comunidadeId} />
+              </div>
+            )}
           </div>
 
           <div>

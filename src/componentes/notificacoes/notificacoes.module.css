@@ -89,3 +89,15 @@
   font-size: 0.9rem;
   color: #494646;
 }
+@media (max-width: 500px) {
+  .bellContainer{
+    top: -10px;
+ 
+  }
+}
+@media (max-width: 400px) {
+  .bellContainer{
+    top: 0px;
+    left: -70px;
+  }
+}

@@ -178,3 +178,37 @@
   gap: 30px;
   margin-top: 30px;
 }
+@media (max-width: 1100px) {
+ .kpiValue{
+  font-size: 1.2rem;
+ }
+}
+
+@media (max-width: 700px) {
+ .kpiValue{
+  font-size: 1rem;
+ }
+}
+
+@media (max-width: 600px) {
+ .kpiValue{
+  font-size: 0.8rem;
+ }
+ .kpiTitle{
+  font-size: 0.8rem;
+ }
+}
+@media (max-width: 530px) {
+ .kpiTitle{
+  font-size: 0.5rem;
+ }
+}
+
+@media (max-width: 400px) {
+ .kpiTitle{
+  font-size: 0.4rem;
+ }
+ .kpiValue{
+  font-size: 0.5rem;
+ }
+}

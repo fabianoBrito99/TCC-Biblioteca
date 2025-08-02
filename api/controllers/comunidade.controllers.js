@@ -445,12 +445,10 @@ function adicionarComentario(req, res) {
               .json({ error: "Erro ao confirmar transação" });
           });
         } else {
-          res
-            .status(201)
-            .json({
-              id: comentarioId,
-              message: "Comentário adicionado com sucesso!",
-            });
+          res.status(201).json({
+            id: comentarioId,
+            message: "Comentário adicionado com sucesso!",
+          });
         }
       });
     } catch (error) {
@@ -558,11 +556,9 @@ function criarObjetivo(req, res) {
       }
 
       if (results.length > 0) {
-        return res
-          .status(400)
-          .json({
-            error: "Já existe um objetivo em andamento para esta comunidade.",
-          });
+        return res.status(400).json({
+          error: "Já existe um objetivo em andamento para esta comunidade.",
+        });
       }
 
       // Insere o novo objetivo se não houver um ativo
@@ -581,12 +577,10 @@ function criarObjetivo(req, res) {
             console.error("Erro ao criar objetivo:", insertError);
             return res.status(500).json({ error: "Erro ao criar objetivo" });
           }
-          res
-            .status(201)
-            .json({
-              id: result.insertId,
-              message: "Objetivo criado com sucesso!",
-            });
+          res.status(201).json({
+            id: result.insertId,
+            message: "Objetivo criado com sucesso!",
+          });
         }
       );
     }
@@ -614,64 +608,85 @@ function verificarObjetivoAtivo(req, res) {
 
 function registrarProgressoObjetivo(req, res) {
   const { fk_id_usuario, paginas_lidas } = req.body;
-  const { idComunidade } = req.params; // 🔥 Pegamos o ID da comunidade da URL
+  const { idComunidade } = req.params;
 
-  if (!fk_id_usuario || isNaN(fk_id_usuario) || !paginas_lidas || isNaN(paginas_lidas)) {
-    return res.status(400).json({ error: "ID do usuário ou quantidade de páginas inválido." });
+  if (
+    !fk_id_usuario ||
+    isNaN(fk_id_usuario) ||
+    !paginas_lidas ||
+    isNaN(paginas_lidas)
+  ) {
+    return res
+      .status(400)
+      .json({ error: "ID do usuário ou quantidade de páginas inválido." });
   }
 
-  // 🔥 Buscar o objetivo ATIVO mais recente na comunidade
   connection.query(
     `SELECT id_objetivo, total_paginas FROM Objetivo 
      WHERE fk_id_comunidade = ? AND data_fim >= CURDATE()
-     ORDER BY data_fim ASC LIMIT 1`, 
-    [idComunidade], 
+     ORDER BY data_fim ASC LIMIT 1`,
+    [idComunidade],
     (error, results) => {
       if (error) {
         console.error("Erro ao buscar objetivo ativo:", error);
-        return res.status(500).json({ error: "Erro ao buscar objetivo ativo." });
+        return res
+          .status(500)
+          .json({ error: "Erro ao buscar objetivo ativo." });
       }
 
       if (results.length === 0) {
-        return res.status(404).json({ error: "Nenhum objetivo ativo encontrado para esta comunidade." });
+        return res
+          .status(404)
+          .json({
+            error: "Nenhum objetivo ativo encontrado para esta comunidade.",
+          });
       }
 
       const fk_id_objetivo = results[0].id_objetivo;
       const total_paginas = results[0].total_paginas;
 
-      // 🔥 Buscar progresso total do usuário nesse objetivo
       connection.query(
         "SELECT paginas_lidas FROM ProgressoObjetivo WHERE fk_id_objetivo = ? AND fk_id_usuario = ?",
         [fk_id_objetivo, fk_id_usuario],
         (sumError, sumResults) => {
           if (sumError) {
             console.error("Erro ao calcular progresso total:", sumError);
-            return res.status(500).json({ error: "Erro ao calcular progresso total." });
+            return res
+              .status(500)
+              .json({ error: "Erro ao calcular progresso total." });
           }
 
-          const paginas_totais = sumResults.length > 0 ? sumResults[0].paginas_lidas : 0;
+          const paginas_totais =
+            sumResults.length > 0 ? sumResults[0].paginas_lidas : 0;
           const novas_paginas_totais = paginas_totais + paginas_lidas;
 
-          // 🔥 Bloqueia se ultrapassar o limite permitido
           if (novas_paginas_totais > total_paginas) {
-            return res.status(400).json({ error: "A quantidade inserida ultrapassa o total permitido pelo objetivo." });
+            return res
+              .status(400)
+              .json({
+                error:
+                  "A quantidade inserida ultrapassa o total permitido pelo objetivo.",
+              });
           }
 
-          // 🔥 Inserir ou atualizar progresso corretamente e retornar as páginas lidas no momento
           connection.query(
-            `INSERT INTO ProgressoObjetivo (fk_id_objetivo, fk_id_usuario, paginas_lidas) 
-             VALUES (?, ?, ?) 
-             ON DUPLICATE KEY UPDATE paginas_lidas = paginas_lidas + VALUES(paginas_lidas)`,
+            `INSERT INTO ProgressoObjetivo (fk_id_objetivo, fk_id_usuario, paginas_lidas, data_progresso) 
+             VALUES (?, ?, ?, CURDATE()) 
+             ON DUPLICATE KEY UPDATE 
+               paginas_lidas = paginas_lidas + VALUES(paginas_lidas),
+               data_progresso = CURDATE()`,
             [fk_id_objetivo, fk_id_usuario, paginas_lidas],
             (insertError) => {
               if (insertError) {
                 console.error("Erro ao registrar progresso:", insertError);
-                return res.status(500).json({ error: "Erro ao registrar progresso." });
+                return res
+                  .status(500)
+                  .json({ error: "Erro ao registrar progresso." });
               }
 
               res.status(201).json({
                 message: "Progresso atualizado com sucesso!",
-                paginas_inseridas: paginas_lidas, // 🔥 Agora retornamos explicitamente esse valor!
+                paginas_inseridas: paginas_lidas,
               });
             }
           );
@@ -680,8 +695,6 @@ function registrarProgressoObjetivo(req, res) {
     }
   );
 }
-
-
 
 function listarProgressoObjetivo(req, res) {
   const { id_objetivo } = req.params;
@@ -728,6 +741,124 @@ function obterObjetivoAtivo(req, res) {
   );
 }
 
+function listarTopLeitores(req, res) {
+  const { id } = req.params;
+
+  connection.query(
+    `SELECT u.nome_login AS nome_usuario, u.foto_usuario, SUM(p.paginas_lidas) AS paginas_lidas
+     FROM ProgressoObjetivo AS p
+     JOIN Usuario AS u ON p.fk_id_usuario = u.id_usuario
+     JOIN objetivo AS o ON o.id_objetivo = p.fk_id_objetivo
+     WHERE o.fk_id_comunidade = ?
+     GROUP BY u.id_usuario
+     ORDER BY paginas_lidas DESC
+     LIMIT 10`,
+    [id],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar top leitores:", error);
+        return res.status(500).json({ error: "Erro ao buscar top leitores" });
+      }
+
+      const convertidos = results.map((usuario) => ({
+        ...usuario,
+        foto_usuario: usuario.foto_usuario
+          ? `data:image/jpeg;base64,${Buffer.from(
+              usuario.foto_usuario
+            ).toString("base64")}`
+          : null,
+      }));
+
+      res.json(convertidos);
+    }
+  );
+}
+
+function leituraDiariaUsuario(req, res) {
+  const { idUsuario, idComunidade } = req.params;
+
+  connection.query(
+    `SELECT DATE(po.data_progresso) AS dia, SUM(po.paginas_lidas) AS total
+     FROM ProgressoObjetivo AS po
+     JOIN Objetivo AS o ON po.fk_id_objetivo = o.id_objetivo
+     WHERE po.fk_id_usuario = ? 
+       AND o.fk_id_comunidade = ?
+       AND po.data_progresso >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
+     GROUP BY dia
+     ORDER BY dia ASC;`,
+    [idUsuario, idComunidade],
+    (error, results) => {
+      if (error) {
+        console.error("Erro ao buscar evolução diária:", error);
+        return res
+          .status(500)
+          .json({ error: "Erro ao buscar evolução diária" });
+      }
+
+      res.status(200).json(results);
+    }
+  );
+}
+
+function indicadoresLeituraUsuario(req, res) {
+  const { idUsuario, idComunidade } = req.params;
+
+  const query = `
+    SELECT 
+      (SELECT DATE(po.data_progresso)
+       FROM ProgressoObjetivo po
+       JOIN Objetivo o ON po.fk_id_objetivo = o.id_objetivo
+       WHERE po.fk_id_usuario = ? AND o.fk_id_comunidade = ?
+       GROUP BY po.data_progresso
+       ORDER BY SUM(po.paginas_lidas) DESC
+       LIMIT 1) AS melhor_dia,
+
+      (SELECT SUM(po.paginas_lidas)
+       FROM ProgressoObjetivo po
+       JOIN Objetivo o ON po.fk_id_objetivo = o.id_objetivo
+       WHERE po.fk_id_usuario = ? AND o.fk_id_comunidade = ?
+         AND DATE(po.data_progresso) = CURDATE()) AS total_hoje,
+
+      (SELECT SUM(po.paginas_lidas)
+       FROM ProgressoObjetivo po
+       JOIN Objetivo o ON po.fk_id_objetivo = o.id_objetivo
+       WHERE po.fk_id_usuario = ? AND o.fk_id_comunidade = ?
+         AND DATE(po.data_progresso) = CURDATE() - INTERVAL 1 DAY) AS total_ontem,
+
+      (SELECT ROUND(SUM(po.paginas_lidas) / COUNT(DISTINCT po.data_progresso), 1)
+       FROM ProgressoObjetivo po
+       JOIN Objetivo o ON po.fk_id_objetivo = o.id_objetivo
+       WHERE po.fk_id_usuario = ? AND o.fk_id_comunidade = ?
+         AND po.data_progresso >= CURDATE() - INTERVAL 60 DAY) AS media_diaria
+  `;
+
+  const params = [
+    idUsuario,
+    idComunidade,
+    idUsuario,
+    idComunidade,
+    idUsuario,
+    idComunidade,
+    idUsuario,
+    idComunidade,
+  ];
+
+  connection.query(query, params, (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar indicadores:", err);
+      return res.status(500).json({ error: "Erro ao buscar indicadores." });
+    }
+
+    const r = results[0];
+    res.status(200).json({
+      melhor_dia: r.melhor_dia,
+      total_hoje: r.total_hoje || 0,
+      total_ontem: r.total_ontem || 0,
+      media_diaria: r.media_diaria || 0,
+    });
+  });
+}
+
 module.exports = {
   criarComunidade,
   listarComunidades,
@@ -749,4 +880,7 @@ module.exports = {
   registrarProgressoObjetivo,
   listarProgressoObjetivo,
   obterObjetivoAtivo,
+  listarTopLeitores,
+  leituraDiariaUsuario,
+  indicadoresLeituraUsuario,
 };

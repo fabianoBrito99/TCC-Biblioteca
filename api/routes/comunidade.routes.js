@@ -70,5 +70,16 @@ router.get("/comunidade/:idComunidade/objetivo-ativo2", comunidadeController.obt
 router.post("/comunidade/:idComunidade/objetivo/progresso", comunidadeController.registrarProgressoObjetivo);
 
 
+router.get("/comunidade/:id/top-leitores", comunidadeController.listarTopLeitores);
+
+router.get(
+  "/comunidade/:idComunidade/usuario/:idUsuario/leitura-diaria",
+  comunidadeController.leituraDiariaUsuario
+);
+
+router.get(
+  "/comunidade/:idComunidade/usuario/:idUsuario/indicadores-leitura",
+  comunidadeController.indicadoresLeituraUsuario
+);
 
 module.exports = router;

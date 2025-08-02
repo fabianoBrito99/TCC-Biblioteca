@@ -5,3 +5,10 @@
   border: 2px solid black;
   margin: auto;
 }
+
+@media (max-width: 400px) {
+  .game-canvas {
+    width: 90%;
+  }
+}
+

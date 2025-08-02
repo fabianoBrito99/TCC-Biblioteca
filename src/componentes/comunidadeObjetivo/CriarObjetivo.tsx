@@ -75,12 +75,12 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
   return (
     <div>
       {!objetivoAtivo && (
-        <button
+        <Button
           className={styles["criar-objetivo-btn"]}
           onClick={() => setModalOpen(true)}
         >
           Novo Objetivo
-        </button>
+        </Button>
       )}
 
       {modalOpen && (

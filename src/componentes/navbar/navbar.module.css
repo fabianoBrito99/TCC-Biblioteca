@@ -15,14 +15,14 @@
   height: 80px;
   width: 100%;
   position: fixed;
-  z-index: 3; /* Lower z-index so it stays behind the menu */
+  z-index: 30; /* Lower z-index so it stays behind the menu */
 }
 
 .navMenu {
   background: linear-gradient(to bottom, #fff5c2, #fffee9);
   width: 250px;
   height: 0;
-  position:fixed ;
+  position: fixed;
   top: 10px;
   bottom: 0;
   left: 0;
@@ -116,13 +116,8 @@
   z-index: 100;
 }
 
-
 .navHover .menuContent li:hover {
-  background: linear-gradient(
-    to left,
-    #e7d570,
-    rgba(255, 255, 255, 0.938)
-  );
+  background: linear-gradient(to left, #e7d570, rgba(255, 255, 255, 0.938));
   padding: 5px;
   margin: 0;
   color: rgb(55, 69, 82);
@@ -216,7 +211,7 @@
 }
 
 .navMenu {
-  z-index: 2;
+  z-index: 25;
 }
 
 .notificacoes {
@@ -317,22 +312,18 @@
 
 /* Media Queries para dispositivos menores */
 @media (max-width: 1500px) {
-.logo{
-  left: 660px;
-}
-
-
+  .logo {
+    left: 660px;
+  }
 }
 
 @media (max-width: 1224px) {
-  .logo{
+  .logo {
     left: 360px;
   }
 }
 
 @media (max-width: 1024px) {
-
-
   .navMenu {
     width: 200px;
     border-radius: 0;
@@ -346,27 +337,24 @@
     font-size: 14px;
   }
 
-  .logo{
-    
+  .logo {
     left: 360px;
   }
-
- 
 }
 
 @media (max-width: 820px) {
-  .logo{
+  .logo {
     left: 260px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 769px) {
   .nav100 {
     height: 60px;
   }
 
   .navMenu {
-    width: 150px;
+    width: 180px;
   }
 
   .menuContent {
@@ -376,24 +364,24 @@
   .navItem a {
     font-size: 12px;
   }
-  .logo{
+  .logo {
     width: 35%;
     left: 260px;
     top: -45px;
   }
-  .perfil{
+  .perfil {
     height: 50px;
     width: 60px;
   }
 }
 @media (max-width: 620px) {
-  .logo{
+  .logo {
     width: 30%;
     left: 180px;
   }
 }
 @media (max-width: 500px) {
-  .logo{
+  .logo {
     width: 30%;
     left: 130px;
   }
@@ -401,10 +389,16 @@
 @media (max-width: 480px) {
   .nav100 {
     height: 50px;
+    
+  }
+  .navMenu.navOpen{
+    width: 50%;
+    top: 0;
   }
 
   .navMenu {
-    width: 100px;
+    width: 20%;
+    
   }
 
   .menuContent {
@@ -414,24 +408,81 @@
   .navItem a {
     font-size: 10px;
   }
-  .notificacoes, .comunidadeUser{
+  .notificacoes,
+  .comunidadeUser {
     top: 10px;
   }
+.logo {
+    width: 15%;
+    height: 60%;
+    left: 130px;
+    top: 10px;
+  }
+  .nav100 {
+    background: linear-gradient(
+      to right,
+      #3c58d4,
+      #ffffff,
+      #3c58d4,
+      #3c58d4,
 
-.logo{
-  width: 30%;
-  left: 130px;
+    );
+  }
+  .perfil {
+    position: fixed;
+    left: 350px;
+    height: 40px;
+    width: 50px;
+  }
+
+.notificacoes {
+  position: absolute;
+  right: 150px;
+  top: 25px;
 }
-.perfil{
-  height: 40px;
-  width: 50px;
-}
+
 
 }
 
 @media (max-width: 400px) {
-  .logo{
-    width: 30%;
-    left: 70px;
+  .navMenu {
+    width: 20%;
+    margin: 0;
+    font-size: 0.1rem;
   }
+
+  .logo {
+    width: 15%;
+    height: 60%;
+    left: 130px;
+    top: 10px;
+  }
+  .nav100 {
+    background: linear-gradient(
+      to right,
+      #3c58d4,
+      #ffffff,
+       #ffffff,
+      #3c58d4,
+      #3c58d4,
+    );
+  }
+    .perfil {
+    position: fixed;
+    left: 330px;
+    height: 40px;
+    width: 50px;
+  }
+
+  .notificacoes {
+  position: fixed;
+  left: 280px;
+  top: 10px;
+  height: 1px;
+  width: 2px;
+  z-index: 999;
+}
+.menuIconContainer{
+  top: 2px;
+}
 }

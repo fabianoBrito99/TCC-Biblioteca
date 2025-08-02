@@ -1,114 +1,61 @@
-import React from "react";
-import {
-  VictoryBar,
-  VictoryChart,
-  VictoryPie,
-  VictoryAxis,
-  VictoryLabel,
-} from "victory";
-import styles from "./graficos.module.css";
+import React, { useEffect, useState } from "react";
+import styles from "./topLeitores.module.css";
+import Image from "next/image";
 
-interface Progresso {
+interface LeitorRanking {
   nome_usuario: string;
-  paginas_lidas: number;
+  foto_usuario: string;
 }
 
-interface EstatisticasIdade {
-  faixa_etaria: string;
-  quantidade: number;
+interface Props {
+  idComunidade: string;
 }
 
-interface GraficosProps {
-  progresso: Progresso[];
-  idadeStats: EstatisticasIdade[];
-}
+const cores = ["#FFD700", "#C0C0C0", "#CD7F32"]; // ouro, prata, bronze
 
+const TopLeitores: React.FC<Props> = ({ idComunidade }) => {
+  const [leitores, setLeitores] = useState<LeitorRanking[]>([]);
 
-const generateColor = (value: number, maxValue: number) => {
-  const intensity = Math.floor((value / maxValue) * 150);
-  return `rgba(22, ${250 - intensity}, ${255 - intensity}, 1)`;
-};
+  useEffect(() => {
+    if (!idComunidade) return;
 
-const Graficos: React.FC<GraficosProps> = ({ progresso, idadeStats }) => {
-  const minPaginas = Math.min(
-    ...progresso.map((item) => Number(item.paginas_lidas))
-  );
-  const maxPaginas = Math.max(
-    ...progresso.map((item) => Number(item.paginas_lidas))
-  );
-
-  const idadeStatsWithNumber = idadeStats.map((item) => ({
-    faixa_etaria: item.faixa_etaria,
-    paginas_lidas: Number(item.quantidade),
-  }));
-
-  const maxQuantidade = Math.max(
-    ...idadeStatsWithNumber.map((item) => item.paginas_lidas)
-  );
-
-  const totalQuantidade = idadeStatsWithNumber.reduce(
-    (sum, item) => sum + item.paginas_lidas,
-    0
-  );
+    fetch(`http://localhost:4000/api/comunidade/${idComunidade}/top-leitores`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("📊 Leitores recebidos:", data);
+        setLeitores(data);
+      })
+      .catch((err) => console.error("Erro ao buscar top leitores:", err));
+  }, [idComunidade]);
 
   return (
-    <div className={styles.graficos}>
-  <div>
-    top 5 que mais está lendo
-  </div>
-
-      <div className={styles.chartContainer}>
-        <VictoryLabel
-          text="Título do Gráfico de Faixa Etária"
-          x={200}
-          y={50}
-          textAnchor="middle"
-          style={{
-            fontSize: 26,
-            fontWeight: "bold",
-            fill: "#001f5c",
-          }}
-        />
-        <VictoryPie
-          data={idadeStatsWithNumber.map((item) => ({
-            x: item.faixa_etaria,
-            y: item.paginas_lidas,
-            label: `${Math.round(
-              (item.paginas_lidas / totalQuantidade) * 100
-            )}%`,
-          }))}
-          labels={({ datum }) => datum.label}
-          labelRadius={50}
-          style={{
-            labels: { fontSize: 12, fill: "#fff", fontWeight: "bold" },
-            data: {
-              fill: ({ datum }) => generateColor(datum.y, maxQuantidade),
-            },
-          }}
-          animate={{
-            duration: 500,
-            onLoad: { duration: 500 },
-          }}
-        />
-      </div>
-
-      <div className={styles.legenda}>
-        <h4>Legenda</h4>
-        {idadeStatsWithNumber.map((item) => {
-          const color = generateColor(item.paginas_lidas, maxQuantidade);
-          return (
-            <div key={item.faixa_etaria} className={styles.legendaItem}>
-              <span
-                className={styles.legendaCor}
-                style={{ backgroundColor: color }}
-              ></span>
-              {item.faixa_etaria}
-            </div>
-          );
-        })}
-      </div>
+    <div className={styles.container}>
+      <h2>Top 10 Leitores</h2>
+      {Array.isArray(leitores) && leitores.length > 0 ? (
+        leitores.slice(0, 10).map((leitor, index) => (
+          <div
+            key={index}
+            className={styles.card}
+            style={{
+              backgroundColor: index < 3 ? cores[index] : "#FFFFFF",
+            }}
+          >
+            <span className={styles.posicao}>#{index + 1}</span>
+            <Image
+              className={styles.foto}
+              src={leitor.foto_usuario || "/img/default-user.png"}
+              alt={`Foto de ${leitor.nome_usuario}`}
+              width={10}
+              height={5}
+            />
+            <span className={styles.nome}>{leitor.nome_usuario}</span>
+          </div>
+        ))
+      ) : (
+        <p>Nenhum leitor encontrado ainda.</p>
+      )}
     </div>
   );
 };
 
-export default Graficos;
+export default TopLeitores;

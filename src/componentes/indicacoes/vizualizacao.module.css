@@ -77,3 +77,75 @@
 .autor{
   margin-top: 20px;
 }
+
+@media (max-width: 1050px) {
+.grid p{
+  font-size: 0.8rem;
+}
+.image1{
+width: 40%;
+}
+}
+@media (max-width: 650px) {
+.grid p{
+  font-size: 0.5rem;
+}
+.image1{
+width: 40%;
+}
+}
+@media (max-width: 550px) {
+.grid p{
+  font-size: 0.5rem;
+}
+.image1{
+width: 50%;
+}
+.image, .image2{
+  width: 40%;
+}
+}
+@media (max-width: 450px) {
+.grid{
+  margin-top: -50px;
+  gap: 50px;
+}
+.grid h1{
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+  .grid p{
+  font-size: 0.5rem;
+}
+.image1{
+width: 65%;
+}
+.image, .image2{
+  width: 50%;
+}
+.grid1{
+  
+  z-index: 20;
+}
+}
+
+@media (max-width: 400px) {
+
+.grid h1{
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+  .grid p{
+  font-size: 0.35rem;
+}
+.image1{
+width: 65%;
+}
+.image, .image2{
+  width: 50%;
+}
+.grid1{
+  
+  z-index: 20;
+}
+}
