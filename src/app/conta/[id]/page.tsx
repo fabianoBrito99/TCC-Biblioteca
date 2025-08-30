@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import styles from "./conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
@@ -15,7 +14,6 @@ interface User {
   igreja_local: string;
   tipo_usuario: string;
 }
-
 interface Endereco {
   cep: string;
   rua: string;
@@ -26,12 +24,11 @@ interface Endereco {
 }
 
 export default function ContaPage({ params }: { params: { id: string } }) {
+  const userId = params.id;
   const [user, setUser] = useState<User | null>(null);
   const [endereco, setEndereco] = useState<Endereco | null>(null);
-  const [fotoBase64, setFotoBase64] = useState<string | null>(null); // Correção aqui
-  const userId = params.id;
+  const [fotoBase64, setFotoBase64] = useState<string | null>(null);
 
-  // Função para converter Blob para Base64
   const convertBlobToBase64 = (blob: Blob) => {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -50,7 +47,6 @@ export default function ContaPage({ params }: { params: { id: string } }) {
           setUser(data.usuario);
           setEndereco(data.endereco);
 
-          // Verificar se a foto é uma string base64 ou Blob
           if (data.usuario.foto_usuario) {
             if (typeof data.usuario.foto_usuario === "string") {
               setFotoBase64(data.usuario.foto_usuario);
@@ -68,14 +64,12 @@ export default function ContaPage({ params }: { params: { id: string } }) {
         console.error("Erro ao buscar dados do usuário:", error);
       }
     }
-
     fetchUserData();
   }, [userId]);
 
   if (!user) {
     return <div>Carregando dados do usuário...</div>;
   }
-
   return (
     <div className={styles.contaContainer}>
       <div className={styles.grid}>

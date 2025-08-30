@@ -9,8 +9,6 @@
   font-weight: 600;
   color: #000000;
 }
-.doe img {
-}
 
 .listaEmprestimo {
   display: flex;
@@ -25,7 +23,6 @@
   padding: 16px;
 }
 
-/*pagina aprovar */
 
 .sugiraDoe h1 {
   font-family: var(--type-second);

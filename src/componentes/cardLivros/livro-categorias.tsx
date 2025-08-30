@@ -10,9 +10,10 @@ import Image from "next/image";
 interface Livro {
   id_livro: string;
   nome_livro: string;
-  foto_capa: string;
-  autor: string;
-  categoria_principal: string;
+  foto_capa_url?: string | null;
+  capa?: string | null;
+  autor?: string | null;
+  categoria_principal?: string | null;
   media_avaliacoes: number;
 }
 
@@ -70,15 +71,17 @@ const CategoriaSwiper: React.FC<CategoriaSwiperProps> = ({
             >
               <div className={styles.cardLivro}>
                 <Image
-                  src={livro.foto_capa}
-                  alt={livro.nome_livro}
+                  src={
+                    livro.foto_capa_url || livro.capa || "/placeholder-cover.png"
+                  }
+                  alt={livro.nome_livro ?? "Capa do livro"}
                   className="livro-capa"
                   width={150}
                   height={300}
                 />
                 <h2 className={styles.tituloLivro}>{livro.nome_livro}</h2>
-                <h4 className={styles.autor }>Autor: {livro.autor}</h4>
-                <p className={styles.avaliacao }>
+                <h4 className={styles.autor}>Autor: {livro.autor ?? "—"}</h4>
+                <p className={styles.avaliacao}>
                   {[1, 2, 3, 4, 5].map((star) => {
                     const media = livro.media_avaliacoes; // Média do livro
                     const isFull = media >= star; // Estrela completa

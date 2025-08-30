@@ -7,7 +7,7 @@ import Image from "next/image";
 interface Historico {
   id_historico: number;
   nome_livro: string;
-  foto_capa: string | null; // Foto como base64
+  foto_capa: string | null; 
   data_historico: string;
   data_emprestimo: string;
   data_prevista_devolucao: string;

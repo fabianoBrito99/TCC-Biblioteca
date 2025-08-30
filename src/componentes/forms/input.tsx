@@ -4,22 +4,22 @@ import styles from "./input.module.css";
 type InputProps = React.ComponentProps<"input"> & {
   label: string;
   error?: string;
-  className?: string; // Propriedade opcional para classes adicionais
+  className?: string; 
 };
 
 export default function Input({
   label,
   error,
-  className = "", // Valor padrão vazio
+  className = "", 
   ...props
 }: InputProps) {
   return (
     <div className={styles.wrapper}>
       <input
-        className={`${styles.input} ${className}`} // Combina as classes padrão e adicionais
+        className={`${styles.input} ${className}`} 
         type="text"
         id={props.name}
-        placeholder=" " // Espaço para o efeito do placeholder flutuante
+        placeholder=" " 
         {...props}
       />
       <label className={styles.label} htmlFor={props.name}>

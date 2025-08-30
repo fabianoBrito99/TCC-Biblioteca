@@ -25,8 +25,6 @@ type LoginCriarFormProps = {
 
 export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [activeTab, setActiveTab] = useState("usuario");
-
-  // Estado para os campos da aba "Usuário"
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,18 +34,15 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [data_nascimento, setDataNascimento] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [capaPreview, setCapaPreview] = useState<string | null>(null);
-  const [fotoBase64, setFotoBase64] = useState<string | null>(null); // Estado para armazenar base64 da foto
-
-  // Estado para os campos da aba "Endereço"
+  const [fotoBase64, setFotoBase64] = useState<string | null>(null); 
   const [cep, setCep] = useState("");
   const [rua, setRua] = useState("");
   const [bairro, setBairro] = useState("");
   const [numero, setNumero] = useState("");
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
-  const [igrejaLocal, setIgrejaLocal] = useState(false); // Checkbox
+  const [igrejaLocal, setIgrejaLocal] = useState(false);
 
-  // Efeito para gerar a pré-visualização da imagem
   useEffect(() => {
     if (fotoPerfil) {
       const reader = new FileReader();
@@ -56,7 +51,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     }
   }, [fotoPerfil]);
 
-  // Efeito para gerar a pré-visualização da imagem
   useEffect(() => {
     if (fotoPerfil) {
       const objectUrl = URL.createObjectURL(fotoPerfil);
@@ -66,7 +60,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     setCapaPreview(null);
   }, [fotoPerfil]);
 
-  // Função para conversão de arquivo para base64
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setFotoPerfil(file);
@@ -93,7 +86,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     }
   };
 
-  // Função para enviar o formulário de cadastro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -102,7 +94,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
       return;
     }
 
-    // Verifique se a fotoBase64 está definida
     if (!fotoBase64) {
       alert("Por favor, selecione uma foto de perfil.");
       return;
@@ -120,7 +111,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
         senha: password,
         telefone,
         data_nascimento,
-        foto_usuario: fotoBase64, // Envia a imagem como base64
+        foto_usuario: fotoBase64, 
         igreja_local: igrejaLocal,
         sexo,
         cep,
@@ -145,8 +136,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   return (
     <div className={styles.tabNavigationFixo}>
       <h1 className={styles.h1Login}>Informe os dados</h1>
-
-      {/* Navegação por abas */}
       <div className={styles.tabNavigation}>
         <button
           className={`${styles.tabButton} ${

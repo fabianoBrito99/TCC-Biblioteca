@@ -119,7 +119,6 @@ export default function DetalhesLivro() {
     }
   }, [id, fetchLivro, fetchComentarios, fetchAvaliacoes]);
 
-  // Função para curtir/descurtir comentário
   const handleCurtirComentario = async (idComentario: number) => {
     try {
       const response = await fetch(
@@ -132,21 +131,19 @@ export default function DetalhesLivro() {
       );
       const data = await response.json();
 
-      // Atualiza diretamente o estado do comentário
       setComentarios((prevComentarios) =>
         prevComentarios.map((com) =>
           com.id_comentario === idComentario
             ? {
                 ...com,
-                usuario_curtiu: !com.usuario_curtiu, // Alterna entre curtido/descurtido
-                curtidas: data.curtidas_totais, // Atualiza a quantidade de curtidas
+                usuario_curtiu: !com.usuario_curtiu, 
+                curtidas: data.curtidas_totais, 
               }
             : com
         )
       );
 
-      // Armazena o estado da curtida no localStorage para persistência após relogar
-      if (!usuarioId) return; // Verifica se o usuário está logado
+      if (!usuarioId) return; 
       if (!data.usuario_curtiu) {
         localStorage.removeItem(
           `comentario-curtido-${idComentario}-${usuarioId}`
@@ -155,7 +152,7 @@ export default function DetalhesLivro() {
         localStorage.setItem(
           `comentario-curtido-${idComentario}-${usuarioId}`,
           JSON.stringify(true)
-        ); // Guarda como curtido
+        ); 
       }
 
       fetchComentarios();
@@ -168,7 +165,6 @@ export default function DetalhesLivro() {
 
   const handleReservar = async () => {
     if (livro && livro.quantidade_estoque > 0) {
-      // Adiciona a verificação de estoque
       try {
         const response = await fetch(
           `http://localhost:4000/api/emprestimos/${livro.id_livro}/reservar`,
@@ -180,7 +176,7 @@ export default function DetalhesLivro() {
         );
         const data = await response.json();
         alert(data.mensagem);
-        fetchLivro(); // Atualiza a informação do livro após a reserva
+        fetchLivro(); 
       } catch (error) {
         alert("Erro ao reservar o livro: " + (error as Error).message);
       }
@@ -244,7 +240,7 @@ export default function DetalhesLivro() {
               idComentario,
               fk_id_usuario: usuarioId,
               resposta,
-              data_resposta: new Date().toISOString(), // Aqui estamos passando a data corretamente
+              data_resposta: new Date().toISOString(), 
             }),
           }
         );
@@ -396,16 +392,11 @@ export default function DetalhesLivro() {
                 <h3>{com.comentario}</h3>
 
                 <div className={styles.flexRes}>
-                  {/* Exibe data, caso esteja em formato válido */}
                   {com.data_comentario && (
                     <p className={styles.data}>
                       {new Date(com.data_comentario).toLocaleDateString()}
                     </p>
                   )}
-
-                  {/* Botão de Curtir Comentário */}
-
-                  {/* Responder Comentário */}
                   <button
                     className={styles.responder}
                     onClick={() => setResponderId(com.id_comentario)}
@@ -441,7 +432,6 @@ export default function DetalhesLivro() {
                   </div>
                 )}
 
-                {/* Respostas ao Comentário */}
                 {com.respostas && com.respostas.length > 0 && (
                   <div className={styles.respostas}>
                     {com.respostas.map((res) => (
@@ -457,7 +447,7 @@ export default function DetalhesLivro() {
                             />
                           ) : (
                             <Image
-                              src="/img/perfil.jpg" // Foto padrão
+                              src="/img/perfil.jpg" 
                               alt="Foto padrão"
                               width={40}
                               height={40}

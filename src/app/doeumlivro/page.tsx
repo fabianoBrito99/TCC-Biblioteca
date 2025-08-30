@@ -7,13 +7,13 @@ import Image from "next/image";
 
 type Sugestao = {
   id_sugestao: number;
-  nome_livro?: string; // Agora pode ser opcional
-  autor?: string; // Adicionado campo autor
+  nome_livro?: string; 
+  autor?: string; 
   descricao_livro?: string;
   motivo_sugestao: string;
   data_sugestao: string;
   nome_usuario: string;
-  foto_usuario?: string | null; // Foto do usuário em base64
+  foto_usuario?: string | null; 
 };
 
 export default function SuggestionPage() {
@@ -21,7 +21,7 @@ export default function SuggestionPage() {
   const [descricaoLivro, setDescricaoLivro] = useState("");
   const [motivoSugestao, setMotivoSugestao] = useState("");
   const [nomeAutor, setNomeAutor] = useState(""); 
-  const [isAuthorSuggestion, setIsAuthorSuggestion] = useState(false); // Estado para alternar entre livro e autor
+  const [isAuthorSuggestion, setIsAuthorSuggestion] = useState(false); 
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
 
@@ -54,8 +54,8 @@ export default function SuggestionPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nome_livro: nomeLivro || undefined, // Envia undefined se o campo estiver vazio
-          autor: isAuthorSuggestion ? nomeAutor : undefined, // Mapeia corretamente o autor
+          nome_livro: nomeLivro || undefined, 
+          autor: isAuthorSuggestion ? nomeAutor : undefined, 
           descricao_livro: descricaoLivro || undefined,
           motivo_sugestao: motivoSugestao,
           fk_id_usuario: usuarioId,
@@ -108,8 +108,6 @@ export default function SuggestionPage() {
         <div className={styles.sugiraDoe}>
         <h1>Sugira um Livro ou Autor</h1>
       </div>
-
-          {/* Navegação de abas */}
           <div className={styles.tabNavigation}>
             <button
               className={isAuthorSuggestion ? "" : styles.activeTab}
@@ -126,7 +124,6 @@ export default function SuggestionPage() {
           </div>
 
           <form onSubmit={handleSubmit} className={styles.suggestionForm}>
-            {/* Se for sugerir livro */}
             {!isAuthorSuggestion ? (
               <>
                 <Input
@@ -146,7 +143,6 @@ export default function SuggestionPage() {
                 />
               </>
             ) : (
-              // Se for sugerir autor
               <Input
                 label="Nome do Autor"
                 name="nomeAutor"
@@ -192,7 +188,6 @@ export default function SuggestionPage() {
               )}
               <span>{sugestao.nome_usuario}</span>
             </div>
-            {/* Exibe o nome do livro ou autor */}
             {sugestao.nome_livro ? (
               <h3>{sugestao.nome_livro}</h3>
             ) : sugestao.autor ? (

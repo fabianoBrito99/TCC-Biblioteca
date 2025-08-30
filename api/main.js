@@ -12,11 +12,7 @@ const comunidadeRoutes = require('./routes/comunidade.routes');
 const noticacoesRoutes = require('./routes/notificacoes.routes'); 
 const relatorioRoutes = require('./routes/relatorios.routes'); 
 const indicacoesRoutes = require('./routes/indicacoes.routes'); 
-
-
 const app = express();
-
-// Configuração CORS para permitir múltiplas origens
 const allowedOrigins = [
   "http://127.0.0.1:5501",
   "http://localhost:3000",
@@ -28,7 +24,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Permite requisições de origens que estão na lista
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
@@ -60,5 +55,6 @@ app.use("/api", indicacoesRoutes);
 
 const PORT = 4000;
 app.listen(PORT, () => {
-  console.log(`API iniciada na porta: ${PORT}`);
+  console.log(`
+    API iniciada na porta: ${PORT}`);
 });

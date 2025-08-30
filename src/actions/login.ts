@@ -1,6 +1,4 @@
-// src/actions/login.ts
 'use server';
-
 import apiError from '@/functions/api-error';
 import { cookies } from 'next/headers';
 

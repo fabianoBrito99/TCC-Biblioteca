@@ -1,4 +1,7 @@
 .container {
+  position: absolute;
+  top: 504px;
+  left: 400px;
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;

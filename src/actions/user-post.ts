@@ -1,7 +1,4 @@
 "use server";
-
-// import login from "./login";
-
 export default async function userPost(formData: FormData) {
   const username = formData.get("username") as string | null;
   const email = formData.get("email") as string | null;

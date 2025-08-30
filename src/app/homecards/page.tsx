@@ -2,7 +2,7 @@
 
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { fetchCategorias, fetchLivros } from "@/actions/categorias"; 
+import { fetchCategorias, fetchLivros } from "@/actions/categorias";
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
@@ -10,9 +10,10 @@ import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
 interface Livro {
   id_livro: string;
   nome_livro: string;
-  foto_capa: string;
-  autor: string;
-  categoria_principal: string;
+  foto_capa_url?: string | null;
+  capa?: string | null;
+  autor?: string | null;
+  categoria_principal?: string | null;
   media_avaliacoes: number;
 }
 
@@ -27,11 +28,29 @@ const Home: React.FC = () => {
         const categoriasData = await fetchCategorias();
         const livrosData = await fetchLivros();
 
-        console.log("Categorias recebidas:", categoriasData);
-        console.log("Livros recebidos:", livrosData);
-
         setCategorias(categoriasData.categorias || []);
-        setLivros(livrosData.livros || []);
+
+        // 2) NORMALIZA: sempre define uma imagem; repõe categoria/autores “singulares”
+        const normalizados = (livrosData?.livros || []).map((l: any) => {
+          const src = l?.capa || l?.foto_capa_url || "/placeholder-cover.png";
+
+          const categoria =
+            l?.categoria_principal ||
+            (Array.isArray(l?.categorias) ? l.categorias[0] : null);
+
+          const autorSingular =
+            l?.autor || (Array.isArray(l?.autores) ? l.autores[0] : null);
+
+          return {
+            ...l,
+            foto_capa_url: src,
+            capa: src,
+            categoria_principal: categoria,
+            autor: autorSingular,
+          };
+        });
+
+        setLivros(normalizados);
         setLoading(false);
       } catch (error) {
         console.error("Erro ao carregar os dados:", error);
@@ -70,8 +89,7 @@ const Home: React.FC = () => {
           // Renderizar os livros filtrados
           return (
             <div key={categoria}>
-              <div>
-              </div>
+              <div></div>
               <CategoriaSwiper
                 categoria_principal={categoria}
                 livros={livrosFiltrados} // Passando os livros filtrados
