@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import styles from "./progresso.module.css";
 
 interface UsuarioProgresso {
@@ -14,6 +14,10 @@ interface ProgressoObjetivoProps {
   usuarioAtual: string;
 }
 
+const velocidadeCenario = 2;
+const gravidade = 0.4;
+const forcaPulo = -10;
+const cores = ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3"];
 const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   idObjetivo,
   progressoAtualizado,
@@ -25,147 +29,133 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   const [animacaoAtiva, setAnimacaoAtiva] = useState(false);
   const [usuarioAnimando, setUsuarioAnimando] = useState<string>("");
 
-  const velocidadeCenario = 2;
-  const gravidade = 0.4;
-  const forcaPulo = -10;
+ 
 
-  const cores = ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3"];
-  const corDoUsuario = (nome: string) => {
-    const hash = [...nome].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const corDoUsuario = useCallback((nome: string) => {
+    const hash = Array.from(nome).reduce(
+      (acc, char) => acc + char.charCodeAt(0),
+      0
+    );
+
     return cores[hash % cores.length];
-  };
+  }, []);
 
-  const desenharParte = (ctx: CanvasRenderingContext2D, fn: () => void) => {
-    ctx.save();
-    fn();
-    ctx.strokeStyle = "#5a3825";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
-  };
+  const desenharParte = useCallback(
+    (ctx: CanvasRenderingContext2D, fn: () => void) => {
+      ctx.save();
+      fn();
+      ctx.strokeStyle = "#5a3825";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    },
+    []
+  );
 
-  const hashCode = (str: string) => {
-    return str
-      .split("")
-      .reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
-  };
-
-  const intToRGB = (i: number) =>
-    "#" +
-    ((i >> 24) & 0xff).toString(16).padStart(2, "0") +
-    ((i >> 16) & 0xff).toString(16).padStart(2, "0") +
-    ((i >> 8) & 0xff).toString(16).padStart(2, "0");
-
-  const desenharJesusParado = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    nome: string
-  ) => {
-    ctx.fillStyle = "#fdf6e3";
-    desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
-    ctx.fillRect(x, y - 30, 16, 30);
-    ctx.fillStyle = "#fce0b0";
-    desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 10));
-    ctx.fillRect(x + 2, y - 38, 12, 10);
-    ctx.fillStyle = "#5a3825";
-    desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 4));
-    ctx.fillRect(x + 2, y - 38, 12, 4);
-    desenharParte(ctx, () => ctx.rect(x + 1, y - 34, 2, 6));
-    ctx.fillRect(x + 1, y - 34, 2, 6);
-    desenharParte(ctx, () => ctx.rect(x + 13, y - 34, 2, 6));
-    ctx.fillRect(x + 13, y - 34, 2, 6);
-    desenharParte(ctx, () => ctx.rect(x + 4, y - 28, 8, 4));
-    ctx.fillRect(x + 4, y - 28, 8, 4);
-    ctx.fillStyle = "red";
-    desenharParte(ctx, () => ctx.rect(x + 2, y - 30, 4, 30));
-    ctx.fillRect(x + 2, y - 30, 4, 30);
-    ctx.fillStyle = "#fce0b0";
-    desenharParte(ctx, () => ctx.rect(x + 2, y, 4, 10));
-    ctx.fillRect(x + 2, y, 4, 10);
-    desenharParte(ctx, () => ctx.rect(x + 10, y - 5, 4, 10));
-    ctx.fillRect(x + 10, y - 5, 4, 10);
-    desenharParte(ctx, () => ctx.rect(x - 4, y - 26, 4, 10));
-    ctx.fillRect(x - 4, y - 26, 4, 10);
-    desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
-    ctx.fillRect(x + 16, y - 26, 4, 10);
-
-    // nome acima de Jesus parado com mesma cor que o correndo
-    const larguraNome = nome.length * 7 + 10;
-    const posTextoX = x - nome.length * 1;
-
-    ctx.fillStyle = corDoUsuario(nome);
-    ctx.beginPath();
-    ctx.roundRect(x - 20, 75, larguraNome, 18, 6); // bordas arredondadas
-    ctx.fill();
-
-    ctx.fillStyle = "black"; // texto branco
-    ctx.font = "10px Arial";
-    ctx.fillText(nome, posTextoX, 88);
-  };
-
-  const desenharJesusCorrendo = (
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    nome: string
-  ) => {
-    const passo = Math.floor(performance.now() / 100) % 2;
-    ctx.fillStyle = "#fdf6e3";
-    desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
-    ctx.fillRect(x, y - 30, 16, 30);
-    ctx.fillStyle = "#fce0b0";
-    desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 10));
-    ctx.fillRect(x + 2, y - 38, 12, 10);
-    ctx.fillStyle = "#5a3825";
-    desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 4));
-    ctx.fillRect(x + 2, y - 38, 12, 4);
-    desenharParte(ctx, () => ctx.rect(x + 1, y - 34, 2, 6));
-    ctx.fillRect(x + 1, y - 34, 2, 6);
-    desenharParte(ctx, () => ctx.rect(x + 13, y - 34, 2, 6));
-    ctx.fillRect(x + 13, y - 34, 2, 6);
-    desenharParte(ctx, () => ctx.rect(x + 4, y - 28, 8, 4));
-    ctx.fillRect(x + 4, y - 28, 8, 4);
-    ctx.fillStyle = "red";
-    desenharParte(ctx, () => ctx.rect(x + 2, y - 30, 4, 30));
-    ctx.fillRect(x + 2, y - 30, 4, 30);
-    ctx.fillStyle = "#fce0b0";
-    if (passo === 0) {
+  const desenharJesusParado = useCallback(
+    (ctx: CanvasRenderingContext2D, x: number, y: number, nome: string) => {
+      ctx.fillStyle = "#fdf6e3";
+      desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
+      ctx.fillRect(x, y - 30, 16, 30);
+      ctx.fillStyle = "#fce0b0";
+      desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 10));
+      ctx.fillRect(x + 2, y - 38, 12, 10);
+      ctx.fillStyle = "#5a3825";
+      desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 4));
+      ctx.fillRect(x + 2, y - 38, 12, 4);
+      desenharParte(ctx, () => ctx.rect(x + 1, y - 34, 2, 6));
+      ctx.fillRect(x + 1, y - 34, 2, 6);
+      desenharParte(ctx, () => ctx.rect(x + 13, y - 34, 2, 6));
+      ctx.fillRect(x + 13, y - 34, 2, 6);
+      desenharParte(ctx, () => ctx.rect(x + 4, y - 28, 8, 4));
+      ctx.fillRect(x + 4, y - 28, 8, 4);
+      ctx.fillStyle = "red";
+      desenharParte(ctx, () => ctx.rect(x + 2, y - 30, 4, 30));
+      ctx.fillRect(x + 2, y - 30, 4, 30);
+      ctx.fillStyle = "#fce0b0";
       desenharParte(ctx, () => ctx.rect(x + 2, y, 4, 10));
       ctx.fillRect(x + 2, y, 4, 10);
       desenharParte(ctx, () => ctx.rect(x + 10, y - 5, 4, 10));
       ctx.fillRect(x + 10, y - 5, 4, 10);
-    } else {
-      desenharParte(ctx, () => ctx.rect(x + 10, y, 4, 10));
-      ctx.fillRect(x + 10, y, 4, 10);
-      desenharParte(ctx, () => ctx.rect(x + 2, y - 5, 4, 10));
-      ctx.fillRect(x + 2, y - 5, 4, 10);
-    }
-    desenharParte(ctx, () => ctx.rect(x - 4, y - 26, 4, 10));
-    ctx.fillRect(x - 4, y - 26, 4, 10);
-    desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
-    ctx.fillRect(x + 16, y - 26, 4, 10);
+      desenharParte(ctx, () => ctx.rect(x - 4, y - 26, 4, 10));
+      ctx.fillRect(x - 4, y - 26, 4, 10);
+      desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
+      ctx.fillRect(x + 16, y - 26, 4, 10);
 
-    const larguraNome = nome.length * 7 + 10;
-    const posTextoX = x - nome.length * 3;
+      const larguraNome = nome.length * 7 + 10;
+      const posTextoX = x - nome.length * 1;
 
-    // fundo com cor fixa e borda arredondada
-    ctx.fillStyle = corDoUsuario(nome);
-    ctx.beginPath();
-    ctx.roundRect(x - 20, 75, larguraNome, 18, 6); // bordas arredondadas
-    ctx.fill();
+      ctx.fillStyle = corDoUsuario(nome);
+      ctx.beginPath();
+      ctx.roundRect(x - 20, 75, larguraNome, 18, 6);
+      ctx.fill();
 
-    // texto em branco
-    ctx.fillStyle = "black";
-    ctx.font = "10px Arial";
-    ctx.fillText(nome, posTextoX, 88);
-  };
+      ctx.fillStyle = "black";
+      ctx.font = "10px Arial";
+      ctx.fillText(nome, posTextoX, 88);
+    },
+    [corDoUsuario, desenharParte]
+  );
 
+  const desenharJesusCorrendo = useCallback(
+    (ctx: CanvasRenderingContext2D, x: number, y: number, nome: string) => {
+      const passo = Math.floor(performance.now() / 100) % 2;
+      ctx.fillStyle = "#fdf6e3";
+      desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
+      ctx.fillRect(x, y - 30, 16, 30);
+      ctx.fillStyle = "#fce0b0";
+      desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 10));
+      ctx.fillRect(x + 2, y - 38, 12, 10);
+      ctx.fillStyle = "#5a3825";
+      desenharParte(ctx, () => ctx.rect(x + 2, y - 38, 12, 4));
+      ctx.fillRect(x + 2, y - 38, 12, 4);
+      desenharParte(ctx, () => ctx.rect(x + 1, y - 34, 2, 6));
+      ctx.fillRect(x + 1, y - 34, 2, 6);
+      desenharParte(ctx, () => ctx.rect(x + 13, y - 34, 2, 6));
+      ctx.fillRect(x + 13, y - 34, 2, 6);
+      desenharParte(ctx, () => ctx.rect(x + 4, y - 28, 8, 4));
+      ctx.fillRect(x + 4, y - 28, 8, 4);
+      ctx.fillStyle = "red";
+      desenharParte(ctx, () => ctx.rect(x + 2, y - 30, 4, 30));
+      ctx.fillRect(x + 2, y - 30, 4, 30);
+      ctx.fillStyle = "#fce0b0";
+      if (passo === 0) {
+        desenharParte(ctx, () => ctx.rect(x + 2, y, 4, 10));
+        ctx.fillRect(x + 2, y, 4, 10);
+        desenharParte(ctx, () => ctx.rect(x + 10, y - 5, 4, 10));
+        ctx.fillRect(x + 10, y - 5, 4, 10);
+      } else {
+        desenharParte(ctx, () => ctx.rect(x + 10, y, 4, 10));
+        ctx.fillRect(x + 10, y, 4, 10);
+        desenharParte(ctx, () => ctx.rect(x + 2, y - 5, 4, 10));
+        ctx.fillRect(x + 2, y - 5, 4, 10);
+      }
+      desenharParte(ctx, () => ctx.rect(x - 4, y - 26, 4, 10));
+      ctx.fillRect(x - 4, y - 26, 4, 10);
+      desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
+      ctx.fillRect(x + 16, y - 26, 4, 10);
+
+      const larguraNome = nome.length * 7 + 10;
+      const posTextoX = x - nome.length * 3;
+
+      ctx.fillStyle = corDoUsuario(nome);
+      ctx.beginPath();
+      ctx.roundRect(x - 20, 75, larguraNome, 18, 6);
+      ctx.fill();
+
+      ctx.fillStyle = "black";
+      ctx.font = "10px Arial";
+      ctx.fillText(nome, posTextoX, 88);
+    },
+    [corDoUsuario, desenharParte]
+  );
+
+  // Carrega progresso ao montar / quando idObjetivo muda
   useEffect(() => {
     const carregarProgressoInicial = async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/comunidade/objetivo/${idObjetivo}/progresso`
+          `/api/comunidade/objetivo/${idObjetivo}/progresso`
         );
         const data: UsuarioProgresso[] = await res.json();
         setUsuarios(data);
@@ -177,13 +167,14 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     carregarProgressoInicial();
   }, [idObjetivo]);
 
+  // Recarrega quando houver atualização e dispara animação
   useEffect(() => {
     if (!progressoAtualizado) return;
 
     const fetchProgresso = async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/comunidade/objetivo/${idObjetivo}/progresso`
+          `/api/comunidade/objetivo/${idObjetivo}/progresso`
         );
         const data: UsuarioProgresso[] = await res.json();
         setUsuarios(data);
@@ -198,8 +189,9 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     };
 
     fetchProgresso();
-  }, [progressoAtualizado, paginasInseridas, usuarioAtual]);
+  }, [progressoAtualizado, paginasInseridas, usuarioAtual, idObjetivo]);
 
+  // Desenha estado estático (sem animação) sempre que usuários mudam
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || animacaoAtiva) return;
@@ -215,8 +207,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
 
       usuarios.forEach((u) => {
         const posX = (u.paginas_lidas / u.total_paginas) * canvas.width;
-        const cor = "#ccc";
-        ctx.fillStyle = cor;
+        ctx.fillStyle = "#ccc";
         ctx.fillRect(posX - 20, 75, u.nome_login.length * 7 + 10, 18);
         ctx.fillStyle = "black";
         ctx.font = "10px Arial";
@@ -226,27 +217,28 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     };
 
     desenhar();
-  }, [usuarios, animacaoAtiva]);
+  }, [usuarios, animacaoAtiva, desenharJesusParado]);
 
+  // Loop da animação
   useEffect(() => {
     if (!animacaoAtiva) return;
-  
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-  
+
     let personagemX = 0;
     let personagemY = 130;
     let velocidadeY = 0;
-  
+
     const usuario = usuarios.find((u) => u.nome_login === usuarioAnimando);
     let destinoX = usuario
       ? (usuario.paginas_lidas / usuario.total_paginas) * canvas.width
       : 50;
-  
+
     const fimDosCactos = 300 + (paginasInseridas - 1) * 100;
-  
+
     const existeOutroNoMesmoPonto = usuarios.some(
       (u) =>
         u.nome_login !== usuarioAnimando &&
@@ -255,15 +247,15 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     if (existeOutroNoMesmoPonto) {
       destinoX += 20;
     }
-  
+
     const posicaoInicial = usuario ? destinoX - paginasInseridas * 10 : 50;
     personagemX = posicaoInicial;
-    const posicaoInicialJesus = personagemX; // <--- POSIÇÃO FIXA PARA REFERÊNCIA
-  
+    const posicaoInicialJesus = personagemX;
+
     const cactos = Array.from({ length: paginasInseridas }, (_, i) => ({
       x: 300 + i * 100,
     }));
-  
+
     const desenharCacto = (x: number) => {
       ctx.fillStyle = "green";
       ctx.strokeStyle = "#5a3825";
@@ -286,54 +278,49 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fill();
       ctx.stroke();
     };
-  
+
     const loop = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#f7f7f7";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#b5651d";
       ctx.fillRect(0, 150, canvas.width, 50);
-  
-      // desenha cactos
+
+      // cactos
       cactos.forEach((c) => {
         c.x -= velocidadeCenario;
         desenharCacto(c.x);
-  
-        if (
-          c.x > personagemX &&
-          c.x < personagemX + 50 &&
-          personagemY === 130
-        ) {
+
+        if (c.x > personagemX && c.x < personagemX + 50 && personagemY === 130) {
           velocidadeY = forcaPulo;
         }
       });
-  
-      // desenha outros usuarios como obstaculos ou nas pontas dos cactos
+
+      // outros usuários
       usuarios.forEach((u) => {
         if (u.nome_login === usuarioAnimando) return;
         const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
-  
-        // se está no caminho do Jesus, vira obstáculo
+
         const estaNoCaminho =
           personagemX + 16 >= pos - 10 &&
           personagemX <= pos + 10 &&
           personagemY === 130;
-  
+
         if (estaNoCaminho) {
           velocidadeY = forcaPulo;
         }
-  
+
         let posX = pos;
-  
+
         if (pos <= posicaoInicialJesus) {
-          posX = 300 - 60; // <--- Comparando com posição fixa do início
+          posX = 300 - 60;
         } else if (pos > destinoX) {
           posX = fimDosCactos + 100;
         }
-  
+
         desenharJesusParado(ctx, posX, 130, u.nome_login);
       });
-  
+
       // física
       velocidadeY += gravidade;
       personagemY += velocidadeY;
@@ -341,26 +328,33 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         personagemY = 130;
         velocidadeY = 0;
       }
-  
+
       // movimento horizontal
       if (personagemX < destinoX) {
         personagemX += 2;
       }
-  
+
       desenharJesusCorrendo(ctx, personagemX, personagemY, usuarioAnimando);
-  
+
       const passouTodosOsCactos = cactos.every((c) => c.x + 10 < personagemX);
       if (personagemX >= destinoX && personagemY === 130 && passouTodosOsCactos) {
         setAnimacaoAtiva(false);
         setUsuarioAnimando("");
         return;
       }
-  
+
       requestAnimationFrame(loop);
     };
-  
+
     requestAnimationFrame(loop);
-  }, [animacaoAtiva, usuarios, usuarioAnimando]);
+  }, [
+    animacaoAtiva,
+    usuarios,
+    usuarioAnimando,
+    paginasInseridas,
+    desenharJesusParado,
+    desenharJesusCorrendo,
+  ]);
 
   return (
     <canvas

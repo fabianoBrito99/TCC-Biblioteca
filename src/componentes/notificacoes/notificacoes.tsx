@@ -36,7 +36,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const gerarNotificacoes = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/notificacoes/gerar/${usuarioId}`,
+          `/api/notificacoes/gerar/${usuarioId}`,
           { method: "POST" }
         );
         if (!response.ok) throw new Error("Erro ao gerar notificações");
@@ -59,7 +59,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const fetchNotificacoes = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/notificacoes/${usuarioId}`
+          `/api/notificacoes/${usuarioId}`
         );
         if (!response.ok) throw new Error("Erro ao buscar notificações");
         const data = await response.json();
@@ -76,7 +76,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
   const handleMarcarLida = async (idNotificacao: number) => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/notificacoes/${idNotificacao}/lida`,
+        `/api/notificacoes/${idNotificacao}/lida`,
         { method: "PATCH" }
       );
 

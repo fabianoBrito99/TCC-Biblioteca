@@ -2,10 +2,7 @@
 const nextConfig = {
   images: {
     domains: ['img.helenaramazzotte.online'],
-    remotePatterns: [
-      { protocol: 'https', hostname: 'img.helenaramazzotte.online', pathname: '/**' },
-    ],
+    remotePatterns: [{ protocol: 'https', hostname: 'img.helenaramazzotte.online', pathname: '/**' }],
   },
 };
-
 export default nextConfig;

@@ -80,9 +80,9 @@ export default function CadastrarLivro({ onToggle }: CadastrarLivroProps) {
     async function fetchSuggestions() {
       try {
         const [categoriaRes, autorRes, editoraRes] = await Promise.all([
-          fetch("http://127.0.0.1:4000/api/sugestoes/categorias"),
-          fetch("http://127.0.0.1:4000/api/sugestoes/autores"),
-          fetch("http://127.0.0.1:4000/api/sugestoes/editoras"),
+          fetch("https://api.helenaramazzotte.online/api/sugestoes/categorias"),
+          fetch("https://api.helenaramazzotte.online/api/sugestoes/autores"),
+          fetch("https://api.helenaramazzotte.online/api/sugestoes/editoras"),
         ]);
 
         const categorias: Categoria[] = await categoriaRes.json();
@@ -160,7 +160,7 @@ export default function CadastrarLivro({ onToggle }: CadastrarLivroProps) {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:4000/livro", {
+      const response = await fetch("https://api.helenaramazzotte.online/livro", {
         method: "POST",
         body: formData,
       });

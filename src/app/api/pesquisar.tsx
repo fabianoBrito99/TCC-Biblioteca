@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const response = await fetch(`http://localhost:4000/pesquisar?q=${q}`);
+    const response = await fetch(`https://api.helenaramazzotte.online/pesquisar?q=${q}`);
     const livros = await response.json();
     res.status(200).json(livros);
   } catch (error) {

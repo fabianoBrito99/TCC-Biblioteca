@@ -26,7 +26,7 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
     const fetchSolicitacoes = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/comunidade/${comunidadeId}/solicitacoes`
+          `/api/comunidade/${comunidadeId}/solicitacoes`
         );
         if (!response.ok)
           throw new Error("Erro ao buscar solicitações da comunidade");
@@ -48,7 +48,7 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${comunidadeId}/usuarios/${idUsuario}`,
+        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/usuarios/${idUsuario}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

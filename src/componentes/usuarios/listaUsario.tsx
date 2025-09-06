@@ -22,7 +22,7 @@ const UsuariosList: React.FC = () => {
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/usuario");
+        const response = await fetch("https://api.helenaramazzotte.online/api/usuario");
         if (!response.ok) {
           throw new Error("Erro ao buscar usuários");
         }

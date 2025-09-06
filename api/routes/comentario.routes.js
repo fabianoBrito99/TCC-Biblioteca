@@ -1,7 +1,7 @@
 const express = require('express');
 const comentarioController = require('../controllers/comentario.controller');
 const router = express.Router();
-
+const { authorize } = require('../middlewares/auth');
 // Criar comentário
 router.post('/comentario', comentarioController.criarComentario);
 

@@ -1,12 +1,23 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./sugestoes.module.css"; // Importando CSS module
+import Image from "next/image";
+import styles from "./sugestoes.module.css";
+
+type FotoCapaRaw =
+  | { type: "Buffer"; data: number[] }   // comum quando vem de MySQL Buffer serializado
+  | { data: number[] };                  // variação sem "type"
 
 interface Livro {
   id_livro: number;
   nome_livro: string;
   nome_autor: string;
-  foto_capa: any; // Pode vir como Buffer ou Base64
+  foto_capa?: string | FotoCapaRaw | null; // string (URL/base64) ou bytes
+}
+
+interface ApiResp {
+  livros: Livro[];
 }
 
 interface Props {
@@ -22,10 +33,14 @@ export default function SugestoesLivros({ categoria }: Props) {
   useEffect(() => {
     async function fetchLivros() {
       try {
-        const response = await fetch(`http://localhost:4000/livro/categoria/${encodeURIComponent(categoria)}`);
+        const response = await fetch(
+          `https://api.helenaramazzotte.online/livro/categoria/${encodeURIComponent(
+            categoria
+          )}`
+        );
         if (!response.ok) throw new Error("Erro ao buscar livros.");
-        const data = await response.json();
-        setLivros(data.livros);
+        const data: ApiResp = await response.json();
+        setLivros(data.livros ?? []);
       } catch (error) {
         console.error(error);
       }
@@ -36,12 +51,29 @@ export default function SugestoesLivros({ categoria }: Props) {
     }
   }, [categoria]);
 
-  // Função para converter Buffer para Base64
-  const getImagemBase64 = (fotoCapa: any) => {
-    if (!fotoCapa) return "/img/default-book.png"; // Se não houver imagem, usa placeholder
-    if (typeof fotoCapa === "string" && fotoCapa.includes("data:image")) return fotoCapa; // Já é Base64
-    if (fotoCapa.type === "Buffer") {
-      return `data:image/jpeg;base64,${Buffer.from(fotoCapa.data).toString("base64")}`;
+  // Converte array de bytes em dataURL base64 (sem usar Buffer do Node)
+  const bytesToDataUrlJPEG = (bytes: number[]): string => {
+    let binary = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      const slice = bytes.slice(i, i + CHUNK);
+      binary += String.fromCharCode(...slice);
+    }
+    return `data:image/jpeg;base64,${btoa(binary)}`;
+  };
+
+  // Normaliza a imagem para uma URL (dataURL ou placeholder)
+  const getImagemUrl = (
+    fotoCapa: string | FotoCapaRaw | null | undefined
+  ): string => {
+    if (!fotoCapa) return "/img/default-book.png";
+    if (typeof fotoCapa === "string") {
+      // já é URL ou dataURL base64
+      return fotoCapa.trim() !== "" ? fotoCapa : "/img/default-book.png";
+    }
+    const data = (fotoCapa as FotoCapaRaw).data;
+    if (Array.isArray(data) && data.length > 0) {
+      return bytesToDataUrlJPEG(data);
     }
     return "/img/default-book.png";
   };
@@ -55,25 +87,32 @@ export default function SugestoesLivros({ categoria }: Props) {
 
   return (
     <div className={styles.container}>
-  
       <div className={styles.grid}>
-        {livrosExibidos.map((livro) => (
-          <div 
-            key={livro.id_livro} 
-            className={styles.cardLivro} 
-            onClick={() => router.push(`/livro/${livro.id_livro}`)}
-          >
-            <img 
-              src={getImagemBase64(livro.foto_capa)}
-              alt={livro.nome_livro} 
-              width={150} 
-              height={220} 
-              style={{ objectFit: "cover", width: "auto", height: "auto" }}
-            />
-            <h3>{livro.nome_livro}</h3>
-            <p>{livro.nome_autor}</p>
-          </div>
-        ))}
+        {livrosExibidos.map((livro) => {
+          const imgUrl = getImagemUrl(livro.foto_capa);
+          return (
+            <div
+              key={livro.id_livro}
+              className={styles.cardLivro}
+              onClick={() => router.push(`/livro/${livro.id_livro}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") router.push(`/livro/${livro.id_livro}`);
+              }}
+            >
+              <Image
+                src={imgUrl}
+                alt={livro.nome_livro}
+                width={150}
+                height={220}
+                className={styles.image}
+              />
+              <h3>{livro.nome_livro}</h3>
+              <p>{livro.nome_autor}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Paginação */}
@@ -85,9 +124,14 @@ export default function SugestoesLivros({ categoria }: Props) {
           >
             ⬅️ Anterior
           </button>
-          <span> Página {paginaAtual} de {totalPaginas} </span>
+          <span>
+            {" "}
+            Página {paginaAtual} de {totalPaginas}{" "}
+          </span>
           <button
-            onClick={() => setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))}
+            onClick={() =>
+              setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))
+            }
             disabled={paginaAtual === totalPaginas}
           >
             Próxima ➡️

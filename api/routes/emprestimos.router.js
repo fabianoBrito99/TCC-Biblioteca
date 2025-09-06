@@ -1,6 +1,6 @@
 const express = require('express');
 const emprestimosController = require('../controllers/emprestimos.controllers');
-
+const { auth, authorize } = require('../middlewares/auth');
 const router = express.Router();
 
 router.get('/emprestimos', emprestimosController.list);

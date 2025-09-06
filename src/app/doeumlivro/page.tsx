@@ -34,7 +34,7 @@ export default function SuggestionPage() {
 
   const fetchSugestoes = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/sugestoes");
+      const response = await fetch("/api/sugestoes");
       const data = await response.json();
       setSugestoes(data);
     } catch (error) {
@@ -50,7 +50,7 @@ export default function SuggestionPage() {
     }
   
     try {
-      const response = await fetch("http://localhost:4000/api/sugestoes", {
+      const response = await fetch("/api/sugestoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -121,8 +121,9 @@
   border-radius: 50%;
   width: 100px;
   height: 100px;
-  margin-left: 10px;
+  margin-left: 230px;
   bottom: 235px;
+  left: 190px;
   position: fixed;
 }
 .capaPreview img {
@@ -130,7 +131,12 @@
   height: 5%;
 }
 
-
+.telefone{
+  position: fixed;
+  bottom: 367px;
+  left: 10px;
+  width: 235px;
+}
 
 .checkboxLabel {
   display: flex;
@@ -150,7 +156,7 @@
 }
 .btCad{
   position: fixed;
-  bottom: 187px;
+  bottom: 147px;
 }
 .facaLogin {
   position: fixed;
@@ -313,7 +319,7 @@
 }
 .ptBaixo{
   position: fixed;
-  bottom: 50px;
+  bottom: 10px;
 }
 
 .cep {

@@ -1,7 +1,7 @@
 const express = require("express");
 const comunidadeController = require("../controllers/comunidade.controllers");
 const router = express.Router();
-
+const { auth, authorize } = require('../middlewares/auth');
 router.post("/comunidade", comunidadeController.criarComunidade);
 router.get("/comunidade", comunidadeController.listarComunidades);
 router.get("/comunidade/:id", comunidadeController.obterComunidade);

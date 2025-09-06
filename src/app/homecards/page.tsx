@@ -1,4 +1,4 @@
-"use client"; // Marcar como Client Component
+"use client";
 
 import Head from "next/head";
 import { useEffect, useState } from "react";
@@ -17,6 +17,27 @@ interface Livro {
   media_avaliacoes: number;
 }
 
+/** Shape possível vindo da API antes de normalizar */
+interface APILivroRaw {
+  id_livro: string;
+  nome_livro: string;
+  foto_capa_url?: string | null;
+  capa?: string | null;
+  autor?: string | null;
+  autores?: string[] | null;
+  categoria_principal?: string | null;
+  categorias?: string[] | null;
+  media_avaliacoes?: number | null;
+}
+
+/** Respostas esperadas das actions */
+interface FetchCategoriasResp {
+  categorias?: string[];
+}
+interface FetchLivrosResp {
+  livros?: APILivroRaw[];
+}
+
 const Home: React.FC = () => {
   const [categorias, setCategorias] = useState<string[]>([]);
   const [livros, setLivros] = useState<Livro[]>([]);
@@ -25,35 +46,38 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const categoriasData = await fetchCategorias();
-        const livrosData = await fetchLivros();
+        const categoriasData = (await fetchCategorias()) as FetchCategoriasResp;
+        const livrosData = (await fetchLivros()) as FetchLivrosResp;
 
-        setCategorias(categoriasData.categorias || []);
+        setCategorias(categoriasData?.categorias ?? []);
 
-        // 2) NORMALIZA: sempre define uma imagem; repõe categoria/autores “singulares”
-        const normalizados = (livrosData?.livros || []).map((l: any) => {
-          const src = l?.capa || l?.foto_capa_url || "/placeholder-cover.png";
+        // Normaliza para o shape Livro sem usar `any`
+        const normalizados: Livro[] = (livrosData?.livros ?? []).map(
+          (l: APILivroRaw): Livro => {
+            const src = l.capa ?? l.foto_capa_url ?? "/placeholder-cover.png";
+            const categoria =
+              l.categoria_principal ??
+              (Array.isArray(l.categorias) ? l.categorias[0] ?? null : null);
+            const autorSingular =
+              l.autor ??
+              (Array.isArray(l.autores) ? l.autores[0] ?? null : null);
 
-          const categoria =
-            l?.categoria_principal ||
-            (Array.isArray(l?.categorias) ? l.categorias[0] : null);
-
-          const autorSingular =
-            l?.autor || (Array.isArray(l?.autores) ? l.autores[0] : null);
-
-          return {
-            ...l,
-            foto_capa_url: src,
-            capa: src,
-            categoria_principal: categoria,
-            autor: autorSingular,
-          };
-        });
+            return {
+              id_livro: l.id_livro,
+              nome_livro: l.nome_livro,
+              foto_capa_url: src,
+              capa: src,
+              categoria_principal: categoria,
+              autor: autorSingular,
+              media_avaliacoes: l.media_avaliacoes ?? 0,
+            };
+          }
+        );
 
         setLivros(normalizados);
-        setLoading(false);
       } catch (error) {
         console.error("Erro ao carregar os dados:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -61,9 +85,7 @@ const Home: React.FC = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
+  if (loading) return <div>Carregando...</div>;
 
   return (
     <div className={styles.containerHome}>
@@ -79,20 +101,17 @@ const Home: React.FC = () => {
       <div id="categorias-section" className={styles.categoriasSection}>
         {categorias.map((categoria) => {
           const livrosFiltrados = livros.filter((livro) => {
-            const categoriaLivro = livro.categoria_principal
-              ?.trim()
-              .toLowerCase();
+            const categoriaLivro = livro.categoria_principal?.trim().toLowerCase();
             const categoriaSelecionada = categoria.trim().toLowerCase();
             return categoriaLivro === categoriaSelecionada;
           });
 
-          // Renderizar os livros filtrados
           return (
             <div key={categoria}>
               <div></div>
               <CategoriaSwiper
                 categoria_principal={categoria}
-                livros={livrosFiltrados} // Passando os livros filtrados
+                livros={livrosFiltrados}
               />
             </div>
           );

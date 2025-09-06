@@ -1,12 +1,7 @@
+// src/app/page.tsx
+import { permanentRedirect } from "next/navigation";
+
 export default function Home() {
-  return (
-    <div >
-      <main>
-        <h1>Home</h1>
-        
-        
-        
-      </main>
-    </div>
-  );
+  // redireciona imediatamente (HTTP 308)
+  permanentRedirect("/login");
 }

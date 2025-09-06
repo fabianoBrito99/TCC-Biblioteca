@@ -1,3 +1,6 @@
+require('dotenv').config({ override: true });
+
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -13,27 +16,23 @@ const noticacoesRoutes = require('./routes/notificacoes.routes');
 const relatorioRoutes = require('./routes/relatorios.routes'); 
 const indicacoesRoutes = require('./routes/indicacoes.routes'); 
 const app = express();
-const allowedOrigins = [
-  "http://127.0.0.1:5501",
-  "http://localhost:3000",
-  "http://10.0.2.2:3000",
-  "http://10.0.2.2:3000", // Para emuladores Android
-  "http://192.168.1.4:8081", // Endereço do Expo
-];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Não permitido por CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+
+const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // permite sem Origin (curl/postman) ou se estiver na lista
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Não permitido por CORS: ' + origin));
+  },
+  methods: ['GET','POST','PATCH','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: false,
+}));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -53,8 +52,8 @@ app.use("/api", relatorioRoutes);
 app.use("/api", indicacoesRoutes); 
 
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`
-    API iniciada na porta: ${PORT}`);
+  console.log(`API iniciada na porta ${PORT}`);
 });
+

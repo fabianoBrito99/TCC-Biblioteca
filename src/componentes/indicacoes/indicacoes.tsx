@@ -4,18 +4,23 @@ import { useState } from "react";
 import styles from "./AdicionarIndicacoes.module.css";
 import Input from "../forms/input";
 
+interface LivroSugestao {
+  id_livro: number;
+  nome_livro: string;
+}
+
 const AdicionarIndicacao = () => {
   const [livroNome, setLivroNome] = useState("");
-  const [livrosSugeridos, setLivrosSugeridos] = useState<any[]>([]);
+  const [livrosSugeridos, setLivrosSugeridos] = useState<LivroSugestao[]>([]);
   const [livroIdSelecionado, setLivroIdSelecionado] = useState<number | null>(null);
 
-  // Função para buscar livros conforme o usuário digita
+  // Buscar livros conforme o usuário digita
   const buscarLivros = async (nome: string) => {
     setLivroNome(nome);
     if (nome.length > 2) {
-      const res = await fetch(`http://localhost:4000/api/livros/busca?nome=${nome}`);
-      const data = await res.json();
-      setLivrosSugeridos(data.livros);
+      const res = await fetch(`/api/livros/busca?nome=${encodeURIComponent(nome)}`);
+      const data: { livros: LivroSugestao[] } = await res.json();
+      setLivrosSugeridos(data.livros ?? []);
     } else {
       setLivrosSugeridos([]);
     }
@@ -28,7 +33,7 @@ const AdicionarIndicacao = () => {
       return;
     }
 
-    const response = await fetch("http://localhost:4000/api/indicacoes", {
+    const response = await fetch("/api/indicacoes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fk_id_livro: livroIdSelecionado }),
@@ -46,14 +51,14 @@ const AdicionarIndicacao = () => {
     <div className={styles.container}>
       <h2>Adicionar Indicação</h2>
       <Input
-       label="Nome do Livro"
+        label="Nome do Livro"
         type="text"
         value={livroNome}
-        onChange={(e) => buscarLivros(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => buscarLivros(e.target.value)}
         className={styles.input}
       />
 
-      {/* Exibir Sugestões de Livros */}
+      {/* Sugestões de Livros */}
       {livrosSugeridos.length > 0 && (
         <ul className={styles.sugestoes}>
           {livrosSugeridos.map((livro) => (
@@ -62,7 +67,7 @@ const AdicionarIndicacao = () => {
               onClick={() => {
                 setLivroNome(livro.nome_livro);
                 setLivroIdSelecionado(livro.id_livro);
-                setLivrosSugeridos([]); 
+                setLivrosSugeridos([]);
               }}
               className={styles.sugestaoItem}
             >
@@ -72,7 +77,9 @@ const AdicionarIndicacao = () => {
         </ul>
       )}
 
-      <button onClick={enviarIndicacao} className={styles.button}>Adicionar</button>
+      <button onClick={enviarIndicacao} className={styles.button}>
+        Adicionar
+      </button>
     </div>
   );
 };

@@ -2,13 +2,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Comentarios from "@/componentes/comunidade/comentarios";
-import Graficos from "@/componentes/comunidade/graficos";
+// Removido import de Graficos (não usado)
+import TopLeitores from "@/componentes/comunidade/graficos";
 import styles from "../comunidade.module.css";
 import GerenciarUsuarios from "@/componentes/comunidade/aceitar-usuario";
 import CriarObjetivo from "@/componentes/comunidadeObjetivo/CriarObjetivo";
 import ProgressoObjetivo from "@/componentes/comunidadeObjetivo/ProgressoObjetivo";
 import RegistrarProgresso from "@/componentes/comunidadeObjetivo/RegistrarProgresso";
-import TopLeitores from "@/componentes/comunidade/graficos";
 import LeituraDiaria from "@/componentes/comunidade/LeituraDiaria";
 import IndicadoresLeitura from "@/componentes/comunidade/IndicadoresLeitura";
 
@@ -43,8 +43,11 @@ interface Comentario {
 export default function ComunidadeDetalhesPage() {
   const { id } = useParams();
   const [comunidade, setComunidade] = useState<Comunidade | null>(null);
-  const [progresso, setProgresso] = useState<Progresso[]>([]);
-  const [idadeStats, setIdadeStats] = useState<EstatisticasIdade[]>([]);
+
+  // Ignora a variável de estado (apenas mantém o setter usado no fetch)
+  const [, setProgresso] = useState<Progresso[]>([]);
+  const [, setIdadeStats] = useState<EstatisticasIdade[]>([]);
+
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const comunidadeId = typeof id === "string" ? parseInt(id, 10) : NaN;
   const [idObjetivo, setIdObjetivo] = useState<number | null>(null);
@@ -80,14 +83,12 @@ export default function ComunidadeDetalhesPage() {
   useEffect(() => {
     if (!comunidadeId) return;
 
-    fetch(
-      `http://localhost:4000/api/comunidade/${comunidadeId}/objetivo-ativo2`
-    )
+    fetch(`/api/comunidade/${comunidadeId}/objetivo-ativo2`)
       .then((res) => res.json())
       .then((data) => {
         if (data.idObjetivo) {
           console.log("ID do Objetivo carregado:", data.idObjetivo);
-          setIdObjetivo(Number(data.idObjetivo)); // Garante que seja número
+          setIdObjetivo(Number(data.idObjetivo));
         } else {
           setIdObjetivo(null);
         }
@@ -102,7 +103,7 @@ export default function ComunidadeDetalhesPage() {
     const verificarAdmin = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/comunidade/${id}/verificar-admin/${userId}`
+          `/api/comunidade/${id}/verificar-admin/${userId}`
         );
         const data = await response.json();
         setIsAdmin(data.isAdmin);
@@ -117,7 +118,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${id}/comentarios`
+        `/api/comunidade/${id}/comentarios`
       );
       if (!response.ok) throw new Error("Erro ao buscar comentários");
       const data = await response.json();
@@ -132,7 +133,7 @@ export default function ComunidadeDetalhesPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/objetivo/${idObjetivo}/progresso`
+        `/api/comunidade/objetivo/${idObjetivo}/progresso`
       );
 
       if (!response.ok) throw new Error("Erro ao buscar progresso");
@@ -145,21 +146,21 @@ export default function ComunidadeDetalhesPage() {
       }));
 
       console.log("Progresso atualizado:", progresso);
-      setProgresso(progresso); // Atualiza a interface
+      setProgresso(progresso);
     } catch (error) {
       console.error("Erro ao buscar progresso:", error);
     }
   }, [idObjetivo]);
 
-  // Chama o fetchProgresso sempre que o idObjetivo mudar
+  // Inclui fetchProgresso como dependência para satisfazer o lint
   useEffect(() => {
     fetchProgresso();
-  }, [idObjetivo]);
+  }, [idObjetivo, fetchProgresso]);
 
   const fetchEstatisticasIdade = useCallback(async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${id}/estatisticas/idade`
+        `/api/comunidade/${id}/estatisticas/idade`
       );
       if (!response.ok) throw new Error("Erro ao buscar estatísticas de idade");
       const data = await response.json();
@@ -171,9 +172,7 @@ export default function ComunidadeDetalhesPage() {
 
   const fetchComunidade = useCallback(async () => {
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/comunidade/${id}`
-      );
+      const response = await fetch(`/api/comunidade/${id}`);
       if (!response.ok) throw new Error("Erro ao buscar comunidade");
       const data = await response.json();
       setComunidade(data);
@@ -189,13 +188,7 @@ export default function ComunidadeDetalhesPage() {
     fetchProgresso();
     fetchEstatisticasIdade();
     fetchComentarios();
-  }, [
-    id,
-    fetchComunidade,
-    fetchProgresso,
-    fetchEstatisticasIdade,
-    fetchComentarios,
-  ]);
+  }, [id, fetchComunidade, fetchProgresso, fetchEstatisticasIdade, fetchComentarios]);
 
   return (
     <div className={styles.containerComu}>
@@ -231,14 +224,12 @@ export default function ComunidadeDetalhesPage() {
               <p>Nenhum objetivo ativo no momento.</p>
             )}
           </div>
+
           <div className={styles.criarObjetivo}>
             {isAdmin && !idObjetivo && (
               <CriarObjetivo comunidadeId={comunidadeId} />
             )}
           </div>
-          {/* <CriarObjetivo
-            comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
-          /> */}
 
           <div className={styles.containerLateral}>
             <Comentarios
@@ -251,6 +242,7 @@ export default function ComunidadeDetalhesPage() {
           <div>
             <TopLeitores idComunidade={comunidadeId.toString()} />
           </div>
+
           <div>
             {userId && (
               <IndicadoresLeitura

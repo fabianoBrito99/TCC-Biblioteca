@@ -34,7 +34,7 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({ emprestimo, onClick }) => {
   // Função para devolver o livro
   const handleDevolver = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/emprestimos/${emprestimo.id_emprestimo}/devolver?livroId=${emprestimo.id_livro}`, {
+      const response = await fetch(`/api/emprestimos/${emprestimo.id_emprestimo}/devolver?livroId=${emprestimo.id_livro}`, {
         method: 'PUT', // Ou 'PUT', dependendo da API
         headers: {
           'Content-Type': 'application/json',

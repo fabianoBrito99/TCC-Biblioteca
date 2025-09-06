@@ -54,7 +54,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${comunidadeId}/comentarios`
+        `/api/comunidade/${comunidadeId}/comentarios`
       );
       const data: Comentario[] = await response.json();
   
@@ -88,7 +88,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${comunidadeId}/comentarios`,
+        `/api/comunidade/${comunidadeId}/comentarios`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

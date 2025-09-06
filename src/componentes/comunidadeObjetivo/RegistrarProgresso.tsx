@@ -27,7 +27,7 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
       if (!id) return;
 
       try {
-        const res = await fetch(`http://localhost:4000/api/usuario/${id}`);
+        const res = await fetch(`https://api.helenaramazzotte.online/api/usuario/${id}`);
         if (res.ok) {
           const data = await res.json();
           setNomeUsuario(data.usuario.nome_login); // 👈 aqui pega o nome corretamente
@@ -60,7 +60,7 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
     console.log("📨 Enviando progresso:", dados);
 
     const response = await fetch(
-      `http://localhost:4000/api/comunidade/${comunidadeId}/objetivo/progresso`,
+      `/api/comunidade/${comunidadeId}/objetivo/progresso`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

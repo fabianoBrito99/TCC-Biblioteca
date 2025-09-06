@@ -1,79 +1,110 @@
-// // /middleware.ts
-// import type { NextRequest } from "next/server";
-// import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-// const permissoes = {
-//   administrador: [
-//     "/livros",
-//     "/cadastrarLivro",
-//     "/emprestimos",
-//     "/usuario",
-//     "/homecards",
-//     "/doeumlivro",
-//     "/comunidade",
-//   ],
-//   voluntario: ["/homecards", "/doeumlivro", "/comunidade"],
-//   leitor: ["/homecards", "/doeumlivro", "/comunidade"],
-// } as const;
+const permissoes = {
+  administrador: [
+    "/livros",
+    "/cadastrarLivro",
+    "/emprestimos",
+    "/usuario",
+    "/homecards",
+    "/doeumlivro",
+    "/comunidade",
+  ],
+  voluntario: ["/homecards", "/doeumlivro", "/comunidade"],
+  leitor: ["/homecards", "/doeumlivro", "/comunidade"],
+} as const;
 
-// function isPathAllowed(pathname: string, allowedPrefixes: readonly string[]) {
-//   return allowedPrefixes.some(
-//     (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
-//   );
-// }
-// function normalizePath(p: string) {
-//   return p !== "/" && p.endsWith("/") ? p.slice(0, -1) : p;
-// }
+type Role = keyof typeof permissoes;
 
-// export function middleware(request: NextRequest) {
-//   const url = request.nextUrl;
-//   const pathname = normalizePath(url.pathname);
-//   const search = url.search;
+const roleAlias: Record<string, Role> = {
+  administrador: "administrador",
+  admin: "administrador",
+  bibliotecario: "administrador",
+  voluntario: "voluntario",
+  leitor: "leitor",
+  user: "leitor",
+};
 
-//   if (
-//     pathname.startsWith("/login") ||
-//     pathname.startsWith("/api/") ||
-//     pathname.startsWith("/_next/") ||
-//     pathname.startsWith("/favicon") ||
-//     /\.\w+$/.test(pathname)
-//   ) {
-//     return NextResponse.next();
-//   }
+const isPathAllowed = (pathname: string, allowed: readonly string[]) =>
+  allowed.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
-//   const cookieRole = request.cookies.get("tipo_usuario")?.value;
-//   const headerRole = request.headers.get("tipo-usuario");
-//   const userType = (cookieRole || headerRole || "").toLowerCase();
+const normalizePath = (p: string) => (p !== "/" && p.endsWith("/") ? p.slice(0, -1) : p);
 
-//   // Sem login: manda pro login com flag de origem e motivo = auth
-//   if (!userType) {
-//     const loginUrl = new URL("/login", request.url);
-//     loginUrl.searchParams.set("next", pathname + search);
-//     loginUrl.searchParams.set("from", "mw");
-//     loginUrl.searchParams.set("error", "auth"); // <-- novo
-//     return NextResponse.redirect(loginUrl);
-//   }
+// Constrói a origem correta para redirecionar (usa headers do proxy)
+// Se ainda vier localhost, usa APP_BASE_URL ou NEXT_PUBLIC_SITE_URL como fallback.
+function getOrigin(req: NextRequest): string {
+  const xfProto = req.headers.get("x-forwarded-proto") ?? "https";
+  const xfHost =
+    req.headers.get("x-forwarded-host") ??
+    req.headers.get("host") ??
+    req.nextUrl.host;
 
-//   const allowed = permissoes[userType as keyof typeof permissoes];
+  const host = xfHost;
+  const originFromProxy = `${xfProto}://${host}`;
 
-//   if (!allowed || !isPathAllowed(pathname, allowed)) {
-//     const loginUrl = new URL("/login", request.url);
-//     loginUrl.searchParams.set("next", pathname + search);
-//     loginUrl.searchParams.set("from", "mw");
-//     loginUrl.searchParams.set("error", "permissao"); // <-- já existia
-//     return NextResponse.redirect(loginUrl);
-//   }
+  const fallback =
+    process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
 
-//   return NextResponse.next();
-// }
+  const isLocal =
+    /^localhost(:\d+)?$/i.test(host) || /^127\.0\.0\.1(:\d+)?$/i.test(host);
 
-// export const config = {
-//   matcher: [
-//     "/livros/:path*",
-//     "/cadastrarLivro/:path*",
-//     "/emprestimos/:path*",
-//     "/usuario/:path*",
-//     "/homecards/:path*",
-//     "/doeumlivro/:path*",
-//     "/comunidade/:path*",
-//   ],
-// };
+  // Se host veio certo do proxy, usa ele. Se for localhost, tenta fallback de env.
+  if (!isLocal) return originFromProxy;
+  if (fallback) return fallback;
+
+  // Último recurso: usa o que o Next viu (pode ser localhost).
+  return req.nextUrl.origin;
+}
+
+export function middleware(req: NextRequest) {
+  const url = req.nextUrl;
+  const pathname = normalizePath(url.pathname);
+  const search = url.search;
+
+  // 1) Autenticação
+  const token = req.cookies.get("token")?.value ?? "";
+  if (!token) {
+    const origin = getOrigin(req);
+    const to = new URL("/login", origin);
+    to.searchParams.set("next", pathname + search);
+    to.searchParams.set("from", "mw");
+    to.searchParams.set("error", "auth");
+    return NextResponse.redirect(to);
+  }
+
+  // 2) Autorização (se houver papel)
+  const rawRole = (req.cookies.get("tipo_usuario")?.value ??
+    req.headers.get("tipo-usuario") ??
+    "")
+    .trim()
+    .toLowerCase();
+
+  const role: Role | undefined = roleAlias[rawRole];
+
+  if (role) {
+    const allowed = permissoes[role];
+    if (!isPathAllowed(pathname, allowed)) {
+      const origin = getOrigin(req);
+      const to = new URL("/login", origin);
+      to.searchParams.set("next", pathname + search);
+      to.searchParams.set("from", "mw");
+      to.searchParams.set("error", "permissao");
+      return NextResponse.redirect(to);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+// Só nas rotas protegidas
+export const config = {
+  matcher: [
+    "/livros/:path*",
+    "/cadastrarLivro",
+    "/emprestimos/:path*",
+    "/usuario/:path*",
+    "/homecards",
+    "/doeumlivro",
+    "/comunidade/:path*",
+  ],
+};

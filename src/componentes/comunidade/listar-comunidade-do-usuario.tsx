@@ -23,7 +23,7 @@ const ComunidadesUsuario: React.FC<ComunidadesUsuarioProps> = ({ usuarioId }) =>
     const fetchComunidadesUsuario = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/comunidade/usuario/${usuarioId}`
+          `https://api.helenaramazzotte.online/api/comunidade/usuario/${usuarioId}`
         );
         if (!response.ok) throw new Error("Erro ao buscar comunidades do usuário.");
         const data = await response.json();

@@ -22,7 +22,7 @@ export default function ComunidadeListPage() {
   const [statusUsuario, setStatusUsuario] = useState<StatusUsuario>({});
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [objetivo, setObjetivo] = useState("");
+  const [objetivo, ] = useState("");
   const [tipo, setTipo] = useState("publica");
   const [userId, setUserId] = useState<number | null>(null);
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function ComunidadeListPage() {
   // Função para carregar comunidades e status do usuário
   const fetchComunidades = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/comunidade");
+      const response = await fetch("/api/comunidade");
       const data = await response.json();
 
       if (Array.isArray(data)) {
@@ -48,7 +48,7 @@ export default function ComunidadeListPage() {
           const statuses: StatusUsuario = {};
           for (const comunidade of data) {
             const statusResponse = await fetch(
-              `http://localhost:4000/api/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
+              `https://api.helenaramazzotte.online/api/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
             );
             const statusData = await statusResponse.json();
             statuses[comunidade.id_comunidade] = statusData.status;
@@ -85,7 +85,7 @@ export default function ComunidadeListPage() {
       id_adm: userId,
     };
 
-    const response = await fetch("http://localhost:4000/api/comunidade", {
+    const response = await fetch("/api/comunidade", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(comunidadeData),
@@ -95,7 +95,7 @@ export default function ComunidadeListPage() {
       const { id } = await response.json();
 
       // Adicionar automaticamente o administrador à comunidade
-      await fetch(`http://localhost:4000/api/comunidade/${id}/entrar`, {
+      await fetch(`/api/comunidade/${id}/entrar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fk_id_usuario: userId, tipo: "publica" }),
@@ -131,7 +131,7 @@ export default function ComunidadeListPage() {
       return;
     }
 
-    await fetch(`http://localhost:4000/api/comunidade/${comunidadeId}/entrar`, {
+    await fetch(`/api/comunidade/${comunidadeId}/entrar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fk_id_usuario: userId, tipo }),

@@ -21,7 +21,7 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
     const verificarObjetivoAtivo = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/comunidade/${comunidadeId}/objetivo-ativo`
+          `/api/comunidade/${comunidadeId}/objetivo-ativo`
         );
         const data = await response.json();
         setObjetivoAtivo(data.ativo);
@@ -43,7 +43,7 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
 
     try {
       const response = await fetch(
-        "http://localhost:4000/api/comunidade/objetivo",
+        "/api/comunidade/objetivo",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

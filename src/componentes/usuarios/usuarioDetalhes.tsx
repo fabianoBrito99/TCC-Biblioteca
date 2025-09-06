@@ -29,7 +29,7 @@ export default function UsuarioDetalhes({
     const fetchUsuario = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/usuario/${params.id}`
+          `https://api.helenaramazzotte.online/api/usuario/${params.id}`
         );
         if (!response.ok) {
           throw new Error("Erro ao buscar usuário");
@@ -51,7 +51,7 @@ export default function UsuarioDetalhes({
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/usuario/${usuario.id_usuario}/tipo`,
+        `https://api.helenaramazzotte.online/api/usuario/${usuario.id_usuario}/tipo`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

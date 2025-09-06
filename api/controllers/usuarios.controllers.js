@@ -1,5 +1,26 @@
 const connection = require("../config/mysql.config");
 
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const senhaForte = (s) =>
+  typeof s === "string" &&
+  s.length >= 8 && s.length <= 64 &&
+  /[a-z]/.test(s) &&    // minúscula
+  /[A-Z]/.test(s) &&    // maiúscula
+  /[0-9]/.test(s) &&    // dígito
+  /[^A-Za-z0-9]/.test(s); // caractere especial
+
+function emitirToken(u) {
+  return jwt.sign(
+    { id: u.id_usuario, nome_login: u.nome_login, tipo_usuario: u.tipo_usuario || "leitor" },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES || "1d" }
+  );
+}
+
+
 async function list(request, response) {
   connection.query(
     `SELECT id_usuario, nome_login, email, tipo_usuario, foto_usuario FROM Usuario`,
@@ -94,67 +115,65 @@ async function show(request, response) {
 
 
 async function create(request, response) {
-  const {
-    nome_login,
-    email,
-    senha,
-    telefone,
-    igreja_local,
-    data_nascimento,
-    foto_usuario, // Recebe como Base64 do front-end
-    tipo_usuario,
-    cep,
-    rua,
-    numero,
-    bairro,
-    cidade,
-    estado,
-    sexo, // Recebe "Masculino" ou "Feminino"
-  } = request.body;
+  try {
+    const {
+      nome_login, email, senha, telefone, igreja_local, data_nascimento,
+      foto_usuario, tipo_usuario, cep, rua, numero, bairro, cidade, estado, sexo
+    } = request.body;
 
-  // Converte a imagem Base64 para Buffer para armazenar como Blob
-  const fotoBuffer = foto_usuario ? Buffer.from(foto_usuario.split(",")[1], 'base64') : null;
-
-  // Normaliza o valor do sexo para "M" ou "F"
-  const sexoNormalizado = sexo === "Masculino" ? "M" : sexo === "Feminino" ? "F" : null;
-
-  connection.query(
-    `INSERT INTO Usuario (nome_login, email, senha, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario, sexo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, "leitor", ?)`,
-    [nome_login, email, senha, telefone, data_nascimento, igreja_local, fotoBuffer, tipo_usuario, sexoNormalizado],
-    function (err, resultadoUsuario) {
-      if (err) {
-        console.error("Erro ao criar usuário:", err);
-        return response.status(500).json({ erro: "Erro ao criar usuário" });
-      }
-
-      // Insere endereço na tabela `Endereco`
-      connection.query(
-        `INSERT INTO Endereco (cep, rua, numero, bairro, cidade, estado) VALUES (?, ?, ?, ?, ?, ?)`,
-        [cep, rua, numero, bairro, cidade, estado],
-        function (err, resultadoEndereco) {
-          if (err) {
-            console.error("Erro ao inserir endereço:", err);
-            return response.status(500).json({ erro: "Erro ao inserir endereço" });
-          }
-
-          // Relaciona o usuário ao endereço
-          connection.query(
-            `INSERT INTO Usuario_Endereco (fk_id_usuario, fk_id_endereco) VALUES (?, ?)`,
-            [resultadoUsuario.insertId, resultadoEndereco.insertId],
-            function (err) {
-              if (err) {
-                console.error("Erro ao associar usuário ao endereço:", err);
-                return response.status(500).json({ erro: "Erro ao associar usuário ao endereço" });
-              }
-              console.log("Usuário criado com sucesso");
-              return response.status(201).json({ message: "Usuário criado com sucesso" });
-            }
-          );
-        }
-      );
+    if (!senhaForte(senha)) {
+      return response.status(400).json({
+        erro: "Senha fraca. Use 8–64 chars com minúsculas, MAIÚSCULAS, números e especiais."
+      });
     }
-  );
+
+    const saltRounds = Number(process.env.BCRYPT_ROUNDS || 10);
+    const hash = await bcrypt.hash(senha, saltRounds);
+
+    const fotoBuffer = foto_usuario ? Buffer.from(foto_usuario.split(",")[1], "base64") : null;
+    const sexoNormalizado = sexo === "Masculino" ? "M" : sexo === "Feminino" ? "F" : null;
+    const tipo = tipo_usuario || "leitor";
+
+    connection.query(
+      `INSERT INTO Usuario (nome_login, email, senha, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario, sexo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nome_login, email, hash, telefone, data_nascimento, igreja_local, fotoBuffer, tipo, sexoNormalizado],
+      function (err, resultadoUsuario) {
+        if (err) {
+          console.error("Erro ao criar usuário:", err);
+          return response.status(500).json({ erro: "Erro ao criar usuário" });
+        }
+
+        connection.query(
+          `INSERT INTO Endereco (cep, rua, numero, bairro, cidade, estado) VALUES (?, ?, ?, ?, ?, ?)`,
+          [cep, rua, numero, bairro, cidade, estado],
+          function (err, resultadoEndereco) {
+            if (err) {
+              console.error("Erro ao inserir endereço:", err);
+              return response.status(500).json({ erro: "Erro ao inserir endereço" });
+            }
+
+            connection.query(
+              `INSERT INTO Usuario_Endereco (fk_id_usuario, fk_id_endereco) VALUES (?, ?)`,
+              [resultadoUsuario.insertId, resultadoEndereco.insertId],
+              function (err) {
+                if (err) {
+                  console.error("Erro ao associar usuário ao endereço:", err);
+                  return response.status(500).json({ erro: "Erro ao associar usuário ao endereço" });
+                }
+
+                const token = emitirToken({ id_usuario: resultadoUsuario.insertId, nome_login, tipo_usuario: tipo });
+                return response.status(201).json({ message: "Usuário criado com sucesso", token });
+              }
+            );
+          }
+        );
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    return response.status(500).json({ erro: "Erro interno" });
+  }
 }
 
 
@@ -165,30 +184,34 @@ async function create(request, response) {
 // API de login
 function login(request, response) {
   const { email, senha } = request.body;
-
-  // Validação de entrada
   if (!email || !senha) {
     return response.status(400).json({ erro: "Todos os campos são obrigatórios" });
   }
 
   connection.query(
-    `SELECT * FROM Usuario WHERE (email = ? OR nome_login = ?) AND senha = ?`,
-    [email, email, senha],
-    function (err, resultado) {
+    `SELECT * FROM Usuario WHERE (email = ? OR nome_login = ?)`,
+    [email, email],
+    async function (err, resultado) {
       if (err) {
         return response.status(500).json({ erro: "Erro ao buscar o usuário" });
       }
       if (resultado.length === 0) {
-        return response.status(401).json({ erro: "Email ou senha incorretos" });
+        return response.status(401).json({ erro: "Email/usuário ou senha incorretos" });
       }
 
-      // Retornar dados do usuário
+      const user = resultado[0];
+      const ok = await bcrypt.compare(senha, user.senha);
+      if (!ok) return response.status(401).json({ erro: "Email/usuário ou senha incorretos" });
+
+      const token = emitirToken(user);
+
       return response.status(200).json({
         message: "Login bem-sucedido",
+        token,
         usuario: {
-          id_usuario: resultado[0].id_usuario,
-          nome_login: resultado[0].nome_login,
-          tipo_usuario: resultado[0].tipo_usuario,
+          id_usuario: user.id_usuario,
+          nome_login: user.nome_login,
+          tipo_usuario: user.tipo_usuario,
         },
       });
     }

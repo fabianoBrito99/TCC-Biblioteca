@@ -44,9 +44,10 @@ interface LeituraSexo {
   sexo: string;
   quantidade: number;
 }
-interface Categoria{
-  categoria_principal: string; 
-  quantidade: number
+
+interface Categoria {
+  categoria_principal: string;
+  quantidade: number;
 }
 
 interface DadosGraficos {
@@ -99,7 +100,7 @@ const Relatorios = () => {
       const fetchData = async () => {
         try {
           const response = await fetch(
-            `http://localhost:4000/api/relatorios?dataInicio=${dataInicio}&dataFim=${dataFim}`
+            `/api/relatorios?dataInicio=${dataInicio}&dataFim=${dataFim}`
           );
           const data = await response.json();
           if (response.ok && !isCancelled) {
@@ -107,7 +108,7 @@ const Relatorios = () => {
           } else {
             throw new Error("Erro na resposta da API");
           }
-        } catch (error) {
+        } catch {
           setErro("Erro ao carregar os dados.");
         }
       };
@@ -148,12 +149,13 @@ const Relatorios = () => {
     "#f44336",
   ];
 
-  const calcularVariacao = (atual: number, anterior: number) => {
+  // sempre retorna number
+  const calcularVariacao = (atual: number, anterior: number): number => {
     if (anterior === 0) return atual > 0 ? 100 : 0;
-    return (((atual - anterior) / anterior) * 100).toFixed(1);
+    return ((atual - anterior) / anterior) * 100;
   };
 
-  let variacao = "0";
+  let variacao = 0;
   let gaugePercent = 0.5;
 
   if (dadosGraficos) {
@@ -161,7 +163,7 @@ const Relatorios = () => {
       dadosGraficos.totalLivros,
       dadosGraficos.totalAnterior
     );
-    gaugePercent = (Number(variacao) + 100) / 200;
+    gaugePercent = (variacao + 100) / 200;
   }
 
   return (
@@ -223,16 +225,13 @@ const Relatorios = () => {
                   className={styles.kpiVariation}
                   style={{
                     color:
-                      dadosGraficos.totalLivros >= dadosGraficos.totalAnterior
+                      dadosGraficos.totalLivros >=
+                      dadosGraficos.totalAnterior
                         ? "green"
                         : "red",
                   }}
                 >
-                  {calcularVariacao(
-                    dadosGraficos.totalLivros,
-                    dadosGraficos.totalAnterior
-                  )}
-                  %
+                  {variacao.toFixed(1)}%
                 </div>
 
                 <div className={styles.kpiProgress}>
@@ -244,7 +243,7 @@ const Relatorios = () => {
                     arcPadding={0.02}
                     colors={["#f44336", "#e0e0e0", "#4caf50"]}
                     needleColor="#333"
-                    formatTextValue={() => `${variacao}%`}
+                    formatTextValue={() => `${variacao.toFixed(1)}%`}
                   />
                 </div>
               </div>
@@ -307,7 +306,11 @@ const Relatorios = () => {
                 }
                 labelRadius={50}
                 style={{
-                  labels: { fontSize: 10, fill: "white", fontWeight: "bold" },
+                  labels: {
+                    fontSize: 10,
+                    fill: "white",
+                    fontWeight: "bold",
+                  },
                 }}
               />
             </div>
@@ -328,11 +331,16 @@ const Relatorios = () => {
                 }
                 labelRadius={50}
                 style={{
-                  labels: { fontSize: 10, fill: "white", fontWeight: "bold" },
+                  labels: {
+                    fontSize: 10,
+                    fill: "white",
+                    fontWeight: "bold",
+                  },
                 }}
               />
             </div>
           </div>
+
           <svg style={{ height: 0 }}>
             <defs>
               <linearGradient id="azulGradiente" x1="0" x2="0" y1="0" y2="1">
@@ -341,10 +349,9 @@ const Relatorios = () => {
               </linearGradient>
             </defs>
           </svg>
-          <div className={styles.gridDoisUm}>
-            {/* Gradiente azul global */}
 
-            {/* Leitores */}
+          <div className={styles.gridDoisUm}>
+            {/* Top Leitores */}
             <div>
               <VictoryChart domainPadding={20}>
                 <VictoryLabel
@@ -373,8 +380,9 @@ const Relatorios = () => {
                 />
               </VictoryChart>
             </div>
+
+            {/* Top Livros */}
             <div>
-              {/* Livros */}
               <VictoryChart domainPadding={20}>
                 <VictoryLabel
                   text="Top 5 Livros"
@@ -403,8 +411,9 @@ const Relatorios = () => {
                 />
               </VictoryChart>
             </div>
+
+            {/* Top Autores */}
             <div>
-              {/* Autores */}
               <VictoryChart domainPadding={20}>
                 <VictoryLabel
                   text="Top 5 Autores"
@@ -432,8 +441,9 @@ const Relatorios = () => {
                 />
               </VictoryChart>
             </div>
+
+            {/* Top Categorias */}
             <div>
-              {/* Categorias */}
               <VictoryChart domainPadding={20}>
                 <VictoryLabel
                   text="Top 5 Categorias"

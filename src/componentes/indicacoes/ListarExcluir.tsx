@@ -1,26 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./ListaIndicacoes.module.css";
 
+interface Indicacao {
+  id_indicacao: number;
+  nome_livro: string;
+  nome_autor: string;
+}
+
 const ListaIndicacoes = () => {
-  const [indicacoes, setIndicacoes] = useState<any[]>([]);
-  const router = useRouter();
+  const [indicacoes, setIndicacoes] = useState<Indicacao[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/indicacoes")
+    fetch("/api/indicacoes")
       .then((res) => res.json())
-      .then((data) => setIndicacoes(data.indicacoes));
+      .then((data: { indicacoes: Indicacao[] }) => setIndicacoes(data.indicacoes))
+      .catch((err) => console.error("Erro ao carregar indicações:", err));
   }, []);
 
   const excluirIndicacao = async (id: number) => {
-    const response = await fetch(`http://localhost:4000/api/indicacoes/${id}`, {
+    const response = await fetch(`/api/indicacoes/${id}`, {
       method: "DELETE",
     });
     if (response.ok) {
       alert("Indicação excluída!");
-      setIndicacoes(indicacoes.filter((ind) => ind.id_indicacao !== id));
+      setIndicacoes((prev) => prev.filter((ind) => ind.id_indicacao !== id));
     }
   };
 
@@ -30,8 +35,15 @@ const ListaIndicacoes = () => {
       <ul className={styles.list}>
         {indicacoes.map((ind) => (
           <li key={ind.id_indicacao} className={styles.item}>
-            <span>{ind.nome_livro} - {ind.nome_autor}</span>
-            <button onClick={() => excluirIndicacao(ind.id_indicacao)} className={styles.button}>Excluir</button>
+            <span>
+              {ind.nome_livro} - {ind.nome_autor}
+            </span>
+            <button
+              onClick={() => excluirIndicacao(ind.id_indicacao)}
+              className={styles.button}
+            >
+              Excluir
+            </button>
           </li>
         ))}
       </ul>

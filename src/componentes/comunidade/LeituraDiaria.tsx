@@ -19,34 +19,36 @@ interface Props {
   idComunidade: number;
 }
 
+interface APILeituraDia {
+  dia: string;
+  total: number | string;
+}
+
 const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
   const [dados, setDados] = useState<LeituraDia[]>([]);
 
   useEffect(() => {
     fetch(
-      `http://localhost:4000/api/comunidade/${idComunidade}/usuario/${idUsuario}/leitura-diaria`
+      `https://api.helenaramazzotte.online/api/comunidade/${idComunidade}/usuario/${idUsuario}/leitura-diaria`
     )
       .then((res) => res.json())
-      .then((data) => {
-        const formatado = data.map((item: any) => ({
+      .then((data: APILeituraDia[]) => {
+        const formatado: LeituraDia[] = data.map((item) => ({
           dia: item.dia.split("T")[0],
           total: Number(item.total),
         }));
         setDados(formatado);
-        console.log("📅 Leitura diária:", formatado);
       })
       .catch((err) => console.error("Erro ao buscar leitura diária:", err));
   }, [idUsuario, idComunidade]);
 
-  if (dados.length < 2)
-    return <p>Sem dados suficientes para exibir gráfico.</p>;
+  if (dados.length < 2) return <p>Sem dados suficientes para exibir gráfico.</p>;
 
-  const segmentos = [];
+  const segmentos: { data: LeituraDia[]; cor: string }[] = [];
   for (let i = 1; i < dados.length; i++) {
     const anterior = dados[i - 1];
     const atual = dados[i];
-
-    const cor = atual.total >= anterior.total ? "#2ecc71" : "#e74c3c"; // verde ou vermelho
+    const cor = atual.total >= anterior.total ? "#2ecc71" : "#e74c3c";
     segmentos.push({ data: [anterior, atual], cor });
   }
 
@@ -62,12 +64,14 @@ const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
         {/* Eixo X */}
         <VictoryAxis
           fixLabelOverlap
-          tickFormat={(t) => {
+          tickFormat={(t: string | number) => {
             if (typeof t === "string" && t.includes("-")) {
-              const [ano, mes, dia] = t.split("-");
+              const parts = t.split("-");
+              const dia = parts[2];
+              const mes = parts[1];
               return `${dia}/${mes}`;
             }
-            return "";
+            return typeof t === "number" ? t.toString() : "";
           }}
           style={{
             tickLabels: { fontSize: 10, angle: 45 },
@@ -78,7 +82,7 @@ const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
         {/* Eixo Y */}
         <VictoryAxis
           dependentAxis
-          tickFormat={(x) => `${x}`}
+          tickFormat={(x: number) => x.toString()}
           style={{
             tickLabels: { fontSize: 10 },
             grid: { stroke: "#ccc", strokeDasharray: "4 4" },
@@ -93,11 +97,7 @@ const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
             x="dia"
             y="total"
             style={{
-              data: {
-                fill: segmento.cor,
-                fillOpacity: 0.2,
-                stroke: "none",
-              },
+              data: { fill: segmento.cor, fillOpacity: 0.2, stroke: "none" },
             }}
           />
         ))}
@@ -109,12 +109,7 @@ const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
             data={segmento.data}
             x="dia"
             y="total"
-            style={{
-              data: {
-                stroke: segmento.cor,
-                strokeWidth: 3,
-              },
-            }}
+            style={{ data: { stroke: segmento.cor, strokeWidth: 3 } }}
             labels={({ datum }) => `${datum.total}`}
             labelComponent={<VictoryTooltip />}
           />
@@ -127,11 +122,7 @@ const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
           y="total"
           size={4}
           style={{
-            data: {
-              fill: "#34495e", // cinza escuro discreto
-              stroke: "#fff",
-              strokeWidth: 1,
-            },
+            data: { fill: "#34495e", stroke: "#fff", strokeWidth: 1 },
           }}
         />
       </VictoryChart>

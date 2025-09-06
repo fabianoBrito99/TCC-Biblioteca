@@ -85,7 +85,7 @@ export default function Navbar() {
       if (userId) {
         try {
           const res = await fetch(
-            `http://localhost:4000/api/usuario/${userId}`
+            `https://api.helenaramazzotte.online/api/usuario/${userId}`
           );
           if (res.ok) {
             const data = await res.json();

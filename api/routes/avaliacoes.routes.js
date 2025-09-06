@@ -1,11 +1,11 @@
 const express = require('express');
 const avaliacaoController = require('../controllers/avaliacoes.controllers');
 const router = express.Router();
-
+const { auth, authorize } = require('../middlewares/auth');
 // Rota para listar as avaliações de um livro
 router.get("/livro/:livroId/avaliacoes", avaliacaoController.listaAvaliacoes);
 
 // Rota para adicionar uma nova avaliação
-router.post("/livro/:livroId/avaliacao", avaliacaoController.adicionaAvaliacao);
+router.post("/livro/:livroId/avaliacao",  avaliacaoController.adicionaAvaliacao);
 
 module.exports = router;

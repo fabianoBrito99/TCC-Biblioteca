@@ -19,7 +19,7 @@ const TopLeitores: React.FC<Props> = ({ idComunidade }) => {
   useEffect(() => {
     if (!idComunidade) return;
 
-    fetch(`http://localhost:4000/api/comunidade/${idComunidade}/top-leitores`)
+    fetch(`/api/comunidade/${idComunidade}/top-leitores`)
       .then((res) => res.json())
       .then((data) => {
         console.log("📊 Leitores recebidos:", data);

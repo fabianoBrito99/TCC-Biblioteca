@@ -17,7 +17,7 @@ export default function AprovarEmprestimo() {
   useEffect(() => {
     const carregarEmprestimos = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/emprestimos/aprovar");
+        const response = await fetch("/api/emprestimos/aprovar");
         const data = await response.json();
         // Verifique a estrutura da resposta para garantir que seja um array
         if (Array.isArray(data.dados)) {

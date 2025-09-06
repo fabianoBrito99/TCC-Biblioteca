@@ -28,7 +28,7 @@ export default function ProgressoForm({
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/comunidade/${comunidadeId}/progresso`,
+        `/api/comunidade/${comunidadeId}/progresso`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

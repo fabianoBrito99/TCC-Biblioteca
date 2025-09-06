@@ -20,7 +20,7 @@ const DetalhesEmprestimo = ({ idEmprestimo }: DetalhesEmprestimoProps) => {
   useEffect(() => {
     const carregarDetalhesEmprestimo = async (id: string) => {
       try {
-        const response = await fetch(`http://localhost:4000/api/emprestimos/${id}`);
+        const response = await fetch(`/api/emprestimos/${id}`);
         const data = await response.json();
         setEmprestimo(data.dados); // Aqui você usa a tipagem correta para 'data.dados'
       } catch (error) {
@@ -33,7 +33,7 @@ const DetalhesEmprestimo = ({ idEmprestimo }: DetalhesEmprestimoProps) => {
 
   const devolverLivro = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/emprestimos/${idEmprestimo}/devolver`, {
+      const response = await fetch(`/api/emprestimos/${idEmprestimo}/devolver`, {
         method: 'PUT',
       });
 

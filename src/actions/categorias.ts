@@ -1,6 +1,6 @@
 export const fetchCategorias = async () => {
   try {
-    const response = await fetch('http://localhost:4000/categorias');
+    const response = await fetch('https://api.helenaramazzotte.online/categorias');
     if (!response.ok) {
       throw new Error('Erro na requisição de categorias');
     }
@@ -13,7 +13,7 @@ export const fetchCategorias = async () => {
 
 export const fetchLivros = async () => {
   try {
-    const response = await fetch('http://localhost:4000/livro');
+    const response = await fetch('https://api.helenaramazzotte.online/livro');
     if (!response.ok) {
       throw new Error('Erro na requisição de livros');
     }
