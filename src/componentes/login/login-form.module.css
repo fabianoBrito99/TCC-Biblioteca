@@ -538,7 +538,7 @@
   width: 100%; /* Preenche todo o campo */
 }
 
-@media (max-width: 480px) {
+@media (max-width: 550px) {
   /* calcula escala e fixa a “tela” no tamanho XR */
   .viewport {
     --scale: min(100vw / 414, 100dvh / 896);
@@ -555,7 +555,7 @@
 
   .screenMobile .h1Login {
     font-size: 0.7rem;
-    margin-top: 255px;
+    margin-top: 249px;
   }
 
   .screenMobile .subtitle {
@@ -578,13 +578,13 @@
   }
 
   .screenMobile .tabNavigation {
-    margin-bottom: 1.9rem;
+    margin-bottom: 1.4rem;
     margin-top: 10px;
     gap: 0;
   }
 
   .screenMobile .tabButton {
-    margin-top: -40px;
+    margin-top: -50px;
     top: 5px;
     position: relative;
     font-size: 0.55rem;
@@ -595,7 +595,7 @@
   }
 
   .screenMobile .senhasul {
-    margin-top: -85px;
+    margin-top: -90px;
     font-size: 8px;
   }
 
