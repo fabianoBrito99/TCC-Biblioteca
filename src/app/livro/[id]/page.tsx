@@ -90,7 +90,7 @@ export default function DetalhesLivro() {
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/livro/${id}/comentarios?usuarioId=${usuarioId}`
+        `https://api.helenaramazzotte.online/api/livro/${id}/comentarios?usuarioId=${usuarioId}`
       );
       const data = await response.json();
       setComentarios(data);
@@ -102,7 +102,7 @@ export default function DetalhesLivro() {
   const fetchAvaliacoes = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/livro/${id}/avaliacoes`
+        `https://api.helenaramazzotte.online/api/livro/${id}/avaliacoes`
       );
       const data = await response.json();
       setAvaliacoes(data.avaliacoes || []);
@@ -122,7 +122,7 @@ export default function DetalhesLivro() {
   const handleCurtirComentario = async (idComentario: number) => {
     try {
       const response = await fetch(
-        `/api/comentario/curtir`,
+        `https://api.helenaramazzotte.online/api/comentario/curtir`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -167,7 +167,7 @@ export default function DetalhesLivro() {
     if (livro && livro.quantidade_estoque > 0) {
       try {
         const response = await fetch(
-          `/api/emprestimos/${livro.id_livro}/reservar`,
+          `https://api.helenaramazzotte.online/api/emprestimos/${livro.id_livro}/reservar`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -188,7 +188,7 @@ export default function DetalhesLivro() {
   const handleEnviarAvaliacao = async () => {
     if (comentario && avaliacao) {
       try {
-        await fetch(`/api/livro/${id}/avaliacao`, {
+        await fetch(`https://api.helenaramazzotte.online/api/livro/${id}/avaliacao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -210,7 +210,7 @@ export default function DetalhesLivro() {
 
   const handleEnviarComentario = async () => {
     try {
-      const response = await fetch(`/api/comentario`, {
+      const response = await fetch(`https://api.helenaramazzotte.online/api/comentario`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -232,7 +232,7 @@ export default function DetalhesLivro() {
     if (resposta) {
       try {
         const response = await fetch(
-          `/api/comentario/responder`,
+          `https://api.helenaramazzotte.online/api/comentario/responder`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

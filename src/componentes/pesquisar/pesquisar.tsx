@@ -10,7 +10,7 @@ const SearchBar: React.FC = () => {
 
     if (query.length > 0) {
       try {
-        const response = await fetch(`/api/pesquisar?q=${query}`);
+        const response = await fetch(`https://api.helenaramazzotte.online/api/pesquisar?q=${query}`);
         const livros = await response.json();
         setSugestoes(livros.map((livro: { nome_livro: string }) => livro.nome_livro));
       } catch (error) {

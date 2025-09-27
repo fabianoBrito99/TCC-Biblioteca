@@ -60,7 +60,7 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
     console.log("📨 Enviando progresso:", dados);
 
     const response = await fetch(
-      `/api/comunidade/${comunidadeId}/objetivo/progresso`,
+      `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo/progresso`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -13,14 +13,14 @@ const ListaIndicacoes = () => {
   const [indicacoes, setIndicacoes] = useState<Indicacao[]>([]);
 
   useEffect(() => {
-    fetch("/api/indicacoes")
+    fetch("https://api.helenaramazzotte.online/api/indicacoes")
       .then((res) => res.json())
       .then((data: { indicacoes: Indicacao[] }) => setIndicacoes(data.indicacoes))
       .catch((err) => console.error("Erro ao carregar indicações:", err));
   }, []);
 
   const excluirIndicacao = async (id: number) => {
-    const response = await fetch(`/api/indicacoes/${id}`, {
+    const response = await fetch(`https://api.helenaramazzotte.online/api/indicacoes/${id}`, {
       method: "DELETE",
     });
     if (response.ok) {

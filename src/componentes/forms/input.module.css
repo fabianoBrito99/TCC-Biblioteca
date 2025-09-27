@@ -61,3 +61,26 @@
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
+
+
+@media (max-width: 480px) {
+ .wrapper input{
+  margin-bottom: 5px;
+  font-size: 0.5rem;
+ }
+ .label{
+  top: 5px;
+ }
+ .input:focus + .label,
+.input:not(:placeholder-shown) + .label {
+  transform: translateY(-15px);
+}
+}
+@media (max-width: 400px) {
+
+ .label{
+  top: 12px;
+  font-size: 0.7rem;
+ }
+
+}

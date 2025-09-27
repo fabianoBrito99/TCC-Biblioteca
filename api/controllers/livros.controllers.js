@@ -566,33 +566,96 @@ function showEditora(request, response) {
   );
 }
 
+// function sugestoesLivro(request, response) {
+//   const categoria = request.query.categoria;
+
+//   let query = `
+//     SELECT Livro.id_livro, Livro.nome_livro, Livro.foto_capa, Autor.nome AS nome_autor
+//     FROM Livro
+//     LEFT JOIN Livro_Categoria ON Livro.id_livro = Livro_Categoria.fk_id_livros
+//     LEFT JOIN Categoria ON Livro_Categoria.fk_id_categoria = Categoria.id_categoria
+//     LEFT JOIN Autor_Livros ON Livro.id_livro = Autor_Livros.fk_id_livros
+//     LEFT JOIN Autor ON Autor_Livros.fk_id_autor = Autor.id_autor
+//   `;
+
+//   let params = [];
+
+//   if (categoria) {
+//     query += ` WHERE Categoria.categoria_principal = ?`;
+//     params.push(categoria);
+//   }
+
+//   connection.query(query, params, (err, resultado) => {
+//     if (err) {
+//       return response.status(500).json({ erro: "Erro ao buscar livros" });
+//     }
+
+//     return response.json({ livros: resultado });
+//   });
+// }
+
 function sugestoesLivro(request, response) {
   const categoria = request.query.categoria;
 
+  // Monta a consulta agregando autores e usando a URL da capa
   let query = `
-    SELECT Livro.id_livro, Livro.nome_livro, Livro.foto_capa, Autor.nome AS nome_autor
-    FROM Livro
-    LEFT JOIN Livro_Categoria ON Livro.id_livro = Livro_Categoria.fk_id_livros
-    LEFT JOIN Categoria ON Livro_Categoria.fk_id_categoria = Categoria.id_categoria
-    LEFT JOIN Autor_Livros ON Livro.id_livro = Autor_Livros.fk_id_livros
-    LEFT JOIN Autor ON Autor_Livros.fk_id_autor = Autor.id_autor
+    SELECT
+      L.id_livro,
+      L.nome_livro,
+      L.foto_capa_url,
+      GROUP_CONCAT(DISTINCT A.nome ORDER BY A.nome SEPARATOR '||') AS autores
+    FROM Livro L
+    LEFT JOIN Livro_Categoria LC ON L.id_livro = LC.fk_id_livros
+    LEFT JOIN Categoria C        ON LC.fk_id_categoria = C.id_categoria
+    LEFT JOIN Autor_Livros AL    ON L.id_livro = AL.fk_id_livros
+    LEFT JOIN Autor A            ON AL.fk_id_autor = A.id_autor
   `;
 
-  let params = [];
+  const params = [];
 
   if (categoria) {
-    query += ` WHERE Categoria.categoria_principal = ?`;
+    query += ` WHERE C.categoria_principal = ?`;
     params.push(categoria);
   }
 
+  // Evita duplicidade por conta dos JOINs
+  query += `
+    GROUP BY L.id_livro, L.nome_livro, L.foto_capa_url
+    ORDER BY L.id_livro DESC
+    LIMIT 12
+  `;
+
   connection.query(query, params, (err, resultado) => {
     if (err) {
+      console.error("Erro ao buscar livros:", err);
       return response.status(500).json({ erro: "Erro ao buscar livros" });
     }
 
-    return response.json({ livros: resultado });
+    const livros = resultado.map((row) => {
+      const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
+      const capaUrl    = row.foto_capa_url || null;
+
+      return {
+        id_livro: row.id_livro,
+        nome_livro: row.nome_livro,
+
+        // novo campo principal
+        foto_capa_url: capaUrl,
+
+        // aliases p/ compatibilidade com o front atual
+        foto_capa: capaUrl,
+        capa: capaUrl,
+
+        // autor “principal” + lista completa
+        autor: autoresArr[0] || null,
+        autores: autoresArr,
+      };
+    });
+
+    return response.json({ livros });
   });
 }
+
 
 module.exports = {
   show,

@@ -21,7 +21,7 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
     const verificarObjetivoAtivo = async () => {
       try {
         const response = await fetch(
-          `/api/comunidade/${comunidadeId}/objetivo-ativo`
+          `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo-ativo`
         );
         const data = await response.json();
         setObjetivoAtivo(data.ativo);
@@ -43,7 +43,7 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
 
     try {
       const response = await fetch(
-        "/api/comunidade/objetivo",
+        "https://api.helenaramazzotte.online/api/comunidade/objetivo",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

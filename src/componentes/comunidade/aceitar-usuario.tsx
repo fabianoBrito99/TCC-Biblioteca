@@ -26,7 +26,7 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
     const fetchSolicitacoes = async () => {
       try {
         const response = await fetch(
-          `/api/comunidade/${comunidadeId}/solicitacoes`
+          `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/solicitacoes`
         );
         if (!response.ok)
           throw new Error("Erro ao buscar solicitações da comunidade");

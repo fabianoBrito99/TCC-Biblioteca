@@ -22,7 +22,7 @@ const HistoricoUsuario: React.FC<{ userId: string }> = ({ userId }) => {
   useEffect(() => {
     const fetchHistorico = async () => {
       try {
-        const response = await fetch(`/api/historico/${userId}`);
+        const response = await fetch(`https://api.helenaramazzotte.online/api/historico/${userId}`);
         if (!response.ok) {
           throw new Error("Erro ao buscar histórico.");
         }

@@ -33,7 +33,7 @@ export default function BookContainer() {
           <div className={styles.logo}>
             <div className={styles.text}>
               <p>
-                HELENA
+                <span className={styles.nome}>HELENA </span>
                 <span className={styles.sobrenome}>RAMAZZOTTE</span>
                 <span className={styles.biblioteca}>BIBLIOTECA</span>
               </p>

@@ -18,7 +18,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     const carregarEmprestimos = async () => {
       try {
-        const response = await fetch("/api/emprestimos");
+        const response = await fetch("https://api.helenaramazzotte.online/api/emprestimos");
         const data = await response.json();
         // Verifique a estrutura da resposta para garantir que seja um array
         if (Array.isArray(data.dados)) {

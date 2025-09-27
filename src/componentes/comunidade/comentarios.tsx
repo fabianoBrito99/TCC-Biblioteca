@@ -54,7 +54,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/comunidade/${comunidadeId}/comentarios`
+        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/comentarios`
       );
       const data: Comentario[] = await response.json();
   
@@ -88,7 +88,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
 
     try {
       const response = await fetch(
-        `/api/comunidade/${comunidadeId}/comentarios`,
+        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/comentarios`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

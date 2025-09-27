@@ -83,7 +83,7 @@ export default function ComunidadeDetalhesPage() {
   useEffect(() => {
     if (!comunidadeId) return;
 
-    fetch(`/api/comunidade/${comunidadeId}/objetivo-ativo2`)
+    fetch(`https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo-ativo2`)
       .then((res) => res.json())
       .then((data) => {
         if (data.idObjetivo) {
@@ -103,7 +103,7 @@ export default function ComunidadeDetalhesPage() {
     const verificarAdmin = async () => {
       try {
         const response = await fetch(
-          `/api/comunidade/${id}/verificar-admin/${userId}`
+          `https://api.helenaramazzotte.online/api/comunidade/${id}/verificar-admin/${userId}`
         );
         const data = await response.json();
         setIsAdmin(data.isAdmin);
@@ -118,7 +118,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/comunidade/${id}/comentarios`
+        `https://api.helenaramazzotte.online/api/comunidade/${id}/comentarios`
       );
       if (!response.ok) throw new Error("Erro ao buscar comentários");
       const data = await response.json();
@@ -133,7 +133,7 @@ export default function ComunidadeDetalhesPage() {
 
     try {
       const response = await fetch(
-        `/api/comunidade/objetivo/${idObjetivo}/progresso`
+        `https://api.helenaramazzotte.online/api/comunidade/objetivo/${idObjetivo}/progresso`
       );
 
       if (!response.ok) throw new Error("Erro ao buscar progresso");
@@ -160,7 +160,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchEstatisticasIdade = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/comunidade/${id}/estatisticas/idade`
+        `https://api.helenaramazzotte.online/api/comunidade/${id}/estatisticas/idade`
       );
       if (!response.ok) throw new Error("Erro ao buscar estatísticas de idade");
       const data = await response.json();

@@ -19,7 +19,7 @@ const TopLeitores: React.FC<Props> = ({ idComunidade }) => {
   useEffect(() => {
     if (!idComunidade) return;
 
-    fetch(`/api/comunidade/${idComunidade}/top-leitores`)
+    fetch(`https://api.helenaramazzotte.online/api/comunidade/${idComunidade}/top-leitores`)
       .then((res) => res.json())
       .then((data) => {
         console.log("📊 Leitores recebidos:", data);

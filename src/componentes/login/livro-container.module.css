@@ -156,7 +156,7 @@
   display: block;
   width: 1.9rem;
   height: 1.7rem;
-  background:linear-gradient(to top, #625bec, #a9a8ca);
+  background: linear-gradient(to top, #625bec, #a9a8ca);
   position: absolute;
   bottom: -4px;
   left: 15px;
@@ -165,18 +165,17 @@
   transform: translateX(-50%); /* Centraliza o elemento */
   z-index: -1;
   clip-path: polygon(
-    0% 0%,     /* Canto superior esquerdo */
-    100% 0%,   /* Canto superior direito */
-    100% 100%,  /* Início das pernas */
-    90% 100%,  /* Perna direita */
-    50% 70%,   /* Centro da base */
-    10% 100%,  /* Perna esquerda */
-    0% 100%     /* Fim das pernas */
+    0% 0%,
+    /* Canto superior esquerdo */ 100% 0%,
+    /* Canto superior direito */ 100% 100%,
+    /* Início das pernas */ 90% 100%,
+    /* Perna direita */ 50% 70%,
+    /* Centro da base */ 10% 100%,
+    /* Perna esquerda */ 0% 100% /* Fim das pernas */
   );
 }
 
-
-.subTitle{
+.subTitle {
   font-family: var(--type-second);
   line-height: 1;
   font-size: 1rem;
@@ -217,7 +216,6 @@
     transform: translateX(0px);
   }
 }
-
 
 /* Texto */
 .text p {
@@ -266,9 +264,94 @@
   border-radius: 100% 0% 0% 0%;
 }
 
-
 .logoFogo {
   position: relative;
   top: 250px;
   left: 10px;
+}
+
+/* Celulares pequenos */
+@media (max-width: 480px) {
+  .bookContainer {
+    width: 90%;
+  }
+  .bookContainer p {
+    top: -60px;
+    left: 1px;
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .text .sobrenome {
+    top: 30px;
+    left: 0;
+    font-size: 1.2rem;
+  }
+  .nome{
+    font-size: 2.1rem;
+  }
+  .text .biblioteca {
+
+    font-size: 0.9rem;
+    top: 15px;
+    color: #6d5a5a;
+    left: 25px;
+  }
+  .text .biblioteca::before,
+.text .biblioteca::after {
+ 
+  width: 20px;
+  height: 7px;
+}
+
+.text .biblioteca::before {
+  left: -25px;
+}
+
+.text .biblioteca::after {
+  left: 90px;
+}
+.book{
+  height: 450px;
+}
+.animeLeft1{
+  font-size: 1.3rem;
+  top:-100px;
+}
+.logoFogo{
+  top: 190px;
+}
+.animeRight1{
+  top: -90px;
+  font-size: 1.3rem;
+}
+
+.titleLogin::after {
+  content: "";
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  position: absolute;
+  bottom: -4px;
+  left: 5px;
+  border-radius: 0.2rem;
+  z-index: -1;
+  transform: translateX(-50%); /* Centraliza o elemento */
+  z-index: -1;
+  clip-path: polygon(
+    0% 0%,
+    /* Canto superior esquerdo */ 100% 0%,
+    /* Canto superior direito */ 100% 100%,
+    /* Início das pernas */ 90% 100%,
+    /* Perna direita */ 50% 70%,
+    /* Centro da base */ 10% 100%,
+    /* Perna esquerda */ 0% 100% /* Fim das pernas */
+  );
+}
+}
+
+@media (max-width: 400px) {
+  .animeRight1{
+    font-size: 1rem;
+  }
 }

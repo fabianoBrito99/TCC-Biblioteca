@@ -218,7 +218,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                 onChange={(e) => setEmail(e.target.value)}
               />
 
-              <div>
+              <div className={styles.senhas}>
                 <Input
                   label="Senha"
                   name="password"
@@ -227,25 +227,17 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 {/* mensagem logo abaixo do input de senha */}
-                <p
+                <h6
+                  className={styles.senhash6}
                   style={{
-                    marginTop: 6,
-                    fontSize: 12,
-                    lineHeight: 1.3,
                     color: corMsg,
                   }}
                 >
                   {mensagemSenha}
-                </p>
+                </h6>
 
                 {/* (Opcional) Lista de requisitos, tique a tique */}
-                <ul
-                  style={{
-                    margin: "6px 0 0 16px",
-                    fontSize: 12,
-                    lineHeight: 1.25,
-                  }}
-                >
+                <ul className={styles.senhasul}>
                   <li style={{ color: regras.tamanho ? "#2e7d32" : "#c62828" }}>
                     Entre 8 e 64 caracteres
                   </li>
@@ -281,10 +273,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                 {/* feedback da confirmação */}
                 {confirmPassword.length > 0 && (
                   <p
+                    className={styles.senhasp}
                     style={{
-                      marginTop: 6,
-                      fontSize: 12,
-                      lineHeight: 1.3,
                       color: senhasBatem ? "#2e7d32" : "#c62828",
                     }}
                   >
@@ -388,6 +378,15 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                   />
                 </div>
               </div>
+              <div className={styles.telefone}>
+                <Input
+                  label="Telefone"
+                  name="telefone"
+                  type="phone"
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                />
+              </div>
 
               <div className={styles.foto}>
                 <Input
@@ -408,19 +407,9 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                     />
                   </div>
                 )}
-                          <div className={styles.telefone}>
-            <Input
-              label="Telefone"
-              name="telefone"
-              type="phone"
-              value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
-            />
-          </div>
               </div>
             </>
           )}
-
 
           <div className={styles.btCad}>
             <FormButton disabled={botaoDesabilitado} />
@@ -430,7 +419,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
 
       <div className={styles.ptBaixo}>
         <h2 className={styles.subtitle}>Faça Login</h2>
-        <p className={styles.conta}>Já possui conta? Faça Login.</p>
+        <h6 className={styles.conta}>Já possui conta? Faça Login.</h6>
         <button className={styles.button2} onClick={onToggle}>
           Login
         </button>

@@ -21,7 +21,7 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({
   const aprovarEmprestimo = async () => {
     try {
       const response = await fetch(
-        `/api/emprestimos/${emprestimo.id_emprestimo}/aprovar`,
+        `https://api.helenaramazzotte.online/api/emprestimos/${emprestimo.id_emprestimo}/aprovar`,
         {
           method: "PUT",
         }
@@ -41,7 +41,7 @@ const EmprestimoCard: React.FC<EmprestimoProps> = ({
   const rejeitarEmprestimo = async () => {
     try {
       const response = await fetch(
-        `/api/emprestimos/${emprestimo.id_emprestimo}/rejeitar`,
+        `https://api.helenaramazzotte.online/api/emprestimos/${emprestimo.id_emprestimo}/rejeitar`,
         {
           method: "PUT",
         }

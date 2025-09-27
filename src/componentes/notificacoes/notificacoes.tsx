@@ -36,7 +36,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const gerarNotificacoes = async () => {
       try {
         const response = await fetch(
-          `/api/notificacoes/gerar/${usuarioId}`,
+          `https://api.helenaramazzotte.online/api/notificacoes/gerar/${usuarioId}`,
           { method: "POST" }
         );
         if (!response.ok) throw new Error("Erro ao gerar notificações");
@@ -59,7 +59,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const fetchNotificacoes = async () => {
       try {
         const response = await fetch(
-          `/api/notificacoes/${usuarioId}`
+          `https://api.helenaramazzotte.online/api/notificacoes/${usuarioId}`
         );
         if (!response.ok) throw new Error("Erro ao buscar notificações");
         const data = await response.json();
@@ -76,7 +76,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
   const handleMarcarLida = async (idNotificacao: number) => {
     try {
       const response = await fetch(
-        `/api/notificacoes/${idNotificacao}/lida`,
+        `https://api.helenaramazzotte.online/api/notificacoes/${idNotificacao}/lida`,
         { method: "PATCH" }
       );
 

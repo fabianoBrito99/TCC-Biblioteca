@@ -117,9 +117,9 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
         Perdeu a senha?
       </Link>
       <div className={styles.cadastro}>
-        <h2 className={styles.subtitle}>Cadastre-se</h2>
+        <h2 className={styles.subtitle2}>Cadastre-se</h2>
         <p>Ainda não possui conta? Cadastre-se no site.</p>
-        <button className={styles.button2} onClick={onToggle}>
+        <button className={styles.button3} onClick={onToggle}>
           Cadastre-se
         </button>
       </div>

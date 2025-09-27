@@ -45,7 +45,7 @@ const IndicacoesDisplay = () => {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    fetch("/api/indicacoes")
+    fetch("https://api.helenaramazzotte.online/api/indicacoes")
       .then((res) => res.json())
       .then((data: IndicacoesResp) => {
         const formatted: IndicacaoView[] = (data?.indicacoes ?? []).map((ind) => {

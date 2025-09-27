@@ -1,19 +1,67 @@
 const connection = require("../config/mysql.config");
 
 // Lista as indicações (máximo de 5 livros)
+// function listarIndicacoes(req, res) {
+//     connection.query(`
+//         SELECT Indicacoes.id_indicacao, Livro.id_livro, Livro.nome_livro, Livro.foto_capa, Autor.nome AS nome_autor 
+//         FROM Indicacoes
+//         JOIN Livro ON Indicacoes.fk_id_livro = Livro.id_livro
+//         JOIN Autor_Livros ON Livro.id_livro = Autor_Livros.fk_id_livros
+//         JOIN Autor ON Autor_Livros.fk_id_autor = Autor.id_autor
+//         ORDER BY id_indicacao DESC
+//     `, (err, result) => {
+//         if (err) return res.status(500).json({ erro: "Erro ao buscar indicações" });
+//         res.json({ indicacoes: result });
+//     });
+// }
+
+// Lista as indicações (máximo de 5 livros) – agora usando foto_capa_url
 function listarIndicacoes(req, res) {
-    connection.query(`
-        SELECT Indicacoes.id_indicacao, Livro.id_livro, Livro.nome_livro, Livro.foto_capa, Autor.nome AS nome_autor 
-        FROM Indicacoes
-        JOIN Livro ON Indicacoes.fk_id_livro = Livro.id_livro
-        JOIN Autor_Livros ON Livro.id_livro = Autor_Livros.fk_id_livros
-        JOIN Autor ON Autor_Livros.fk_id_autor = Autor.id_autor
-        ORDER BY id_indicacao DESC
-    `, (err, result) => {
-        if (err) return res.status(500).json({ erro: "Erro ao buscar indicações" });
-        res.json({ indicacoes: result });
+  const sql = `
+    SELECT 
+      I.id_indicacao,
+      L.id_livro,
+      L.nome_livro,
+      L.foto_capa_url,
+      GROUP_CONCAT(DISTINCT A.nome ORDER BY A.nome SEPARATOR '||') AS autores
+    FROM Indicacoes I
+    JOIN Livro L              ON I.fk_id_livro = L.id_livro
+    LEFT JOIN Autor_Livros AL ON L.id_livro   = AL.fk_id_livros
+    LEFT JOIN Autor A         ON AL.fk_id_autor = A.id_autor
+    GROUP BY I.id_indicacao, L.id_livro, L.nome_livro, L.foto_capa_url
+    ORDER BY I.id_indicacao DESC
+    LIMIT 5;
+  `;
+
+  connection.query(sql, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ erro: "Erro ao buscar indicações" });
+    }
+
+    const indicacoes = rows.map((row) => {
+      const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
+      const capaUrl    = row.foto_capa_url || null;
+
+      return {
+        id_indicacao: row.id_indicacao,
+        id_livro: row.id_livro,
+        nome_livro: row.nome_livro,
+
+        // compat com o front e alinhado ao livros.controllers:
+        foto_capa_url: capaUrl,
+        foto_capa: capaUrl,
+        capa: capaUrl,
+
+        // autor “principal” + lista completa
+        autor: autoresArr[0] || null,
+        autores: autoresArr,
+      };
     });
+
+    res.json({ indicacoes });
+  });
 }
+
 
 // Adiciona uma indicação (limite de 5)
 function adicionarIndicacao(req, res) {

@@ -18,7 +18,7 @@ const AdicionarIndicacao = () => {
   const buscarLivros = async (nome: string) => {
     setLivroNome(nome);
     if (nome.length > 2) {
-      const res = await fetch(`/api/livros/busca?nome=${encodeURIComponent(nome)}`);
+      const res = await fetch(`https://api.helenaramazzotte.online/api/livros/busca?nome=${encodeURIComponent(nome)}`);
       const data: { livros: LivroSugestao[] } = await res.json();
       setLivrosSugeridos(data.livros ?? []);
     } else {
@@ -33,7 +33,7 @@ const AdicionarIndicacao = () => {
       return;
     }
 
-    const response = await fetch("/api/indicacoes", {
+    const response = await fetch("https://api.helenaramazzotte.online/api/indicacoes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fk_id_livro: livroIdSelecionado }),

@@ -100,7 +100,7 @@ const Relatorios = () => {
       const fetchData = async () => {
         try {
           const response = await fetch(
-            `/api/relatorios?dataInicio=${dataInicio}&dataFim=${dataFim}`
+            `https://api.helenaramazzotte.online/api/relatorios?dataInicio=${dataInicio}&dataFim=${dataFim}`
           );
           const data = await response.json();
           if (response.ok && !isCancelled) {
