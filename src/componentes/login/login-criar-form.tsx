@@ -174,255 +174,270 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const botaoDesabilitado = !forte || !senhasBatem;
 
   return (
-    <div className={styles.tabNavigationFixo}>
-      <h1 className={styles.h1Login}>Informe os dados</h1>
+    <div className={styles.viewport}>
+      <div className={styles.screenMobile}>
+        <div className={styles.tabNavigationFixo}>
+          <h1 className={styles.h1Login}>Informe os dados</h1>
 
-      <div className={styles.tabNavigation}>
-        <button
-          type="button"
-          className={`${styles.tabButton} ${
-            activeTab === "usuario" ? styles.activeTab : ""
-          }`}
-          onClick={() => setActiveTab("usuario")}
-        >
-          Usuário
-        </button>
-        <button
-          type="button"
-          className={`${styles.tabButton} ${
-            activeTab === "endereco" ? styles.activeTab : ""
-          }`}
-          onClick={() => setActiveTab("endereco")}
-        >
-          Endereço
-        </button>
-      </div>
+          <div className={styles.tabNavigation}>
+            <button
+              type="button"
+              className={`${styles.tabButton} ${
+                activeTab === "usuario" ? styles.activeTab : ""
+              }`}
+              onClick={() => setActiveTab("usuario")}
+            >
+              Usuário
+            </button>
+            <button
+              type="button"
+              className={`${styles.tabButton} ${
+                activeTab === "endereco" ? styles.activeTab : ""
+              }`}
+              onClick={() => setActiveTab("endereco")}
+            >
+              Endereço
+            </button>
+          </div>
 
-      <div className={styles.formFixo}>
-        <form className={styles.form} onSubmit={handleSubmit}>
-          {activeTab === "usuario" ? (
-            <>
-              <Input
-                label="Usuário"
-                name="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-
-              <Input
-                label="Email"
-                name="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-
-              <div className={styles.senhas}>
-                <Input
-                  label="Senha"
-                  name="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                {/* mensagem logo abaixo do input de senha */}
-                <h6
-                  className={styles.senhash6}
-                  style={{
-                    color: corMsg,
-                  }}
-                >
-                  {mensagemSenha}
-                </h6>
-
-                {/* (Opcional) Lista de requisitos, tique a tique */}
-                <ul className={styles.senhasul}>
-                  <li style={{ color: regras.tamanho ? "#2e7d32" : "#c62828" }}>
-                    Entre 8 e 64 caracteres
-                  </li>
-                  <li
-                    style={{ color: regras.minuscula ? "#2e7d32" : "#c62828" }}
-                  >
-                    Pelo menos 1 letra minúscula
-                  </li>
-                  <li
-                    style={{ color: regras.maiuscula ? "#2e7d32" : "#c62828" }}
-                  >
-                    Pelo menos 1 letra maiúscula
-                  </li>
-                  <li style={{ color: regras.numero ? "#2e7d32" : "#c62828" }}>
-                    Pelo menos 1 número
-                  </li>
-                  <li
-                    style={{ color: regras.especial ? "#2e7d32" : "#c62828" }}
-                  >
-                    Pelo menos 1 caractere especial (ex: !@#$%&)
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <Input
-                  label="Confirma a Senha"
-                  name="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                {/* feedback da confirmação */}
-                {confirmPassword.length > 0 && (
-                  <p
-                    className={styles.senhasp}
-                    style={{
-                      color: senhasBatem ? "#2e7d32" : "#c62828",
-                    }}
-                  >
-                    {senhasBatem
-                      ? "As senhas coincidem ✅"
-                      : "As senhas não coincidem"}
-                  </p>
-                )}
-              </div>
-
-              <div className={styles.sexo}>
-                <label htmlFor="sexo">Sexo</label>
-                <select
-                  id="sexo"
-                  name="sexo"
-                  value={sexo}
-                  onChange={(e) => setSexo(e.target.value)}
-                >
-                  <option value="">Selecione</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                </select>
-              </div>
-
-              <div className={styles.igrejaLocal}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={igrejaLocal}
-                    onChange={() => setIgrejaLocal(!igrejaLocal)}
-                  />
-                  Membro IMUB?
-                </label>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className={styles.cep}>
-                <Input
-                  label="CEP"
-                  name="cep"
-                  type="text"
-                  value={cep}
-                  onChange={(e) => setCep(e.target.value)}
-                  onBlur={handleCepBlur}
-                />
-              </div>
-              <div className={styles.rua}>
-                <Input
-                  label="Rua"
-                  name="rua"
-                  type="text"
-                  value={rua}
-                  onChange={(e) => setRua(e.target.value)}
-                />
-              </div>
-              <div className={styles.bairro}>
-                <Input
-                  label="Bairro"
-                  name="bairro"
-                  type="text"
-                  value={bairro}
-                  onChange={(e) => setBairro(e.target.value)}
-                />
-              </div>
-              <div className={styles.num}>
-                <Input
-                  label="Número"
-                  name="numero"
-                  type="text"
-                  value={numero}
-                  onChange={(e) => setNumero(e.target.value)}
-                />
-              </div>
-              <div className={styles.cidade}>
-                <Input
-                  label="Cidade"
-                  name="cidade"
-                  type="text"
-                  value={cidade}
-                  onChange={(e) => setCidade(e.target.value)}
-                />
-              </div>
-              <div className={styles.estado_data}>
-                <div className={styles.estado}>
+          <div className={styles.formFixo}>
+            <form className={styles.form} onSubmit={handleSubmit}>
+              {activeTab === "usuario" ? (
+                <>
                   <Input
-                    label="Estado"
-                    name="estado"
+                    label="Usuário"
+                    name="username"
                     type="text"
-                    value={estado}
-                    onChange={(e) => setEstado(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
-                </div>
-                <div className={styles.dataNasc}>
-                  <Input
-                    label="Data Nascimento"
-                    name="data_nascimento"
-                    type="date"
-                    value={data_nascimento}
-                    onChange={(e) => setDataNascimento(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className={styles.telefone}>
-                <Input
-                  label="Telefone"
-                  name="telefone"
-                  type="phone"
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                />
-              </div>
 
-              <div className={styles.foto}>
-                <Input
-                  label="Foto Perfil"
-                  name="fotoPerfil"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-                {capaPreview && (
-                  <div className={styles.capaContainerLivro}>
-                    <Image
-                      src={capaPreview}
-                      alt="Preview foto de perfil"
-                      className={styles.capaPreview}
-                      width={1000}
-                      height={1000}
+                  <Input
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+
+                  <div className={styles.senhas}>
+                    <Input
+                      label="Senha"
+                      name="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <h6
+                      className={styles.senhash6}
+                      style={{
+                        color: corMsg,
+                      }}
+                    >
+                      {mensagemSenha}
+                    </h6>
+
+                    {/* (Opcional) Lista de requisitos, tique a tique */}
+                    <ul className={styles.senhasul}>
+                      <li
+                        style={{
+                          color: regras.tamanho ? "#2e7d32" : "#c62828",
+                        }}
+                      >
+                        Entre 8 e 64 caracteres
+                      </li>
+                      <li
+                        style={{
+                          color: regras.minuscula ? "#2e7d32" : "#c62828",
+                        }}
+                      >
+                        Pelo menos 1 letra minúscula
+                      </li>
+                      <li
+                        style={{
+                          color: regras.maiuscula ? "#2e7d32" : "#c62828",
+                        }}
+                      >
+                        Pelo menos 1 letra maiúscula
+                      </li>
+                      <li
+                        style={{ color: regras.numero ? "#2e7d32" : "#c62828" }}
+                      >
+                        Pelo menos 1 número
+                      </li>
+                      <li
+                        style={{
+                          color: regras.especial ? "#2e7d32" : "#c62828",
+                        }}
+                      >
+                        Pelo menos 1 caractere especial (ex: !@#$%&)
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <Input
+                      label="Confirma a Senha"
+                      name="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                    {/* feedback da confirmação */}
+                    {confirmPassword.length > 0 && (
+                      <p
+                        className={styles.senhasp}
+                        style={{
+                          color: senhasBatem ? "#2e7d32" : "#c62828",
+                        }}
+                      >
+                        {senhasBatem
+                          ? "As senhas coincidem ✅"
+                          : "As senhas não coincidem"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className={styles.sexo}>
+                    <label htmlFor="sexo">Sexo</label>
+                    <select
+                      id="sexo"
+                      name="sexo"
+                      value={sexo}
+                      onChange={(e) => setSexo(e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.igrejaLocal}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={igrejaLocal}
+                        onChange={() => setIgrejaLocal(!igrejaLocal)}
+                      />
+                      Membro IMUB?
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.cep}>
+                    <Input
+                      label="CEP"
+                      name="cep"
+                      type="text"
+                      value={cep}
+                      onChange={(e) => setCep(e.target.value)}
+                      onBlur={handleCepBlur}
                     />
                   </div>
-                )}
+                  <div className={styles.rua}>
+                    <Input
+                      label="Rua"
+                      name="rua"
+                      type="text"
+                      value={rua}
+                      onChange={(e) => setRua(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.bairro}>
+                    <Input
+                      label="Bairro"
+                      name="bairro"
+                      type="text"
+                      value={bairro}
+                      onChange={(e) => setBairro(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.num}>
+                    <Input
+                      label="Número"
+                      name="numero"
+                      type="text"
+                      value={numero}
+                      onChange={(e) => setNumero(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.cidade}>
+                    <Input
+                      label="Cidade"
+                      name="cidade"
+                      type="text"
+                      value={cidade}
+                      onChange={(e) => setCidade(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.estado_data}>
+                    <div className={styles.estado}>
+                      <Input
+                        label="Estado"
+                        name="estado"
+                        type="text"
+                        value={estado}
+                        onChange={(e) => setEstado(e.target.value)}
+                      />
+                    </div>
+                    <div className={styles.dataNasc}>
+                      <Input
+                        label="Data Nascimento"
+                        name="data_nascimento"
+                        type="date"
+                        value={data_nascimento}
+                        onChange={(e) => setDataNascimento(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.telefone}>
+                    <Input
+                      label="Telefone"
+                      name="telefone"
+                      type="phone"
+                      value={telefone}
+                      onChange={(e) => setTelefone(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={styles.foto}>
+                    <Input
+                      label="Foto Perfil"
+                      name="fotoPerfil"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    {capaPreview && (
+                      <div className={styles.capaContainerLivro}>
+                        <Image
+                          src={capaPreview}
+                          alt="Preview foto de perfil"
+                          className={styles.capaPreview}
+                          width={1000}
+                          height={1000}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              <div className={styles.btCad}>
+                <FormButton disabled={botaoDesabilitado} />
               </div>
-            </>
-          )}
-
-          <div className={styles.btCad}>
-            <FormButton disabled={botaoDesabilitado} />
+            </form>
           </div>
-        </form>
-      </div>
 
-      <div className={styles.ptBaixo}>
-        <h2 className={styles.subtitle}>Faça Login</h2>
-        <h6 className={styles.conta}>Já possui conta? Faça Login.</h6>
-        <button className={styles.button2} onClick={onToggle}>
-          Login
-        </button>
+          <div className={styles.ptBaixo}>
+            <h2 className={styles.subtitle}>Faça Login</h2>
+            <h6 className={styles.conta}>Já possui conta? Faça Login.</h6>
+            <button className={styles.button2} onClick={onToggle}>
+              Login
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

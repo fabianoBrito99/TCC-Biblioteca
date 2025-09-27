@@ -60,7 +60,6 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 10px;
-  
 }
 
 .button2 {
@@ -146,7 +145,7 @@
   height: 5%;
 }
 
-.telefone{
+.telefone {
   position: fixed;
   bottom: 367px;
   left: 10px;
@@ -169,7 +168,7 @@
 .btCadastrar button {
   width: 300px;
 }
-.btCad{
+.btCad {
   position: fixed;
   bottom: 147px;
 }
@@ -352,13 +351,11 @@
   height: 5%;
 }
 
-
-
 .formFixo {
   position: relative;
   top: -20px;
 }
-.ptBaixo{
+.ptBaixo {
   position: fixed;
   bottom: 10px;
 }
@@ -405,44 +402,41 @@
   width: 50%;
 }
 
-.igrejaLocal{
+.igrejaLocal {
   display: flex;
   font-size: 1.2rem;
   align-items: center;
   padding: 20px 0;
- 
 }
-.igrejaLocal label{
+.igrejaLocal label {
   position: relative;
   left: 29px;
   bottom: 29px;
 }
-.igrejaLocal input{
+.igrejaLocal input {
   position: relative;
   width: 20px;
   height: 20px;
   top: 22px;
   left: -29px;
 }
-.sexo{
+.sexo {
   display: flex;
   flex-direction: column;
-  
 }
-.sexo label{
+.sexo label {
   margin: 2px;
 }
-.sexo select{
+.sexo select {
   padding: 10px;
   border-radius: 8px;
- border-color: #4c00ff;
+  border-color: #4c00ff;
 }
 
-.sexo select:focus{
+.sexo select:focus {
   border-width: 2px;
   border-color: #001aff;
 }
-
 
 .foto {
   position: relative;
@@ -526,14 +520,15 @@
       #ffeb3b69 0%,
       #ffeb3b69 90%,
       transparent 90%
-        
     ),
     repeating-linear-gradient(
       0.5deg,
-      #ffeb3b69 0%, /* Cor amarela ao longo do fundo */
-      #ffeb3b69 85%, /* Cor amarela termina em 90% */
-      #0000002f 75%, /* Faixa preta começa em 95% */
-      transparent 100% /* Transição suave para transparente */);
+      #ffeb3b69 0%,
+      /* Cor amarela ao longo do fundo */ #ffeb3b69 85%,
+      /* Cor amarela termina em 90% */ #0000002f 75%,
+      /* Faixa preta começa em 95% */ transparent 100%
+        /* Transição suave para transparente */
+    );
   z-index: 1;
   transition: width 0.1s ease-in;
 }
@@ -543,253 +538,179 @@
   width: 100%; /* Preenche todo o campo */
 }
 
-
 @media (max-width: 480px) {
-
-  .h1Login{
-    font-size: 1rem;
-    margin-top: 25px;
+  /* calcula escala e fixa a “tela” no tamanho XR */
+  .viewport {
+    --scale: min(100vw / 414, 100dvh / 896);
   }
-  .subtitle{
+  .screenMobile {
+    width: 144px;
+    height: 896px;
+    transform: scale(var(--scale));
+    padding: 5px;
+    transform-origin: top left;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .screenMobile .h1Login {
+    font-size: 0.7rem;
+    margin-top: 255px;
+  }
+
+  .screenMobile .subtitle {
     font-size: 1.3rem;
     margin-top: -50px;
+    visibility: hidden;
   }
-.button2{
-  margin-top: 10px;
-}
-.tabNavigationFixo{
-top: -25px;
 
-}
-.tabNavigation{
-  margin-bottom: 1.4rem;
-  margin-top: 10px;
-  gap: -10px;
-}
-.tabButton{
-  margin-top: -40px;
-}
+  .screenMobile .button2 {
+    margin-top: 10px;
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+  }
 
-.formFixo input{
-  height: 10%;
-}
-.senhasul {
-  margin-top: -59px;
-  font-size: 8px;
-}
-.senhash6{
-  visibility: hidden;
-  margin-bottom: 10px;
-  margin-top: 10px;
-  font-size: 0.6rem;
-}
-.tabButton{
-  top: 10px;
-}
+  .screenMobile .tabNavigationFixo {
+    top: -25px;
+    position: relative;
+  }
 
-.sexo{
-  position: absolute;
-  bottom: 25px;
-  width:  100%;
-}
-.sexo label{
-  background: #001aff;
-  color: #fff;
-  border-radius: 5px;
-  padding: 2px 12px;
-  position: absolute;
-  bottom: 29px;
-  left: 5px;
-}
-.btCad{
-  bottom: 42px;
-}
-.conta{
-  position: absolute;
-  font-size: 0.4rem;
-  bottom: 5px;
-}
-.subtitle{
-  visibility: hidden;
-}
+  .screenMobile .tabNavigation {
+    margin-bottom: 1.9rem;
+    margin-top: 10px;
+    gap: 0;
+  }
 
-.button2{
-  position: absolute;
-  bottom: -5px;
-}
-.igrejaLocal{
-  font-size: 1rem;
-}
+  .screenMobile .tabButton {
+    margin-top: -40px;
+    top: 5px;
+    position: relative;
+    font-size: 0.55rem;
+  }
 
-.igrejaLocal label{
-  left: 16px;
-  bottom: -16px;
-}
-.igrejaLocal input{
+  .screenMobile .formFixo input {
+    height: 50%;
+  }
 
-  top: 19px;
-  left: -23px;
-}
-.telefone{
-  position: absolute;
-  top: 150px;
-  width: 54%;
-  left: -15px;
-}
+  .screenMobile .senhasul {
+    margin-top: -85px;
+    font-size: 8px;
+  }
 
+  .screenMobile .senhash6 {
+    visibility: hidden;
+    margin: 10px 0;
+    font-size: 0.6rem;
+  }
 
+  .screenMobile .sexo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+    width: 100%;
+  }
+  .screenMobile .sexo label {
+    background: #001aff;
+    color: #fff;
+    border-radius: 5px;
+    padding: 2px 12px;
+    position: absolute;
+    bottom: 29px;
+    left: 5px;
+  }
 
-.cep {
-  right: 15px;
-  width: 54%;
-}
-.rua {
-  left: 70px;
-  bottom: 42px;
-  width: 65%;
-}
-.bairro {
+  .screenMobile .btCad {
+    position: fixed;
+    left: 10px;
+    right: 0;
+    bottom: 50px;
+  }
 
-  right: 15px;
-  bottom: 35px;
-  width: 54%;
-}
-.cidade {
-  left: 70px;
-  bottom: 117px;
-  width: 65%;
-}
-.estado {
-  right: 15px;
-  bottom: 110px;
-  width: 54%;
-}
-.num {
-  left: 70px;
-  bottom: 26px;
-  width: 65%;
-}
-.dataNasc {
-  right: 15px;
-  bottom: 45px;
-  width: 100%;
-}
-.foto{
-  left: 69px;
-  bottom: 146px;
-  width: 65%;
-}
-/* .capaPreview {
-  width: 60px;
-  height: 60px;
-  margin-left: 30px;
-  bottom: -125px;
-  left: -30px;
-  position: fixed;
-}
-.capaPreview img {
-  width: 10%;
-  height: 5%;
-} */
+  .screenMobile .conta {
+    position: absolute;
+    font-size: 0.4rem;
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
 
+  .screenMobile .igrejaLocal {
+    font-size: 0.8rem;
+  }
+  .screenMobile .igrejaLocal label {
+    left: 16px;
+    bottom: -25px;
+    position: absolute;
+  }
+  .screenMobile .igrejaLocal input {
+    position: absolute;
+    top: 0px;
+    left: -23px;
+  }
 
-.subtitle2{
-  font-size: 1.3rem;
-  
-}
-}
+  .screenMobile .cep {
+    position: absolute;
+    left: -5px;
+    width: 69%;
+  }
+  .screenMobile .rua {
+    position: absolute;
+    left: 70px;
+    bottom: -44px;
+    width: 64%;
+  }
+  .screenMobile .bairro {
+    position: absolute;
+    left: -5px;
+    top: 39px;
+    width: 69%;
+  }
+  .screenMobile .cidade {
+    position: absolute;
+    left: 70px;
+    top: 39px;
+    width: 64%;
+  }
+  .screenMobile .estado {
+    position: absolute;
+    left: -5px;
+    top: 79px;
+    width: 69%;
+  }
+  .screenMobile .num {
+    position: absolute;
+    left: 70px;
+    top: 79px;
+    width: 64%;
+  }
 
-@media (max-width: 400px) {
-
-.sexo{
-  position: absolute;
-  bottom: 33px;
-  width:  100%;
-}
-.sexo label{
-
-  bottom: 20px;
-  left: 5px;
-}
-.igrejaLocal label{
-  left: 16px;
-  bottom: 0px;
-}
-.igrejaLocal input{
-
-  top: 19px;
-  left: -23px;
-}
-
-  .senhasul {
-  margin-top: -75px;
-  font-size: 8px;
-}
-  
-.telefone{
-  position: absolute;
-  top: 149px;
-  width: 120%;
-  left: -15px;
-}
-
-.cep {
-   bottom: -8px;
-  right: 15px;
-  width: 54%;
-}
-.rua {
-  left: 70px;
-  bottom: 35px;
-  width: 65%;
-}
-.bairro {
-
-  right: 15px;
-  bottom: 30px;
-  width: 54%;
-}
-.cidade {
-  left: 70px;
-  bottom: 115px;
-  width: 65%;
-}
-.estado {
-  right: 15px;
-  bottom: 115px;
-  width: 54%;
-}
-.num {
-  left: 70px;
-  bottom: 29px;
-  width: 65%;
-}
-.dataNasc {
-  right: 15px;
-  bottom: 10px;
-  width: 120%;
-}
-.foto{
-  left: -15px;
-  bottom: 85px;
-  width: 120%;
-}
-/* .capaPreview {
-  width: 60px;
-  height: 60px;
-  margin-left: 30px;
-  bottom: -125px;
-  left: -30px;
-  position: fixed;
-}
-.capaPreview img {
-  width: 10%;
-  height: 5%;
-} */
-
-
-.subtitle2{
-  font-size: 1.3rem;
-  
-}
+  .screenMobile * {
+    max-width: 100%;
+  }
+  .screenMobile .telefone {
+    position: absolute;
+    top: 170px;
+    width: 69%;
+    left: -5px;
+    width: 200%;
+    max-width: 120%;
+  }
+  .screenMobile .dataNasc {
+    position: absolute;
+    left: -5px;
+    top: 125px;
+    width: 200%;
+    max-width: 120%;
+  }
+  .screenMobile .foto {
+    position: absolute;
+    left: -5px;
+    top: 214px;
+    width: 200%;
+    max-width: 120%;
+  }
 }
