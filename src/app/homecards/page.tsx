@@ -7,6 +7,7 @@ import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
 
+
 interface Livro {
   id_livro: string;
   nome_livro: string;
