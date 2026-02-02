@@ -7,7 +7,7 @@ import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
 
-
+/** Tipos */
 interface Livro {
   id_livro: string;
   nome_livro: string;
@@ -16,11 +16,11 @@ interface Livro {
   autor?: string | null;
   categoria_principal?: string | null;
   media_avaliacoes: number;
+  categorias?: string[]; // << usamos no filtro
 }
 
-/** Shape possível vindo da API antes de normalizar */
 interface APILivroRaw {
-  id_livro: string;
+  id_livro: string | number;
   nome_livro: string;
   foto_capa_url?: string | null;
   capa?: string | null;
@@ -31,13 +31,22 @@ interface APILivroRaw {
   media_avaliacoes?: number | null;
 }
 
-/** Respostas esperadas das actions */
 interface FetchCategoriasResp {
   categorias?: string[];
 }
 interface FetchLivrosResp {
   livros?: APILivroRaw[];
 }
+
+/** Normalizador de string (acentos/NBSP/espaços) */
+const norm = (s?: string | null) =>
+  String(s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+    .replace(/\u00A0/g, " ") // NBSP -> espaço
+    .replace(/\s+/g, " ") // colapsa espaços
+    .trim()
+    .toLowerCase();
 
 const Home: React.FC = () => {
   const [categorias, setCategorias] = useState<string[]>([]);
@@ -52,7 +61,7 @@ const Home: React.FC = () => {
 
         setCategorias(categoriasData?.categorias ?? []);
 
-        // Normaliza para o shape Livro sem usar `any`
+        // Normaliza para o shape Livro
         const normalizados: Livro[] = (livrosData?.livros ?? []).map(
           (l: APILivroRaw): Livro => {
             const src = l.capa ?? l.foto_capa_url ?? "/placeholder-cover.png";
@@ -64,13 +73,14 @@ const Home: React.FC = () => {
               (Array.isArray(l.autores) ? l.autores[0] ?? null : null);
 
             return {
-              id_livro: l.id_livro,
+              id_livro: String(l.id_livro),
               nome_livro: l.nome_livro,
               foto_capa_url: src,
               capa: src,
               categoria_principal: categoria,
               autor: autorSingular,
               media_avaliacoes: l.media_avaliacoes ?? 0,
+              categorias: Array.isArray(l.categorias) ? l.categorias : [],
             };
           }
         );
@@ -101,15 +111,18 @@ const Home: React.FC = () => {
 
       <div id="categorias-section" className={styles.categoriasSection}>
         {categorias.map((categoria) => {
+          const alvo = norm(categoria);
+
           const livrosFiltrados = livros.filter((livro) => {
-            const categoriaLivro = livro.categoria_principal?.trim().toLowerCase();
-            const categoriaSelecionada = categoria.trim().toLowerCase();
-            return categoriaLivro === categoriaSelecionada;
+            // cria um set com categoria_principal + todas as categorias do livro
+            const setCats = new Set<string>();
+            setCats.add(norm(livro.categoria_principal));
+            (livro.categorias ?? []).forEach((c) => setCats.add(norm(c)));
+            return setCats.has(alvo);
           });
 
           return (
             <div key={categoria}>
-              <div></div>
               <CategoriaSwiper
                 categoria_principal={categoria}
                 livros={livrosFiltrados}
