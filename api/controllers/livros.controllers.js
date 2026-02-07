@@ -228,8 +228,6 @@ async function create(request, response) {
             (errSel, rows) => {
               if (errSel) return cb(errSel);
               if (rows && rows.length) return cb(null, rows[0].id_editora);
-              
-
               connection.query(
                 `INSERT INTO Editora (nome_editora) VALUES (?)`,
                 [nomeEditora],
