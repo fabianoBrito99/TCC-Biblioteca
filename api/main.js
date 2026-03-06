@@ -15,6 +15,7 @@ const comunidadeRoutes = require('./routes/comunidade.routes');
 const noticacoesRoutes = require('./routes/notificacoes.routes'); 
 const relatorioRoutes = require('./routes/relatorios.routes'); 
 const indicacoesRoutes = require('./routes/indicacoes.routes'); 
+const ocrRoutes = require('./routes/ocr.routes');
 const app = express();
 
 
@@ -50,6 +51,7 @@ app.use("/api", comunidadeRoutes);
 app.use("/api", noticacoesRoutes); 
 app.use("/api", relatorioRoutes); 
 app.use("/api", indicacoesRoutes); 
+app.use("/api", ocrRoutes);
 
 
 const PORT = process.env.PORT || 4000;

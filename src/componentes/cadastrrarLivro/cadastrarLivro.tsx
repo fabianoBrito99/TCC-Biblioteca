@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useFormStatus } from "react-dom";
-import type { LoggerMessage, RecognizeResult } from "tesseract.js";
 
 import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
@@ -19,8 +18,6 @@ type Categoria = {
   cor_cima: string;
   cor_baixo: string;
 };
-
-type OcrImageSource = HTMLCanvasElement | HTMLImageElement | Blob;
 
 export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) {
   // ==========================
@@ -54,7 +51,12 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   const [capaPreview, setCapaPreview] = useState<string | null>(null);
 
   // ==========================
-  // OCR (SINOPSE POR CÂMERA)
+  // REFS IMPORTANTES
+  // ==========================
+  const descricaoRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // ==========================
+  // OCR
   // ==========================
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -66,6 +68,26 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   const [ocrProgress, setOcrProgress] = useState<number>(0);
   const [ocrMsg, setOcrMsg] = useState<string>("");
   const [ocrError, setOcrError] = useState<string | null>(null);
+
+  // Debug em produção via ?debug=1
+  const [debugOcr, setDebugOcr] = useState<boolean>(false);
+
+  // Modal de escolha do trecho
+  const [ocrPickOpen, setOcrPickOpen] = useState<boolean>(false);
+  const [ocrText, setOcrText] = useState<string>("");
+  const ocrPickRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // ==========================
+  // DEBUG PARAM
+  // ==========================
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setDebugOcr(params.get("debug") === "1");
+    } catch {
+      setDebugOcr(false);
+    }
+  }, []);
 
   // ==========================
   // SUGESTÕES (API)
@@ -105,8 +127,16 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   }, [capaLivro]);
 
   // ==========================
-  // OCR HELPERS
+  // HELPERS OCR
   // ==========================
+  const isIOSDevice = (): boolean => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent || "";
+    const iOS = /iPad|iPhone|iPod/.test(ua);
+    const iPadOS = ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
+    return iOS || iPadOS;
+  };
+
   const stopStream = (): void => {
     try {
       if (streamRef.current) {
@@ -118,7 +148,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     }
   };
 
-  const closeOcr = (): void => {
+  const closeCameraModal = (): void => {
     stopStream();
     setOcrOpen(false);
     setOcrBusy(false);
@@ -127,12 +157,91 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     setOcrError(null);
   };
 
+  const normalizeOcrText = (t: string): string => {
+    return t
+      .replace(/\r/g, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ \t]{2,}/g, " ")
+      .trim();
+  };
+
+  // ✅ iPhone: file -> canvas (resolve HEIC e decode)
+  const fileToCanvas = async (file: File, maxDim = 2000): Promise<HTMLCanvasElement> => {
+    if ("createImageBitmap" in window) {
+      try {
+        const bitmap = await createImageBitmap(file);
+        const { width, height } = bitmap;
+
+        const scale = Math.min(1, maxDim / Math.max(width, height));
+        const w = Math.max(1, Math.round(width * scale));
+        const h = Math.max(1, Math.round(height * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Sem contexto 2D");
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(bitmap, 0, 0, w, h);
+        bitmap.close?.();
+        return canvas;
+      } catch {
+        // fallback
+      }
+    }
+
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+      reader.readAsDataURL(file);
+    });
+
+    const imgEl: HTMLImageElement = await new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Falha ao decodificar imagem"));
+      img.src = dataUrl;
+    });
+
+    const scale = Math.min(1, maxDim / Math.max(imgEl.naturalWidth, imgEl.naturalHeight));
+    const w = Math.max(1, Math.round(imgEl.naturalWidth * scale));
+    const h = Math.max(1, Math.round(imgEl.naturalHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Sem contexto 2D");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(imgEl, 0, 0, w, h);
+
+    return canvas;
+  };
+
   const openOcr = async (): Promise<void> => {
     setOcrError(null);
     setOcrMsg("");
     setOcrProgress(0);
 
-    // Se não tiver getUserMedia, cai no input (no celular abre câmera também)
+    // iOS Safari costuma bloquear getUserMedia/autoplay; use captura por arquivo direto.
+    if (isIOSDevice()) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setOcrError("A câmera ao vivo precisa de HTTPS. Use 'Usar foto'.");
+      fileInputRef.current?.click();
+      return;
+    }
+
     if (!navigator.mediaDevices?.getUserMedia) {
       fileInputRef.current?.click();
       return;
@@ -147,54 +256,64 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
       streamRef.current = stream;
       setOcrOpen(true);
 
-      setTimeout(() => {
+      const startVideo = (): void => {
         const video = videoRef.current;
-        if (video) {
-          video.srcObject = stream;
-          void video.play();
-        }
-      }, 60);
+        if (!video) return;
+        video.srcObject = stream;
+        void video.play();
+      };
+
+      // aguarda o modal renderizar
+      setTimeout(startVideo, 60);
     } catch (err) {
       console.warn("Falha ao abrir câmera ao vivo, usando fallback:", err);
       fileInputRef.current?.click();
     }
   };
 
-  // ✅ v5/v6: NÃO existe mais loadLanguage/initialize
-  // ✅ passa idioma e logger no createWorker(lang, oem, { logger })
-  const runOcrOnImage = async (image: OcrImageSource): Promise<void> => {
+  // ✅ OCR via servidor (funciona em iPhone/Android/PC)
+  const runOcrOnServer = async (blob: Blob): Promise<void> => {
     setOcrBusy(true);
     setOcrError(null);
-    setOcrMsg("Iniciando OCR...");
+    setOcrMsg("Enviando imagem...");
     setOcrProgress(0);
 
     try {
-      const tesseract = await import("tesseract.js");
-      const createWorker = tesseract.createWorker;
+      setOcrMsg("Processando OCR no servidor...");
+      setOcrProgress(30);
 
-      const worker = await createWorker("por", 1, {
-        logger: (m: LoggerMessage) => {
-          if (m.status) setOcrMsg(m.status);
-          if (typeof m.progress === "number") setOcrProgress(Math.round(m.progress * 100));
-        },
+      const formData = new FormData();
+      formData.append("image", blob, "sinopse.jpg");
+
+      const resp = await fetch("https://api.helenaramazzotte.online/api/ocr", {
+        method: "POST",
+        body: formData,
       });
 
-      const result: RecognizeResult = await worker.recognize(image);
-      const texto: string = result.data.text.trim();
+      const data = (await resp.json()) as { text?: string; error?: string };
+      if (!resp.ok) {
+        throw new Error(data.error || "OCR falhou no servidor");
+      }
 
-      await worker.terminate();
-
+      const texto = normalizeOcrText(data.text || "");
       if (!texto) {
         setOcrError("Não foi possível identificar texto. Aproxima mais e melhora a iluminação.");
         return;
       }
 
-      setDescricao((prev) => (prev.trim() ? `${prev}\n\n${texto}` : texto));
-      closeOcr();
+      setOcrText(texto);
+      closeCameraModal();
+      setOcrPickOpen(true);
+
+      setTimeout(() => {
+        ocrPickRef.current?.focus();
+      }, 60);
     } catch (error) {
-      console.error(error);
-      setOcrError("Erro ao processar OCR.");
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("OCR erro:", error);
+      setOcrError(`OCR falhou: ${msg}`);
     } finally {
+      setOcrProgress(100);
       setOcrBusy(false);
     }
   };
@@ -213,30 +332,105 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(video, 0, 0, w, h);
-    await runOcrOnImage(canvas);
+
+    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+    if (!blob) {
+      setOcrError("Não consegui capturar a imagem da câmera.");
+      return;
+    }
+
+    await runOcrOnServer(blob);
   };
 
   const handleFileOcr = async (file: File | null): Promise<void> => {
     if (!file) return;
 
-    const img = new window.Image();
-    const url = URL.createObjectURL(file);
+    // não fecha forçado aqui (iOS pode “matar” a UI); só para stream se existir
+    stopStream();
 
-    img.onload = async () => {
-      try {
-        await runOcrOnImage(img);
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-    };
+    setOcrBusy(true);
+    setOcrError(null);
+    setOcrMsg(`Preparando imagem... (${file.type || "sem type"})`);
+    setOcrProgress(0);
 
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      setOcrError("Não consegui abrir a imagem selecionada.");
-    };
+    try {
+      const canvas = await fileToCanvas(file, 2000);
+      const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+      if (!blob) throw new Error("Falha ao gerar imagem para OCR");
+      await runOcrOnServer(blob);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("handleFileOcr erro:", err);
+      setOcrBusy(false);
+      setOcrError(`Não consegui processar a imagem: ${msg}`);
+    }
+  };
 
-    img.src = url;
+  // ==========================
+  // ESCOLHER TRECHO
+  // ==========================
+  const getSelectedOcrText = (): string => {
+    const el = ocrPickRef.current;
+    if (!el) return ocrText;
+
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const selected = el.value.slice(start, end).trim();
+    return selected.length > 0 ? selected : ocrText;
+  };
+
+  const applyOcrTextReplace = (): void => {
+    const snippet = getSelectedOcrText();
+    setDescricao(snippet);
+    setOcrPickOpen(false);
+    setOcrText("");
+    setTimeout(() => descricaoRef.current?.focus(), 0);
+  };
+
+  const applyOcrTextAppend = (): void => {
+    const snippet = getSelectedOcrText();
+    setDescricao((prev) => (prev.trim() ? `${prev}\n\n${snippet}` : snippet));
+    setOcrPickOpen(false);
+    setOcrText("");
+    setTimeout(() => descricaoRef.current?.focus(), 0);
+  };
+
+  const applyOcrTextInsertAtCursor = (): void => {
+    const snippet = getSelectedOcrText();
+    const target = descricaoRef.current;
+
+    if (!target) {
+      setDescricao((prev) => (prev.trim() ? `${prev}\n\n${snippet}` : snippet));
+      setOcrPickOpen(false);
+      setOcrText("");
+      return;
+    }
+
+    const start = target.selectionStart ?? target.value.length;
+    const end = target.selectionEnd ?? target.value.length;
+
+    const before = descricao.slice(0, start);
+    const after = descricao.slice(end);
+
+    const newText = `${before}${snippet}${after}`;
+    setDescricao(newText);
+
+    setTimeout(() => {
+      target.focus();
+      const pos = start + snippet.length;
+      target.setSelectionRange(pos, pos);
+    }, 0);
+
+    setOcrPickOpen(false);
+    setOcrText("");
+  };
+
+  const closeOcrPick = (): void => {
+    setOcrPickOpen(false);
+    setOcrText("");
   };
 
   // ==========================
@@ -324,8 +518,6 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
         setCapaLivro(null);
         setCapaPreview(null);
       } else {
-        const err = (await resp.json().catch(() => ({}))) as unknown;
-        console.error("Erro ao cadastrar livro:", err);
         alert("Erro ao cadastrar livro.");
       }
     } catch (error) {
@@ -350,39 +542,40 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
           onChange={(e) => setNomeLivro(e.target.value)}
         />
 
-        {/* SINOPSE + CÂMERA */}
+        {/* SINOPSE */}
         <div className={styles.descricaoWrap}>
           <label className={styles.descricaoLabel} htmlFor="descricao">
             Sinopse / Descrição
           </label>
 
-          <button
-            type="button"
-            className={styles.cameraButton}
-            onClick={() => void openOcr()}
-            title="Ler sinopse com a câmera (OCR)"
-            aria-label="Ler sinopse com a câmera (OCR)"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <path
-                d="M9 4.5 7.8 6H6a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-1.8L15 4.5H9Zm3 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"
-                fill="currentColor"
-              />
-            </svg>
-            <span className={styles.cameraText}>Ler com câmera</span>
+          <button type="button" className={styles.cameraButton} onClick={() => void openOcr()}>
+            <span className={styles.cameraText}>📷 Ler com câmera</span>
           </button>
 
           <textarea
+            ref={descricaoRef}
             id="descricao"
             name="descricao"
             className={styles.textarea}
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
-            rows={6}
-            placeholder="Escreva a sinopse / descrição do livro…"
+            rows={8}
+            placeholder="Escreva a sinopse / descrição do livro..."
           />
 
-          {/* fallback: câmera/galeria */}
+          {(ocrBusy || ocrMsg || ocrError) && (
+            <div className={styles.ocrInlineStatus}>
+              {ocrError ? (
+                <span className={styles.ocrInlineError}>{ocrError}</span>
+              ) : (
+                <span className={styles.ocrInlineMsg}>
+                  {ocrMsg || "Processando..."} {ocrProgress ? `(${ocrProgress}%)` : ""}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* ⚠️ iPhone: NÃO pode ser display:none (no CSS) */}
           <input
             ref={fileInputRef}
             className={styles.hiddenFile}
@@ -431,11 +624,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
             onChange={(e) => setCategoria(e.target.value)}
             onFocus={() => setShowCategoriaSugestoes(true)}
           />
-          <button
-            type="button"
-            onClick={() => setShowCategoriaSugestoes((p) => !p)}
-            className={styles.dropdownButton}
-          >
+          <button type="button" onClick={() => setShowCategoriaSugestoes((p) => !p)} className={styles.dropdownButton}>
             ▼
           </button>
 
@@ -452,26 +641,11 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
         {/* Cores */}
         <div className={styles.colorInputs}>
-          <Input
-            label="Cor Topo"
-            name="corCima"
-            type="color"
-            value={corCima}
-            onChange={(e) => setCorCima(e.target.value)}
-          />
-          <Input
-            label="Cor Base"
-            name="corBaixo"
-            type="color"
-            value={corBaixo}
-            onChange={(e) => setCorBaixo(e.target.value)}
-          />
+          <Input label="Cor Topo" name="corCima" type="color" value={corCima} onChange={(e) => setCorCima(e.target.value)} />
+          <Input label="Cor Base" name="corBaixo" type="color" value={corBaixo} onChange={(e) => setCorBaixo(e.target.value)} />
         </div>
 
-        <div
-          className={styles.gradientPreview}
-          style={{ background: `linear-gradient(to bottom, ${corCima}, ${corBaixo})` }}
-        />
+        <div className={styles.gradientPreview} style={{ background: `linear-gradient(to bottom, ${corCima}, ${corBaixo})` }} />
 
         {/* Subcategorias */}
         <div>
@@ -502,11 +676,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
                 onChange={(e) => handleAutorChange(index, e.target.value)}
                 onFocus={() => setShowAutorSugestoes(index)}
               />
-              <button
-                type="button"
-                onClick={() => setShowAutorSugestoes(index)}
-                className={styles.dropdownButton}
-              >
+              <button type="button" onClick={() => setShowAutorSugestoes(index)} className={styles.dropdownButton}>
                 ▼
               </button>
 
@@ -539,11 +709,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
             onChange={(e) => setEditora(e.target.value)}
             onFocus={() => setShowEditoraSugestoes(true)}
           />
-          <button
-            type="button"
-            onClick={() => setShowEditoraSugestoes((p) => !p)}
-            className={styles.dropdownButton}
-          >
+          <button type="button" onClick={() => setShowEditoraSugestoes((p) => !p)} className={styles.dropdownButton}>
             ▼
           </button>
 
@@ -577,26 +743,41 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
         {capaPreview && (
           <div className={styles.capaContainerLivro}>
-            <Image
-              src={capaPreview}
-              alt="Preview da capa do livro"
-              className={styles.capaPreview}
-              width={200}
-              height={400}
-            />
+            <Image src={capaPreview} alt="Preview da capa do livro" className={styles.capaPreview} width={200} height={400} />
           </div>
         )}
 
         <FormButton />
       </form>
 
-      {/* MODAL OCR */}
+      {/* ✅ DEBUG OVERLAY (produção com ?debug=1) */}
+      {debugOcr && (
+        <div className={styles.debugOverlay}>
+          <div>
+            <b>OCR msg:</b> {ocrMsg || "-"}
+          </div>
+          <div>
+            <b>OCR progress:</b> {ocrProgress}%
+          </div>
+          <div>
+            <b>OCR error:</b> {ocrError ?? "-"}
+          </div>
+          <div>
+            <b>ocrOpen:</b> {String(ocrOpen)} | <b>ocrBusy:</b> {String(ocrBusy)}
+          </div>
+          <div>
+            <b>iOS:</b> {String(isIOSDevice())} | <b>secure:</b> {String(typeof window !== "undefined" && window.isSecureContext)}
+          </div>
+        </div>
+      )}
+
+      {/* Modal câmera */}
       {ocrOpen && (
         <div className={styles.modalBackdrop} role="dialog" aria-modal="true">
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Ler sinopse com a câmera</h3>
-              <button type="button" className={styles.modalClose} onClick={closeOcr} aria-label="Fechar">
+              <h3 className={styles.modalTitle}>Ler sinopse com câmera</h3>
+              <button type="button" className={styles.modalClose} onClick={closeCameraModal}>
                 ✕
               </button>
             </div>
@@ -612,7 +793,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
                   ) : (
                     <>
                       <p className={styles.ocrMsg}>{ocrMsg || "Processando..."}</p>
-                      <div className={styles.progressBar} aria-label="Progresso OCR">
+                      <div className={styles.progressBar}>
                         <div className={styles.progressFill} style={{ width: `${ocrProgress}%` }} />
                       </div>
                       <p className={styles.ocrPct}>{ocrProgress}%</p>
@@ -623,22 +804,54 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
             </div>
 
             <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={ocrBusy}
-              >
-                Enviar foto (galeria)
+              <button type="button" className={styles.secondaryBtn} onClick={() => fileInputRef.current?.click()} disabled={ocrBusy}>
+                Usar foto
               </button>
 
-              <button
-                type="button"
-                className={styles.primaryBtn}
-                onClick={() => void captureFromVideo()}
-                disabled={ocrBusy}
-              >
-                {ocrBusy ? "Lendo..." : "Capturar e preencher"}
+              <button type="button" className={styles.primaryBtn} onClick={() => void captureFromVideo()} disabled={ocrBusy}>
+                Capturar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal escolher trecho */}
+      {ocrPickOpen && (
+        <div className={styles.modalBackdrop} role="dialog" aria-modal="true">
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Escolha o trecho</h3>
+              <button type="button" className={styles.modalClose} onClick={closeOcrPick}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.ocrHint}>
+                Selecione o trecho (arrastando) e depois escolha como aplicar. Se não selecionar nada, aplica o texto todo.
+              </p>
+
+              <textarea
+                ref={ocrPickRef}
+                className={styles.ocrPreview}
+                value={ocrText}
+                onChange={(e) => setOcrText(e.target.value)}
+                rows={10}
+              />
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryBtn} onClick={applyOcrTextInsertAtCursor}>
+                Inserir no cursor
+              </button>
+
+              <button type="button" className={styles.secondaryBtn} onClick={applyOcrTextAppend}>
+                Adicionar ao final
+              </button>
+
+              <button type="button" className={styles.primaryBtn} onClick={applyOcrTextReplace}>
+                Substituir descrição
               </button>
             </div>
           </div>
