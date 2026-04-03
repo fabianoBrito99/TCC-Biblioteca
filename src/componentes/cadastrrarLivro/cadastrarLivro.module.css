@@ -456,3 +456,46 @@
   max-height: 160px;
   overflow: auto;
 }
+.formError {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 0, 0, 0.08);
+  color: #b00020;
+  font-size: 14px;
+}
+
+.formMsg {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(0, 160, 80, 0.08);
+  color: #0b6b2e;
+  font-size: 14px;
+}
+
+/* Cropper */
+.cropArea {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.cropControls {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cropLabel {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.cropZoom {
+  width: 100%;
+}

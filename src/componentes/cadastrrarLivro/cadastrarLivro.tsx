@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useFormStatus } from "react-dom";
 
+import Cropper, { Area } from "react-easy-crop";
+
 import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
 import styles from "./cadastrarLivro.module.css";
@@ -18,6 +20,8 @@ type Categoria = {
   cor_cima: string;
   cor_baixo: string;
 };
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
 
 export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) {
   // ==========================
@@ -46,9 +50,13 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   const [autorSugestoes, setAutorSugestoes] = useState<string[]>([]);
   const [showAutorSugestoes, setShowAutorSugestoes] = useState<number | null>(null);
 
-  // Capa
+  // Capa (final recortada)
   const [capaLivro, setCapaLivro] = useState<File | null>(null);
   const [capaPreview, setCapaPreview] = useState<string | null>(null);
+
+  // Erros do form (ex: capa > 10MB)
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formMsg, setFormMsg] = useState<string>("");
 
   // ==========================
   // REFS IMPORTANTES
@@ -76,6 +84,23 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   const [ocrPickOpen, setOcrPickOpen] = useState<boolean>(false);
   const [ocrText, setOcrText] = useState<string>("");
   const ocrPickRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // ==========================
+  // CROP DA CAPA
+  // ==========================
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropBusy, setCropBusy] = useState(false);
+  const [cropMsg, setCropMsg] = useState("");
+  const [cropError, setCropError] = useState<string | null>(null);
+
+  const [coverRawFile, setCoverRawFile] = useState<File | null>(null);
+  const [coverRawUrl, setCoverRawUrl] = useState<string | null>(null);
+
+  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState<number>(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
+  const coverAspect = 2 / 3; // capa vertical (ajuste se quiser: 3/4 etc)
 
   // ==========================
   // DEBUG PARAM
@@ -116,7 +141,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     void fetchSuggestions();
   }, []);
 
-  // Preview da capa
+  // Preview da capa final
   useEffect(() => {
     if (capaLivro) {
       const objectUrl = URL.createObjectURL(capaLivro);
@@ -126,16 +151,33 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     setCapaPreview(null);
   }, [capaLivro]);
 
+  // Preview da capa RAW (para crop)
+  useEffect(() => {
+    if (coverRawFile) {
+      const objectUrl = URL.createObjectURL(coverRawFile);
+      setCoverRawUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+    setCoverRawUrl(null);
+  }, [coverRawFile]);
+
   // ==========================
-  // HELPERS OCR
+  // HELPERS
   // ==========================
-  const isIOSDevice = (): boolean => {
-    if (typeof navigator === "undefined") return false;
-    const ua = navigator.userAgent || "";
-    const iOS = /iPad|iPhone|iPod/.test(ua);
-    const iPadOS = ua.includes("Macintosh") && navigator.maxTouchPoints > 1;
-    return iOS || iPadOS;
-  };
+const isIOSDevice = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+
+  const ua = navigator.userAgent || "";
+  const iOS = /iPad|iPhone|iPod/.test(ua);
+
+  // iPadOS 13+ se identifica como Macintosh, mas tem touch
+  const maxTouchPoints = "maxTouchPoints" in navigator ? navigator.maxTouchPoints : 0;
+  const iPadOS = ua.includes("Macintosh") && maxTouchPoints > 1;
+
+  return iOS || iPadOS;
+};
+
+  const bytesToMb = (b: number): string => (b / (1024 * 1024)).toFixed(2);
 
   const stopStream = (): void => {
     try {
@@ -157,17 +199,98 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     setOcrError(null);
   };
 
+  // Ajuste para não "comer" unicode/acentos. Apenas normaliza quebras/espacos.
   const normalizeOcrText = (t: string): string => {
-    return t
-      .replace(/\r/g, "")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .replace(/[ \t]{2,}/g, " ")
-      .trim();
+    return (
+      t
+        // normaliza CRLF -> LF
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        // remove espaços no fim da linha (sem mexer em unicode)
+        .replace(/[ \t]+$/gm, "")
+        // colapsa linhas em branco excessivas
+        .replace(/\n{3,}/g, "\n\n")
+        // colapsa tabs repetidos (sem remover acentos)
+        .replace(/[ \t]{2,}/g, " ")
+        .trim()
+    );
   };
 
-  // ✅ iPhone: file -> canvas (resolve HEIC e decode)
-  const fileToCanvas = async (file: File, maxDim = 2000): Promise<HTMLCanvasElement> => {
+  const blobToFile = (blob: Blob, fileName: string): File => {
+    const type = blob.type || "image/jpeg";
+    return new File([blob], fileName, { type, lastModified: Date.now() });
+  };
+
+  const canvasToJpeg = (canvas: HTMLCanvasElement, quality: number): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (b) => {
+          if (!b) return reject(new Error("Falha ao gerar JPEG"));
+          resolve(b);
+        },
+        "image/jpeg",
+        quality
+      );
+    });
+  };
+
+  const scaleCanvasToMaxDim = (src: HTMLCanvasElement, maxDim: number): HTMLCanvasElement => {
+    const w0 = src.width;
+    const h0 = src.height;
+    const scale = Math.min(1, maxDim / Math.max(w0, h0));
+    const w = Math.max(1, Math.round(w0 * scale));
+    const h = Math.max(1, Math.round(h0 * scale));
+
+    if (w === w0 && h === h0) return src;
+
+    const out = document.createElement("canvas");
+    out.width = w;
+    out.height = h;
+    const ctx = out.getContext("2d");
+    if (!ctx) return src;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(src, 0, 0, w, h);
+    return out;
+  };
+
+  // Compressão progressiva até caber no limite (ou parar no minQ)
+  const compressCanvasUnderLimit = async (opts: {
+    canvas: HTMLCanvasElement;
+    maxBytes: number;
+    startQuality: number;
+    minQuality: number;
+    onStep?: (msg: string, pct?: number) => void;
+  }): Promise<Blob> => {
+    const { canvas, maxBytes, startQuality, minQuality, onStep } = opts;
+
+    const qualities = [startQuality, 0.65, 0.55, 0.45].filter((q) => q <= startQuality && q >= minQuality);
+    let lastBlob: Blob | null = null;
+
+    for (let i = 0; i < qualities.length; i++) {
+      const q = qualities[i];
+      onStep?.(`Otimizando imagem... (qualidade ${(q * 100).toFixed(0)}%)`, 10 + i * 20);
+
+      const blob = await canvasToJpeg(canvas, q);
+      lastBlob = blob;
+
+      if (blob.size <= maxBytes) {
+        onStep?.("Imagem otimizada.", 60);
+        return blob;
+      }
+    }
+
+    // Se não coube, devolve o último blob (quem chama decide)
+    if (!lastBlob) {
+      throw new Error("Falha ao comprimir imagem");
+    }
+    return lastBlob;
+  };
+
+  // ✅ file -> canvas (iPhone) com limite de dimensão
+  const fileToCanvas = async (file: File, maxDim = 1600): Promise<HTMLCanvasElement> => {
+    // Tenta createImageBitmap primeiro
     if ("createImageBitmap" in window) {
       try {
         const bitmap = await createImageBitmap(file);
@@ -183,7 +306,6 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("Sem contexto 2D");
-
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(bitmap, 0, 0, w, h);
@@ -194,6 +316,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
       }
     }
 
+    // Fallback FileReader -> Image
     const dataUrl: string = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
@@ -221,10 +344,129 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(imgEl, 0, 0, w, h);
+    return canvas;
+  };
+
+  // ==========================
+  // CROP HELPERS
+  // ==========================
+  const onCropComplete = (_croppedArea: Area, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels);
+  };
+
+  const loadImage = (url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Falha ao carregar imagem"));
+      img.src = url;
+    });
+  };
+
+  const getCroppedCanvas = async (imageUrl: string, pixelCrop: Area): Promise<HTMLCanvasElement> => {
+    const img = await loadImage(imageUrl);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(pixelCrop.width));
+    canvas.height = Math.max(1, Math.round(pixelCrop.height));
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Sem contexto 2D");
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    // Desenha o recorte
+    ctx.drawImage(
+      img,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
 
     return canvas;
   };
 
+  const openCoverCrop = async (file: File | null) => {
+    if (!file) return;
+    setFormError(null);
+    setFormMsg("");
+
+    setCropError(null);
+    setCropMsg("");
+    setCropBusy(false);
+
+    // Só abre crop — compressão acontece ao confirmar
+    setCoverRawFile(file);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setCropOpen(true);
+  };
+
+  const closeCoverCrop = () => {
+    setCropOpen(false);
+    setCoverRawFile(null);
+    setCroppedAreaPixels(null);
+    setCropError(null);
+    setCropMsg("");
+    setCropBusy(false);
+  };
+
+  const confirmCoverCrop = async () => {
+    if (!coverRawUrl || !croppedAreaPixels) {
+      setCropError("Selecione um recorte antes de confirmar.");
+      return;
+    }
+
+    setCropBusy(true);
+    setCropError(null);
+    setCropMsg("Gerando recorte...");
+    try {
+      // Recorta
+      const croppedCanvas = await getCroppedCanvas(coverRawUrl, croppedAreaPixels);
+
+      // Reduz dimensão da CAPA
+      const scaled = scaleCanvasToMaxDim(croppedCanvas, 1400);
+
+      // Compressão progressiva
+      const blob = await compressCanvasUnderLimit({
+        canvas: scaled,
+        maxBytes: MAX_UPLOAD_BYTES,
+        startQuality: 0.75,
+        minQuality: 0.45,
+        onStep: (msg) => setCropMsg(msg),
+      });
+
+      if (blob.size > MAX_UPLOAD_BYTES) {
+        setCropError(
+          `A capa ainda ficou muito grande (${bytesToMb(blob.size)}MB). Tente recortar mais fechado ou usar uma foto menor.`
+        );
+        return;
+      }
+
+      const finalFile = blobToFile(blob, "capa.jpg");
+      setCapaLivro(finalFile);
+      setCropMsg("Capa pronta!");
+      setCropOpen(false);
+      setCoverRawFile(null);
+      setCroppedAreaPixels(null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setCropError(`Falha ao recortar/comprimir: ${msg}`);
+    } finally {
+      setCropBusy(false);
+    }
+  };
+
+  // ==========================
+  // OCR FLOW
+  // ==========================
   const openOcr = async (): Promise<void> => {
     setOcrError(null);
     setOcrMsg("");
@@ -263,7 +505,6 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
         void video.play();
       };
 
-      // aguarda o modal renderizar
       setTimeout(startVideo, 60);
     } catch (err) {
       console.warn("Falha ao abrir câmera ao vivo, usando fallback:", err);
@@ -273,6 +514,14 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
   // ✅ OCR via servidor (funciona em iPhone/Android/PC)
   const runOcrOnServer = async (blob: Blob): Promise<void> => {
+    // Bloqueio 10MB
+    if (blob.size > MAX_UPLOAD_BYTES) {
+      setOcrError(
+        `A imagem ficou grande demais (${bytesToMb(blob.size)}MB). Recorte mais ou aproxime a câmera. Limite: 10MB.`
+      );
+      return;
+    }
+
     setOcrBusy(true);
     setOcrError(null);
     setOcrMsg("Enviando imagem...");
@@ -280,9 +529,10 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
     try {
       setOcrMsg("Processando OCR no servidor...");
-      setOcrProgress(30);
+      setOcrProgress(35);
 
       const formData = new FormData();
+      // nome fixo + JPEG
       formData.append("image", blob, "sinopse.jpg");
 
       const resp = await fetch("https://api.helenaramazzotte.online/api/ocr", {
@@ -290,7 +540,9 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
         body: formData,
       });
 
+      // cuidado: sempre parsear json
       const data = (await resp.json()) as { text?: string; error?: string };
+
       if (!resp.ok) {
         throw new Error(data.error || "OCR falhou no servidor");
       }
@@ -332,23 +584,53 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    setOcrError(null);
+    setOcrMsg("Capturando imagem...");
+    setOcrProgress(10);
+
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(video, 0, 0, w, h);
 
-    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
-    if (!blob) {
+    // OCR: qualidade menor
+    const rawBlob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.75));
+    if (!rawBlob) {
       setOcrError("Não consegui capturar a imagem da câmera.");
       return;
     }
 
-    await runOcrOnServer(blob);
+    // Se o blob ainda for grande, tenta recomprimir (mantendo dimensão)
+    setOcrMsg("Otimizando imagem...");
+    setOcrProgress(20);
+
+    let finalBlob = rawBlob;
+    if (finalBlob.size > MAX_UPLOAD_BYTES) {
+      const compressed = await compressCanvasUnderLimit({
+        canvas,
+        maxBytes: MAX_UPLOAD_BYTES,
+        startQuality: 0.75,
+        minQuality: 0.45,
+        onStep: (msg, pct) => {
+          setOcrMsg(msg);
+          if (pct) setOcrProgress(Math.min(60, pct));
+        },
+      });
+
+      finalBlob = compressed;
+      if (finalBlob.size > MAX_UPLOAD_BYTES) {
+        setOcrError(
+          `A imagem ficou grande demais (${bytesToMb(finalBlob.size)}MB). Tente aproximar/recortar mais. Limite: 10MB.`
+        );
+        return;
+      }
+    }
+
+    await runOcrOnServer(finalBlob);
   };
 
   const handleFileOcr = async (file: File | null): Promise<void> => {
     if (!file) return;
 
-    // não fecha forçado aqui (iOS pode “matar” a UI); só para stream se existir
     stopStream();
 
     setOcrBusy(true);
@@ -357,10 +639,41 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     setOcrProgress(0);
 
     try {
-      const canvas = await fileToCanvas(file, 2000);
-      const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
-      if (!blob) throw new Error("Falha ao gerar imagem para OCR");
-      await runOcrOnServer(blob);
+      // OCR no iPhone: maxDim 1600 e qualidade 0.75
+      const maxDim = 1600;
+      const canvas = await fileToCanvas(file, maxDim);
+
+      setOcrMsg("Otimizando imagem...");
+      setOcrProgress(15);
+
+      // gera JPEG base
+      const baseBlob = await canvasToJpeg(canvas, 0.75);
+
+      // se ainda grande, tenta recomprimir (e/ou diminuir qualidade)
+      let finalBlob = baseBlob;
+
+      if (finalBlob.size > MAX_UPLOAD_BYTES) {
+        finalBlob = await compressCanvasUnderLimit({
+          canvas,
+          maxBytes: MAX_UPLOAD_BYTES,
+          startQuality: 0.75,
+          minQuality: 0.45,
+          onStep: (msg, pct) => {
+            setOcrMsg(msg);
+            if (pct) setOcrProgress(Math.min(60, pct));
+          },
+        });
+      }
+
+      if (finalBlob.size > MAX_UPLOAD_BYTES) {
+        setOcrError(
+          `A imagem ficou grande demais (${bytesToMb(finalBlob.size)}MB). Recorte mais o texto antes de enviar. Limite: 10MB.`
+        );
+        setOcrBusy(false);
+        return;
+      }
+
+      await runOcrOnServer(finalBlob);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("handleFileOcr erro:", err);
@@ -478,6 +791,14 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setFormError(null);
+    setFormMsg("");
+
+    // bloqueia se capa maior que limite (por segurança extra)
+    if (capaLivro && capaLivro.size > MAX_UPLOAD_BYTES) {
+      setFormError(`A capa está acima de 10MB (${bytesToMb(capaLivro.size)}MB). Recorte/comprima antes de enviar.`);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("nomeLivro", nomeLivro);
@@ -495,13 +816,14 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
     if (capaLivro) formData.append("foto_capa", capaLivro);
 
     try {
+      setFormMsg("Enviando livro...");
       const resp = await fetch("https://api.helenaramazzotte.online/livro", {
         method: "POST",
         body: formData,
       });
 
       if (resp.ok) {
-        alert("Livro cadastrado com sucesso!");
+        setFormMsg("Livro cadastrado com sucesso!");
         onToggle?.();
 
         setNomeLivro("");
@@ -517,12 +839,15 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
         setEditora("");
         setCapaLivro(null);
         setCapaPreview(null);
+
+        // limpa mensagens depois de um tempo
+        setTimeout(() => setFormMsg(""), 1500);
       } else {
-        alert("Erro ao cadastrar livro.");
+        setFormError("Erro ao cadastrar livro.");
       }
     } catch (error) {
       console.error("Erro no envio:", error);
-      alert("Erro ao cadastrar livro (network).");
+      setFormError("Erro ao cadastrar livro (network).");
     }
   };
 
@@ -642,7 +967,13 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
         {/* Cores */}
         <div className={styles.colorInputs}>
           <Input label="Cor Topo" name="corCima" type="color" value={corCima} onChange={(e) => setCorCima(e.target.value)} />
-          <Input label="Cor Base" name="corBaixo" type="color" value={corBaixo} onChange={(e) => setCorBaixo(e.target.value)} />
+          <Input
+            label="Cor Base"
+            name="corBaixo"
+            type="color"
+            value={corBaixo}
+            onChange={(e) => setCorBaixo(e.target.value)}
+          />
         </div>
 
         <div className={styles.gradientPreview} style={{ background: `linear-gradient(to bottom, ${corCima}, ${corBaixo})` }} />
@@ -732,14 +1063,20 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
           )}
         </div>
 
-        {/* Capa */}
+        {/* Capa (abre crop) */}
         <Input
           label="Capa do Livro"
           name="capaLivro"
           type="file"
           accept="image/*"
-          onChange={(e) => setCapaLivro(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            const f = e.target.files?.[0] ?? null;
+            void openCoverCrop(f);
+          }}
         />
+
+        {formError && <div className={styles.formError}>{formError}</div>}
+        {!!formMsg && !formError && <div className={styles.formMsg}>{formMsg}</div>}
 
         {capaPreview && (
           <div className={styles.capaContainerLivro}>
@@ -767,6 +1104,9 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
           </div>
           <div>
             <b>iOS:</b> {String(isIOSDevice())} | <b>secure:</b> {String(typeof window !== "undefined" && window.isSecureContext)}
+          </div>
+          <div>
+            <b>coverRaw:</b> {String(!!coverRawFile)} | <b>cropOpen:</b> {String(cropOpen)}
           </div>
         </div>
       )}
@@ -852,6 +1192,79 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
               <button type="button" className={styles.primaryBtn} onClick={applyOcrTextReplace}>
                 Substituir descrição
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal CROP CAPA */}
+      {cropOpen && (
+        <div className={styles.modalBackdrop} role="dialog" aria-modal="true">
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Recortar capa</h3>
+              <button type="button" className={styles.modalClose} onClick={closeCoverCrop} disabled={cropBusy}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              {!coverRawUrl ? (
+                <p>Carregando imagem...</p>
+              ) : (
+                <div className={styles.cropArea}>
+                  <Cropper
+                    image={coverRawUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={coverAspect}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                    restrictPosition={false}
+                    zoomWithScroll={true}
+                  />
+                </div>
+              )}
+
+              <div className={styles.cropControls}>
+                <label className={styles.cropLabel}>Zoom</label>
+                <input
+                  className={styles.cropZoom}
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  disabled={cropBusy}
+                />
+              </div>
+
+              {(cropBusy || cropMsg || cropError) && (
+                <div className={styles.ocrStatus}>
+                  {cropError ? (
+                    <p className={styles.ocrError}>{cropError}</p>
+                  ) : (
+                    <>
+                      <p className={styles.ocrMsg}>{cropMsg || "Processando..."}</p>
+                      <div className={styles.progressBar}>
+                        <div className={styles.progressFill} style={{ width: cropBusy ? "60%" : "0%" }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.secondaryBtn} onClick={closeCoverCrop} disabled={cropBusy}>
+                Cancelar
+              </button>
+
+              <button type="button" className={styles.primaryBtn} onClick={() => void confirmCoverCrop()} disabled={cropBusy}>
+                Usar este recorte
               </button>
             </div>
           </div>
