@@ -65,6 +65,22 @@
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
 }
 
+.rotuloMeta {
+  display: block;
+  font-family: var(--type-first);
+  font-size: 0.95rem;
+  margin: 0.5rem 0 0.2rem;
+}
+
+.selectMeta {
+  width: 100%;
+  border: 1px solid #5c7ef7;
+  border-radius: 8px;
+  padding: 0.7rem;
+  margin-bottom: 0.5rem;
+  background: #eef5ff;
+}
+
 .modal button{
   width: 14vw;
   margin-bottom: 10px;

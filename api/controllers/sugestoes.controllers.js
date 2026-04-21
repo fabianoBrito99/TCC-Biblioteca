@@ -4,7 +4,14 @@ const fs = require("fs");
 // Sugestão para categorias
 function listarCategorias(request, response) {
   connection.query(
-    "SELECT DISTINCT categoria_principal, cor_cima, cor_baixo FROM Categoria;",
+    `SELECT c1.categoria_principal, c1.cor_cima, c1.cor_baixo
+     FROM Categoria c1
+     JOIN (
+       SELECT categoria_principal, MAX(id_categoria) AS id_categoria
+       FROM Categoria
+       GROUP BY categoria_principal
+     ) ult ON ult.id_categoria = c1.id_categoria
+     ORDER BY c1.categoria_principal ASC;`,
     (err, resultado) => {
       if (err) {
         console.error("Erro ao buscar sugestões de categorias:", err);

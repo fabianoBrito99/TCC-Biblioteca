@@ -8,6 +8,7 @@ interface RegistrarProgressoProps {
   comunidadeId: number;
   idObjetivo: number;
   userId: number; // continua sendo passado via props
+  tipoMeta: "paginas" | "capitulos";
   onProgressoSalvo: (dados: { paginas: number; nome: string }) => void;
 }
 
@@ -15,6 +16,7 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
   comunidadeId,
   idObjetivo,
   userId,
+  tipoMeta,
   onProgressoSalvo,
 }) => {
   const [paginasLidas, setPaginasLidas] = useState<number>(0);
@@ -27,7 +29,10 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
       if (!id) return;
 
       try {
-        const res = await fetch(`https://api.helenaramazzotte.online/api/usuario/${id}`);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`https://api.helenaramazzotte.online/api/usuario/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (res.ok) {
           const data = await res.json();
           setNomeUsuario(data.usuario.nome_login); // 👈 aqui pega o nome corretamente
@@ -63,7 +68,12 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
       `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo/progresso`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(localStorage.getItem("token")
+            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            : {}),
+        },
         body: JSON.stringify(dados),
       }
     );
@@ -87,7 +97,7 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
     <form onSubmit={handleSubmit}>
       <div className={styles["modal2"]}>
         <Input
-          label="Páginas Lidas"
+          label={tipoMeta === "capitulos" ? "Capítulos Lidos" : "Páginas Lidas"}
           type="number"
           value={paginasLidas}
           onChange={(e) => setPaginasLidas(Number(e.target.value))}

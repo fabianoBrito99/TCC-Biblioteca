@@ -48,7 +48,9 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
 
       if (response.ok && response.data) {
         const userId = response.data.id_usuario;
+        const token = response.data.token;
         localStorage.setItem("userId", userId); // Salva o ID do usuário no localStorage
+        localStorage.setItem("token", token); // Salva o token para chamadas autenticadas na API
         router.push(`/conta/${userId}`); // Redireciona para a conta do usuário
       } else {
         setError(response.error);

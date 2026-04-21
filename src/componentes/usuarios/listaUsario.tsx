@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./listaUsuario.module.css";
 import Image from "next/image";
+import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 
 interface Usuario {
   id_usuario: number;
@@ -17,12 +18,24 @@ const UsuariosList: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState<boolean>(false);
   const router = useRouter();
+
+  const getAuthHeaders = (): HeadersInit => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await fetch("https://api.helenaramazzotte.online/api/usuario");
+        const response = await fetch("https://api.helenaramazzotte.online/api/usuario", {
+          headers: getAuthHeaders(),
+        });
+        if (response.status === 401 || response.status === 403) {
+          setForbidden(true);
+          return;
+        }
         if (!response.ok) {
           throw new Error("Erro ao buscar usuários");
         }
@@ -39,6 +52,7 @@ const UsuariosList: React.FC = () => {
   }, []);
 
   if (loading) return <div>Carregando usuários...</div>;
+  if (forbidden) return <AcessoNegado />;
   if (error) return <div>Erro: {error}</div>;
 
   return (

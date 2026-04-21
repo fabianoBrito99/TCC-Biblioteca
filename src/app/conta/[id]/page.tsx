@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import styles from "./conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
+import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 
 interface User {
   id_usuario: string;
@@ -56,9 +57,23 @@ export default function ContaPage() {
   const [fotoBase64, setFotoBase64] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState<boolean>(false);
+
+  const getAuthHeaders = (): HeadersInit => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   useEffect(() => {
     if (!userId) return;
+    const logadoId =
+      typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+    if (!logadoId || logadoId !== userId) {
+      setForbidden(true);
+      setLoading(false);
+      return;
+    }
 
     let isMounted = true;
 
@@ -67,9 +82,17 @@ export default function ContaPage() {
       setErro(null);
 
       try {
-        const res = await fetch(`https://api.helenaramazzotte.online/api/usuario/${userId}`, {
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `https://api.helenaramazzotte.online/api/usuario/${userId}`,
+          {
+            cache: "no-store",
+            headers: getAuthHeaders(),
+          }
+        );
+        if (res.status === 401 || res.status === 403) {
+          if (isMounted) setForbidden(true);
+          return;
+        }
 
         if (!res.ok) {
           throw new Error(`Falha ao buscar usuário: ${res.status}`);
@@ -107,6 +130,10 @@ export default function ContaPage() {
 
   if (loading) {
     return <div className={styles.contaContainer}>Carregando dados do usuário...</div>;
+  }
+
+  if (forbidden) {
+    return <AcessoNegado />;
   }
 
   if (erro) {

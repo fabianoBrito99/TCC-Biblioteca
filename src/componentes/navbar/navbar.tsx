@@ -80,12 +80,20 @@ export default function Navbar() {
 
   // Buscar o usuário logado
   useEffect(() => {
+    const getAuthHeaders = (): HeadersInit => {
+      const token = localStorage.getItem("token");
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    };
+
     const fetchUserData = async () => {
       const userId = localStorage.getItem("userId");
       if (userId) {
         try {
           const res = await fetch(
-            `https://api.helenaramazzotte.online/api/usuario/${userId}`
+            `https://api.helenaramazzotte.online/api/usuario/${userId}`,
+            {
+              headers: getAuthHeaders(),
+            }
           );
           if (res.ok) {
             const data = await res.json();
@@ -133,7 +141,7 @@ export default function Navbar() {
       <div className={styles.nav100}>
         {/* Avatar do usuário */}
         {user ? (
-          <Link href={`/conta/${user.id}`}>
+          <Link href="/conta">
             <Image
               className={styles.perfil}
               src={`data:image/jpeg;base64,${user.foto_usuario}`}

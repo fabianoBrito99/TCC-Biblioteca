@@ -210,7 +210,7 @@
 .textarea {
   width: 100%;
   resize: vertical;
-  padding: 42px 14px 12px 14px; /* ✅ espaço pro botão */
+  padding: 78px 14px 12px 14px; /* espaço para os botões OCR/Lens */
   border-radius: 12px;
   border: 1px solid #cfcfcf;
   outline: none;
@@ -247,6 +247,25 @@
 
 .cameraButton:active {
   transform: scale(0.98);
+}
+
+.lensButton {
+  position: absolute;
+  right: 10px;
+  top: 74px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #d6d6d6;
+  background: #ffffff;
+  cursor: pointer;
+  color: #111;
+}
+
+.lensButton:hover {
+  background: #f6f6f6;
 }
 
 .cameraText {
@@ -332,6 +351,23 @@
 
 .modalBody {
   padding: 14px 16px;
+}
+
+.iosHelpBox {
+  background: #f7fbff;
+  border: 1px solid #d5ebff;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.95rem;
+  color: #1a2d42;
+}
+
+.iosHelpBox p {
+  margin: 0 0 8px 0;
+}
+
+.iosHelpBox p:last-child {
+  margin-bottom: 0;
 }
 
 .video {

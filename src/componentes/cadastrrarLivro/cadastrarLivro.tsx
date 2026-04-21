@@ -22,6 +22,7 @@ type Categoria = {
 };
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
+const LAST_BOOK_NAME_KEY = "last_book_name_after_save";
 
 export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) {
   // ==========================
@@ -34,7 +35,6 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   const [quantidade_estoque, setQuantidadeEstoque] = useState<string>("");
 
   const [categoria, setCategoria] = useState<string>("");
-  const [subcategorias, setSubcategorias] = useState<string[]>([""]);
 
   const [corCima, setCorCima] = useState<string>("#000000");
   const [corBaixo, setCorBaixo] = useState<string>("#FFFFFF");
@@ -67,11 +67,14 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   // OCR
   // ==========================
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const iosCameraInputRef = useRef<HTMLInputElement | null>(null);
+  const iosGalleryInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [ocrOpen, setOcrOpen] = useState<boolean>(false);
+  const [ocrIosMode, setOcrIosMode] = useState<boolean>(false);
   const [ocrBusy, setOcrBusy] = useState<boolean>(false);
   const [ocrProgress, setOcrProgress] = useState<number>(0);
   const [ocrMsg, setOcrMsg] = useState<string>("");
@@ -117,6 +120,17 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   // ==========================
   // SUGESTÕES (API)
   // ==========================
+  useEffect(() => {
+    try {
+      const lastName = sessionStorage.getItem(LAST_BOOK_NAME_KEY);
+      if (lastName) {
+        setNomeLivro(lastName);
+      }
+    } catch {
+      // noop
+    }
+  }, []);
+
   useEffect(() => {
     async function fetchSuggestions(): Promise<void> {
       try {
@@ -177,6 +191,12 @@ const isIOSDevice = (): boolean => {
   return iOS || iPadOS;
 };
 
+const isChromeIOS = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /CriOS/i.test(ua);
+};
+
   const bytesToMb = (b: number): string => (b / (1024 * 1024)).toFixed(2);
 
   const stopStream = (): void => {
@@ -193,6 +213,7 @@ const isIOSDevice = (): boolean => {
   const closeCameraModal = (): void => {
     stopStream();
     setOcrOpen(false);
+    setOcrIosMode(false);
     setOcrBusy(false);
     setOcrProgress(0);
     setOcrMsg("");
@@ -472,9 +493,10 @@ const isIOSDevice = (): boolean => {
     setOcrMsg("");
     setOcrProgress(0);
 
-    // iOS Safari costuma bloquear getUserMedia/autoplay; use captura por arquivo direto.
+    // iOS (Safari/Chrome): usa fluxo de arquivo/foto, mais confiável que câmera ao vivo.
     if (isIOSDevice()) {
-      fileInputRef.current?.click();
+      setOcrIosMode(true);
+      setOcrOpen(true);
       return;
     }
 
@@ -510,6 +532,11 @@ const isIOSDevice = (): boolean => {
       console.warn("Falha ao abrir câmera ao vivo, usando fallback:", err);
       fileInputRef.current?.click();
     }
+  };
+
+  const openGoogleLens = (): void => {
+    const lensUrl = "https://lens.google.com/";
+    window.open(lensUrl, "_blank", "noopener,noreferrer");
   };
 
   // ✅ OCR via servidor (funciona em iPhone/Android/PC)
@@ -749,18 +776,6 @@ const isIOSDevice = (): boolean => {
   // ==========================
   // FORM HELPERS
   // ==========================
-  const handleSubcategoriaChange = (index: number, value: string): void => {
-    setSubcategorias((prev) => {
-      const novo = [...prev];
-      novo[index] = value;
-      return novo;
-    });
-  };
-
-  const addSubcategoryInput = (): void => {
-    setSubcategorias((prev) => [...prev, ""]);
-  };
-
   const handleCategoriaSelect = (categoriaNome: string): void => {
     setCategoria(categoriaNome);
     const selecionada = categoriaSugestoes.find((c) => c.categoria_principal === categoriaNome);
@@ -812,7 +827,6 @@ const isIOSDevice = (): boolean => {
     formData.append("editora", editora);
 
     autores.forEach((autor, i) => formData.append(`autores[${i}]`, autor));
-    subcategorias.forEach((sub, i) => formData.append(`subcategorias[${i}]`, sub));
     if (capaLivro) formData.append("foto_capa", capaLivro);
 
     try {
@@ -825,23 +839,12 @@ const isIOSDevice = (): boolean => {
       if (resp.ok) {
         setFormMsg("Livro cadastrado com sucesso!");
         onToggle?.();
-
-        setNomeLivro("");
-        setDescricao("");
-        setAnoPublicacao("");
-        setQuantidadePaginas("");
-        setQuantidadeEstoque("");
-        setCategoria("");
-        setSubcategorias([""]);
-        setAutores([""]);
-        setCorCima("#000000");
-        setCorBaixo("#FFFFFF");
-        setEditora("");
-        setCapaLivro(null);
-        setCapaPreview(null);
-
-        // limpa mensagens depois de um tempo
-        setTimeout(() => setFormMsg(""), 1500);
+        try {
+          sessionStorage.setItem(LAST_BOOK_NAME_KEY, nomeLivro);
+        } catch {
+          // noop
+        }
+        window.location.reload();
       } else {
         setFormError("Erro ao cadastrar livro.");
       }
@@ -876,6 +879,11 @@ const isIOSDevice = (): boolean => {
           <button type="button" className={styles.cameraButton} onClick={() => void openOcr()}>
             <span className={styles.cameraText}>📷 Ler com câmera</span>
           </button>
+          {isIOSDevice() && (
+            <button type="button" className={styles.lensButton} onClick={openGoogleLens}>
+              <span className={styles.cameraText}>🔎 Abrir Google Lens</span>
+            </button>
+          )}
 
           <textarea
             ref={descricaoRef}
@@ -907,6 +915,29 @@ const isIOSDevice = (): boolean => {
             type="file"
             accept="image/*"
             capture="environment"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              e.currentTarget.value = "";
+              void handleFileOcr(f);
+            }}
+          />
+          <input
+            ref={iosCameraInputRef}
+            className={styles.hiddenFile}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              e.currentTarget.value = "";
+              void handleFileOcr(f);
+            }}
+          />
+          <input
+            ref={iosGalleryInputRef}
+            className={styles.hiddenFile}
+            type="file"
+            accept="image/*"
             onChange={(e) => {
               const f = e.target.files?.[0] ?? null;
               e.currentTarget.value = "";
@@ -946,7 +977,10 @@ const isIOSDevice = (): boolean => {
             name="categoria"
             type="text"
             value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
+            onChange={(e) => {
+              setCategoria(e.target.value);
+              setShowCategoriaSugestoes(true);
+            }}
             onFocus={() => setShowCategoriaSugestoes(true)}
           />
           <button type="button" onClick={() => setShowCategoriaSugestoes((p) => !p)} className={styles.dropdownButton}>
@@ -955,11 +989,15 @@ const isIOSDevice = (): boolean => {
 
           {showCategoriaSugestoes && (
             <ul className={styles.suggestionList}>
-              {categoriaSugestoes.map((sug, i) => (
+              {categoriaSugestoes
+                .filter((sug) =>
+                  sug.categoria_principal.toLowerCase().includes(categoria.toLowerCase())
+                )
+                .map((sug, i) => (
                 <li key={i} onClick={() => handleCategoriaSelect(sug.categoria_principal)}>
                   {sug.categoria_principal}
                 </li>
-              ))}
+                ))}
             </ul>
           )}
         </div>
@@ -977,23 +1015,6 @@ const isIOSDevice = (): boolean => {
         </div>
 
         <div className={styles.gradientPreview} style={{ background: `linear-gradient(to bottom, ${corCima}, ${corBaixo})` }} />
-
-        {/* Subcategorias */}
-        <div>
-          {subcategorias.map((sub, index) => (
-            <Input
-              key={index}
-              label="Subcategorias"
-              name={`subcategoria_${index}`}
-              type="text"
-              value={sub}
-              onChange={(e) => handleSubcategoriaChange(index, e.target.value)}
-            />
-          ))}
-          <button className={styles.btSub} type="button" onClick={addSubcategoryInput}>
-            Adicionar mais Subcategorias
-          </button>
-        </div>
 
         {/* Autores */}
         <div className={styles.inputContainer}>
@@ -1123,8 +1144,21 @@ const isIOSDevice = (): boolean => {
             </div>
 
             <div className={styles.modalBody}>
-              <video ref={videoRef} className={styles.video} playsInline muted />
-              <canvas ref={canvasRef} className={styles.hiddenCanvas} />
+              {ocrIosMode ? (
+                <div className={styles.iosHelpBox}>
+                  <p>
+                    No iPhone, o melhor caminho é tirar a foto da sinopse e extrair o texto aqui.
+                  </p>
+                  <p>
+                    No Chrome iOS não dá para forçar o Lens automaticamente pelo site, mas você pode abrir o Lens em 1 toque.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <video ref={videoRef} className={styles.video} playsInline muted />
+                  <canvas ref={canvasRef} className={styles.hiddenCanvas} />
+                </>
+              )}
 
               {(ocrBusy || ocrMsg || ocrError) && (
                 <div className={styles.ocrStatus}>
@@ -1144,13 +1178,51 @@ const isIOSDevice = (): boolean => {
             </div>
 
             <div className={styles.modalActions}>
-              <button type="button" className={styles.secondaryBtn} onClick={() => fileInputRef.current?.click()} disabled={ocrBusy}>
-                Usar foto
-              </button>
+              {ocrIosMode ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={() => iosGalleryInputRef.current?.click()}
+                    disabled={ocrBusy}
+                  >
+                    Escolher da galeria
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={() => iosCameraInputRef.current?.click()}
+                    disabled={ocrBusy}
+                  >
+                    Tirar foto
+                  </button>
+                  {isChromeIOS() && (
+                    <button type="button" className={styles.primaryBtn} onClick={openGoogleLens} disabled={ocrBusy}>
+                      Abrir Google Lens
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={ocrBusy}
+                  >
+                    Usar foto
+                  </button>
 
-              <button type="button" className={styles.primaryBtn} onClick={() => void captureFromVideo()} disabled={ocrBusy}>
-                Capturar
-              </button>
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={() => void captureFromVideo()}
+                    disabled={ocrBusy}
+                  >
+                    Capturar
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

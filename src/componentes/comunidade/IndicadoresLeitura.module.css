@@ -1,11 +1,9 @@
 .container {
-  position: absolute;
-  top: 504px;
-  left: 400px;
+  width: min(920px, 95%);
+  margin: 1rem auto;
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
-  margin-top: 1rem;
   justify-content: center;
 }
 
@@ -43,4 +41,15 @@
 .vermelho {
   color: #c0392b;
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .container {
+    gap: 0.8rem;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 320px;
+  }
 }

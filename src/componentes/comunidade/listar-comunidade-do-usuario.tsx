@@ -6,6 +6,7 @@ import { FaUsers } from "react-icons/fa";
 
 interface Comunidade {
   id_comunidade: number;
+  slug: string;
   nome: string;
   descricao: string;
   tipo: string;
@@ -22,8 +23,12 @@ const ComunidadesUsuario: React.FC<ComunidadesUsuarioProps> = ({ usuarioId }) =>
   useEffect(() => {
     const fetchComunidadesUsuario = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/usuario/${usuarioId}`
+          `https://api.helenaramazzotte.online/api/comunidade/usuario/${usuarioId}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
         );
         if (!response.ok) throw new Error("Erro ao buscar comunidades do usuário.");
         const data = await response.json();
@@ -53,7 +58,7 @@ const ComunidadesUsuario: React.FC<ComunidadesUsuarioProps> = ({ usuarioId }) =>
               <div key={comunidade.id_comunidade} className={styles.comunidadeCard}>
                 <h3>{comunidade.nome}</h3>
                 <p>{comunidade.descricao}</p>
-                <button onClick={() => window.location.href = `/comunidade/${comunidade.id_comunidade}`}>
+                <button onClick={() => window.location.href = `/comunidade/${comunidade.slug || comunidade.id_comunidade}`}>
                   Acessar
                 </button>
               </div>

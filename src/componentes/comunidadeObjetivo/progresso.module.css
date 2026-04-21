@@ -1,9 +1,64 @@
 /* Container do jogo */
+.gameWrapper {
+  width: min(920px, 100%);
+  margin: 1rem auto;
+}
+
+.gameLegend {
+  font-family: var(--type-first);
+  color: #2f2d3a;
+  margin: 0.3rem 0 0.5rem;
+}
+
+.progressoLista {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.7rem;
+}
+
+.progressoItem {
+  background: #fff;
+  border: 1px solid #e4e8ff;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+
+.progressoHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.barraBg {
+  margin-top: 0.35rem;
+  width: 100%;
+  height: 10px;
+  background: #e9ecf7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barraFill {
+  height: 10px;
+  background: linear-gradient(90deg, #3e66ff, #18b170);
+  border-radius: 999px;
+}
+
+.percentual {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  color: #4e5270;
+  text-align: right;
+}
+
 .game-canvas {
   display: block;
   background-color: #f7f7f7;
   border: 2px solid black;
   margin: auto;
+  max-width: 100%;
 }
 
 @media (max-width: 400px) {

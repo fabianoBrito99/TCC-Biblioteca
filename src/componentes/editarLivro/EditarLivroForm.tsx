@@ -27,7 +27,6 @@ export default function EditarLivroForm({ id }: Props) {
   const [quantidade_paginas, setQuantidadePaginas] = useState("");
   const [quantidade_estoque, setQuantidadeEstoque] = useState("");
   const [categoria, setCategoria] = useState("");
-  const [subcategorias, setSubcategorias] = useState<string[]>([""]);
   const [corCima, setCorCima] = useState("#000000");
   const [corBaixo, setCorBaixo] = useState("#FFFFFF");
 
@@ -85,11 +84,6 @@ export default function EditarLivroForm({ id }: Props) {
         setQuantidadePaginas(String(l?.quantidade_paginas ?? ""));
         setQuantidadeEstoque(String(l?.quantidade_estoque ?? ""));
         setCategoria(l?.categoria_principal ?? "");
-        setSubcategorias(
-          Array.isArray(l?.subcategorias) && l.subcategorias.length
-            ? l.subcategorias
-            : [""]
-        );
         setAutores(
           Array.isArray(l?.autores) && l.autores.length ? l.autores : [""]
         );
@@ -144,7 +138,6 @@ export default function EditarLivroForm({ id }: Props) {
     formData.append("editora", editora);
 
     autores.forEach((a, i) => formData.append(`autores[${i}]`, a));
-    subcategorias.forEach((s, i) => formData.append(`subcategorias[${i}]`, s));
 
     if (capaLivro) formData.append("foto_capa", capaLivro); // mantém a antiga se não enviar
 
@@ -165,13 +158,6 @@ export default function EditarLivroForm({ id }: Props) {
       setSaving(false);
     }
   };
-
-  const handleSubcategoriaChange = (index: number, value: string) => {
-    const k = [...subcategorias];
-    k[index] = value;
-    setSubcategorias(k);
-  };
-  const addSubcategoria = () => setSubcategorias((s) => [...s, ""]);
 
   const handleCategoriaSelect = (nome: string) => {
     setCategoria(nome);
@@ -241,7 +227,10 @@ export default function EditarLivroForm({ id }: Props) {
             name="categoria"
             type="text"
             value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
+            onChange={(e) => {
+              setCategoria(e.target.value);
+              setShowCategoriaSugestoes(true);
+            }}
             onFocus={() => setShowCategoriaSugestoes(true)}
           />
           <button
@@ -253,11 +242,15 @@ export default function EditarLivroForm({ id }: Props) {
           </button>
           {showCategoriaSugestoes && (
             <ul className={styles.suggestionList}>
-              {categoriaSugestoes.map((s, i) => (
+              {categoriaSugestoes
+                .filter((s) =>
+                  s.categoria_principal.toLowerCase().includes(categoria.toLowerCase())
+                )
+                .map((s, i) => (
                 <li key={i} onClick={() => handleCategoriaSelect(s.categoria_principal)}>
                   {s.categoria_principal}
                 </li>
-              ))}
+                ))}
             </ul>
           )}
         </div>
@@ -284,23 +277,6 @@ export default function EditarLivroForm({ id }: Props) {
           className={styles.gradientPreview}
           style={{ background: `linear-gradient(to bottom, ${corCima}, ${corBaixo})` }}
         />
-
-        {/* Subcategorias */}
-        <div>
-          {subcategorias.map((sub, idx) => (
-            <Input
-              key={idx}
-              label="Subcategorias"
-              name={`sub_${idx}`}
-              type="text"
-              value={sub}
-              onChange={(e) => handleSubcategoriaChange(idx, e.target.value)}
-            />
-          ))}
-          <button type="button" onClick={addSubcategoria} className={styles.btSub}>
-            Adicionar mais Subcategorias
-          </button>
-        </div>
 
         {/* Autores */}
         <div className={styles.inputContainer}>

@@ -12,6 +12,8 @@ import RegistrarProgresso from "@/componentes/comunidadeObjetivo/RegistrarProgre
 import LeituraDiaria from "@/componentes/comunidade/LeituraDiaria";
 import IndicadoresLeitura from "@/componentes/comunidade/IndicadoresLeitura";
 
+const API_BASE = "https://api.helenaramazzotte.online/api";
+
 interface Comunidade {
   id_comunidade: number;
   nome: string;
@@ -24,37 +26,57 @@ interface Progresso {
   paginas_lidas: number;
 }
 
+interface ObjetivoAtivo {
+  id_objetivo: number;
+  titulo: string;
+  descricao: string;
+  data_inicio: string;
+  data_fim: string;
+  total_meta: number;
+  tipo_meta: "paginas" | "capitulos";
+}
+
+interface Participante {
+  id_usuario: number;
+  nome_login: string;
+  nivel_acesso: "admin" | "auxiliar" | "membro";
+}
+
 interface EstatisticasIdade {
   faixa_etaria: string;
   quantidade: number;
 }
 
-interface Comentario {
-  id_comentario: number;
-  comentario: string;
-  nome_usuario: string;
-  foto_usuario: string;
-  data_comentario: string;
-  curtidas: number;
-  usuario_curtiu: boolean;
-  fk_id_usuario: string;
-}
-
 export default function ComunidadeDetalhesPage() {
   const { id } = useParams();
+  const routeCommunityKey = typeof id === "string" ? id : "";
   const [comunidade, setComunidade] = useState<Comunidade | null>(null);
 
   // Ignora a variável de estado (apenas mantém o setter usado no fetch)
   const [, setProgresso] = useState<Progresso[]>([]);
   const [, setIdadeStats] = useState<EstatisticasIdade[]>([]);
 
-  const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const comunidadeId = typeof id === "string" ? parseInt(id, 10) : NaN;
+  const [comunidadeId, setComunidadeId] = useState<number | null>(null);
+  const [resolvendoComunidade, setResolvendoComunidade] = useState(true);
   const [idObjetivo, setIdObjetivo] = useState<number | null>(null);
+  const [objetivoAtivo, setObjetivoAtivo] = useState<ObjetivoAtivo | null>(null);
+  const [tipoMeta, setTipoMeta] = useState<"paginas" | "capitulos">("paginas");
   const [loadingObjetivo, setLoadingObjetivo] = useState(true);
+  const [editandoObjetivo, setEditandoObjetivo] = useState(false);
+  const [salvandoObjetivo, setSalvandoObjetivo] = useState(false);
+  const [formObjetivo, setFormObjetivo] = useState({
+    titulo: "",
+    descricao: "",
+    data_inicio: "",
+    data_fim: "",
+    total_meta: 0,
+    tipo_meta: "paginas" as "paginas" | "capitulos",
+  });
 
   const [userId, setUserId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [nivelAcesso, setNivelAcesso] = useState<"admin" | "auxiliar" | "membro">("membro");
+  const [participantes, setParticipantes] = useState<Participante[]>([]);
   const [progressoAtualizado, setProgressoAtualizado] = useState(false);
   const [paginasInseridas, setPaginasInseridas] = useState<number>(0);
   const [usuarioAtual, setUsuarioAtual] = useState("");
@@ -79,54 +101,101 @@ export default function ComunidadeDetalhesPage() {
     }
   }, []);
 
-  // Buscar o objetivo ativo da comunidade
   useEffect(() => {
+    const resolve = async () => {
+      if (!routeCommunityKey) return;
+      setResolvendoComunidade(true);
+      const asNumber = Number(routeCommunityKey);
+      if (Number.isFinite(asNumber) && asNumber > 0) {
+        setComunidadeId(asNumber);
+        setResolvendoComunidade(false);
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/comunidade/slug/${routeCommunityKey}`);
+        if (!res.ok) throw new Error("Comunidade não encontrada");
+        const data = await res.json();
+        setComunidadeId(Number(data.id_comunidade));
+      } catch (error) {
+        console.error("Erro ao resolver comunidade por slug:", error);
+        setComunidadeId(null);
+      } finally {
+        setResolvendoComunidade(false);
+      }
+    };
+    resolve();
+  }, [routeCommunityKey]);
+
+  // Buscar o objetivo ativo da comunidade
+  const carregarObjetivoAtivo = useCallback(async () => {
     if (!comunidadeId) return;
 
-    fetch(`https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo-ativo2`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.idObjetivo) {
-          console.log("ID do Objetivo carregado:", data.idObjetivo);
-          setIdObjetivo(Number(data.idObjetivo));
-        } else {
-          setIdObjetivo(null);
-        }
-      })
-      .catch((error) => console.error("Erro ao buscar objetivo ativo:", error))
-      .finally(() => setLoadingObjetivo(false));
+    try {
+      const res = await fetch(`${API_BASE}/comunidade/${comunidadeId}/objetivo-ativo2`);
+      if (!res.ok) {
+        setIdObjetivo(null);
+        return;
+      }
+      const data = await res.json();
+      if (data.idObjetivo) {
+        setIdObjetivo(Number(data.idObjetivo));
+        setTipoMeta(data.objetivo?.tipo_meta === "capitulos" ? "capitulos" : "paginas");
+        const objetivo = data.objetivo as ObjetivoAtivo;
+        setObjetivoAtivo(objetivo);
+        setFormObjetivo({
+          titulo: objetivo?.titulo || "",
+          descricao: objetivo?.descricao || "",
+          data_inicio: objetivo?.data_inicio || "",
+          data_fim: objetivo?.data_fim || "",
+          total_meta: Number(objetivo?.total_meta || 0),
+          tipo_meta: objetivo?.tipo_meta === "capitulos" ? "capitulos" : "paginas",
+        });
+      } else {
+        setIdObjetivo(null);
+        setObjetivoAtivo(null);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar objetivo ativo:", error);
+    } finally {
+      setLoadingObjetivo(false);
+    }
   }, [comunidadeId]);
 
   useEffect(() => {
-    if (!userId || !id) return;
+    carregarObjetivoAtivo();
+  }, [carregarObjetivoAtivo]);
 
-    const verificarAdmin = async () => {
-      try {
-        const response = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/${id}/verificar-admin/${userId}`
-        );
-        const data = await response.json();
-        setIsAdmin(data.isAdmin);
-      } catch (error) {
-        console.error("Erro ao verificar admin:", error);
-      }
-    };
+  useEffect(() => {
+    if (!userId || !comunidadeId) return;
+    // Nível será definido pelo retorno dos participantes para evitar inconsistência.
+  }, [comunidadeId, userId]);
 
-    verificarAdmin();
-  }, [id, userId]);
-
-  const fetchComentarios = useCallback(async () => {
+  const fetchParticipantes = useCallback(async () => {
+    if (!comunidadeId) return;
     try {
-      const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${id}/comentarios`
-      );
-      if (!response.ok) throw new Error("Erro ao buscar comentários");
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}/participantes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Erro ao buscar participantes");
       const data = await response.json();
-      setComentarios(data);
+      const lista = Array.isArray(data) ? data : [];
+      setParticipantes(lista);
+
+      if (userId) {
+        const eu = lista.find((p) => Number(p.id_usuario) === Number(userId));
+        const nivel =
+          eu?.nivel_acesso === "admin" || eu?.nivel_acesso === "auxiliar"
+            ? eu.nivel_acesso
+            : "membro";
+        setNivelAcesso(nivel);
+        setIsAdmin(nivel === "admin" || nivel === "auxiliar");
+      }
     } catch (error) {
-      console.error("Erro ao buscar comentários:", error);
+      console.error("Erro ao buscar participantes:", error);
     }
-  }, [id]);
+  }, [comunidadeId, userId]);
 
   const fetchProgresso = useCallback(async () => {
     if (!idObjetivo) return;
@@ -160,7 +229,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchEstatisticasIdade = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${id}/estatisticas/idade`
+        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/estatisticas/idade`
       );
       if (!response.ok) throw new Error("Erro ao buscar estatísticas de idade");
       const data = await response.json();
@@ -168,45 +237,257 @@ export default function ComunidadeDetalhesPage() {
     } catch (error) {
       console.error("Erro ao buscar estatísticas de idade:", error);
     }
-  }, [id]);
+  }, [comunidadeId]);
 
   const fetchComunidade = useCallback(async () => {
     try {
-      const response = await fetch(`/api/comunidade/${id}`);
+      if (!comunidadeId) return;
+      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}`);
       if (!response.ok) throw new Error("Erro ao buscar comunidade");
       const data = await response.json();
       setComunidade(data);
     } catch (error) {
       console.error("Erro na requisição da comunidade:", error);
     }
-  }, [id]);
+  }, [comunidadeId]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!comunidadeId) return;
 
     fetchComunidade();
     fetchProgresso();
     fetchEstatisticasIdade();
-    fetchComentarios();
-  }, [id, fetchComunidade, fetchProgresso, fetchEstatisticasIdade, fetchComentarios]);
+    fetchParticipantes();
+  }, [comunidadeId, fetchComunidade, fetchProgresso, fetchEstatisticasIdade, fetchParticipantes]);
+
+  const handleFinalizarObjetivo = async () => {
+    if (!idObjetivo) return;
+    const confirmou = window.confirm(
+      "Deseja encerrar este desafio agora? Após isso será possível criar um novo objetivo."
+    );
+    if (!confirmou) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/comunidade/objetivo/${idObjetivo}/finalizar`, {
+        method: "PATCH",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Não foi possível finalizar o desafio.");
+        return;
+      }
+      alert("Desafio encerrado. Você já pode iniciar um novo objetivo.");
+      await carregarObjetivoAtivo();
+      setEditandoObjetivo(false);
+    } catch (error) {
+      console.error("Erro ao finalizar objetivo:", error);
+    }
+  };
+
+  const handleSalvarEdicaoObjetivo = async () => {
+    if (!idObjetivo) return;
+    try {
+      setSalvandoObjetivo(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/comunidade/objetivo/${idObjetivo}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          titulo: formObjetivo.titulo,
+          descricao: formObjetivo.descricao,
+          data_inicio: formObjetivo.data_inicio,
+          data_fim: formObjetivo.data_fim,
+          total_paginas: formObjetivo.total_meta,
+          tipo_meta: formObjetivo.tipo_meta,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Não foi possível editar o objetivo.");
+        return;
+      }
+      alert("Objetivo atualizado com sucesso.");
+      setEditandoObjetivo(false);
+      await carregarObjetivoAtivo();
+    } catch (error) {
+      console.error("Erro ao editar objetivo:", error);
+    } finally {
+      setSalvandoObjetivo(false);
+    }
+  };
+
+  const handleSairComunidade = async () => {
+    if (!comunidadeId) return;
+    const ok = window.confirm("Deseja sair desta comunidade?");
+    if (!ok) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}/sair`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Não foi possível sair da comunidade.");
+        return;
+      }
+      window.location.href = "/comunidade";
+    } catch (error) {
+      console.error("Erro ao sair da comunidade:", error);
+    }
+  };
+
+  const handleExcluirComunidade = async () => {
+    if (!comunidadeId) return;
+    const ok = window.confirm("Tem certeza que deseja excluir esta comunidade? Essa ação não pode ser desfeita.");
+    if (!ok) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Não foi possível excluir a comunidade.");
+        return;
+      }
+      window.location.href = "/comunidade";
+    } catch (error) {
+      console.error("Erro ao excluir comunidade:", error);
+    }
+  };
 
   return (
     <div className={styles.containerComu}>
+      {resolvendoComunidade && <p>Carregando comunidade...</p>}
+      {!resolvendoComunidade && !comunidadeId && <p>Comunidade não encontrada.</p>}
       {comunidade && (
         <>
           <h1>{comunidade.nome}</h1>
           <p>{comunidade.descricao}</p>
+          <p className={styles.nivelAtual}>
+            Seu nível na comunidade:{" "}
+            <strong>
+              {nivelAcesso === "admin" ? "Admin" : nivelAcesso === "auxiliar" ? "Auxiliar" : "Membro"}
+            </strong>
+          </p>
 
           <div>
             {loadingObjetivo ? (
               <p>Carregando objetivo...</p>
             ) : idObjetivo ? (
               <>
+                {objetivoAtivo && (
+                  <div className={styles.objetivoCard}>
+                    <h3>{objetivoAtivo.titulo}</h3>
+                    <p>{objetivoAtivo.descricao}</p>
+                    <p>
+                      Meta: <strong>{objetivoAtivo.total_meta}</strong>{" "}
+                      {objetivoAtivo.tipo_meta === "capitulos" ? "capítulos" : "páginas"}
+                    </p>
+                    <p>
+                      Período: {new Date(objetivoAtivo.data_inicio).toLocaleDateString()} até{" "}
+                      {new Date(objetivoAtivo.data_fim).toLocaleDateString()}
+                    </p>
+                    {isAdmin && (
+                      <div className={styles.objetivoAcoes}>
+                        <button
+                          className={styles.editarObjetivoBtn}
+                          onClick={() => setEditandoObjetivo((prev) => !prev)}
+                        >
+                          {editandoObjetivo ? "Fechar edição" : "Editar objetivo"}
+                        </button>
+                        <button
+                          className={styles.finalizarObjetivoBtn}
+                          onClick={handleFinalizarObjetivo}
+                        >
+                          Encerrar desafio agora
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {isAdmin && editandoObjetivo && (
+                  <div className={styles.edicaoObjetivoBox}>
+                    <h4>Editar objetivo</h4>
+                    <input
+                      value={formObjetivo.titulo}
+                      onChange={(e) =>
+                        setFormObjetivo((prev) => ({ ...prev, titulo: e.target.value }))
+                      }
+                      placeholder="Título"
+                    />
+                    <input
+                      value={formObjetivo.descricao}
+                      onChange={(e) =>
+                        setFormObjetivo((prev) => ({ ...prev, descricao: e.target.value }))
+                      }
+                      placeholder="Descrição"
+                    />
+                    <div className={styles.linhaEdicao}>
+                      <input
+                        type="date"
+                        value={formObjetivo.data_inicio}
+                        onChange={(e) =>
+                          setFormObjetivo((prev) => ({ ...prev, data_inicio: e.target.value }))
+                        }
+                      />
+                      <input
+                        type="date"
+                        value={formObjetivo.data_fim}
+                        onChange={(e) =>
+                          setFormObjetivo((prev) => ({ ...prev, data_fim: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className={styles.linhaEdicao}>
+                      <select
+                        value={formObjetivo.tipo_meta}
+                        onChange={(e) =>
+                          setFormObjetivo((prev) => ({
+                            ...prev,
+                            tipo_meta: e.target.value as "paginas" | "capitulos",
+                          }))
+                        }
+                      >
+                        <option value="paginas">Páginas</option>
+                        <option value="capitulos">Capítulos</option>
+                      </select>
+                      <input
+                        type="number"
+                        value={formObjetivo.total_meta}
+                        onChange={(e) =>
+                          setFormObjetivo((prev) => ({
+                            ...prev,
+                            total_meta: Number(e.target.value),
+                          }))
+                        }
+                        placeholder="Total"
+                      />
+                    </div>
+                    <button
+                      className={styles.salvarEdicaoBtn}
+                      onClick={handleSalvarEdicaoObjetivo}
+                      disabled={salvandoObjetivo}
+                    >
+                      {salvandoObjetivo ? "Salvando..." : "Salvar edição"}
+                    </button>
+                  </div>
+                )}
+
                 {userId && idObjetivo && comunidadeId && (
                   <RegistrarProgresso
                     comunidadeId={comunidadeId}
                     idObjetivo={idObjetivo}
                     userId={userId}
+                    tipoMeta={tipoMeta}
                     onProgressoSalvo={handleProgressoSalvo}
                   />
                 )}
@@ -214,6 +495,7 @@ export default function ComunidadeDetalhesPage() {
                 {userId && idObjetivo && (
                   <ProgressoObjetivo
                     idObjetivo={idObjetivo}
+                    tipoMeta={tipoMeta}
                     progressoAtualizado={progressoAtualizado}
                     paginasInseridas={paginasInseridas}
                     usuarioAtual={usuarioAtual}
@@ -226,25 +508,23 @@ export default function ComunidadeDetalhesPage() {
           </div>
 
           <div className={styles.criarObjetivo}>
-            {isAdmin && !idObjetivo && (
-              <CriarObjetivo comunidadeId={comunidadeId} />
+            {isAdmin && !idObjetivo && comunidadeId && (
+              <CriarObjetivo comunidadeId={comunidadeId} onObjetivoCriado={carregarObjetivoAtivo} />
             )}
           </div>
 
-          <div className={styles.containerLateral}>
-            <Comentarios
-              comunidadeId={parseInt(typeof id === "string" ? id : "0", 10)}
-              comentarios={comentarios as Comentario[]}
-              atualizarComentarios={fetchComentarios}
-            />
+          {comunidadeId && (
+            <div className={styles.containerLateral}>
+              <Comentarios comunidadeId={comunidadeId} />
+            </div>
+          )}
+
+          <div>
+            {comunidadeId && <TopLeitores idComunidade={String(comunidadeId)} />}
           </div>
 
           <div>
-            <TopLeitores idComunidade={comunidadeId.toString()} />
-          </div>
-
-          <div>
-            {userId && (
+            {userId && comunidadeId && (
               <IndicadoresLeitura
                 idUsuario={userId}
                 idComunidade={comunidadeId}
@@ -253,7 +533,7 @@ export default function ComunidadeDetalhesPage() {
           </div>
 
           <div>
-            {userId && (
+            {userId && comunidadeId && (
               <div className={styles.leitura_diaria}>
                 <LeituraDiaria idUsuario={userId} idComunidade={comunidadeId} />
               </div>
@@ -261,8 +541,46 @@ export default function ComunidadeDetalhesPage() {
           </div>
 
           <div>
-            <h1>Gerenciar Comunidade</h1>
-            <GerenciarUsuarios comunidadeId={comunidadeId} isAdmin={isAdmin} />
+            {comunidadeId && (
+              <GerenciarUsuarios
+                comunidadeId={comunidadeId}
+                isAdmin={isAdmin}
+                nivelAcesso={nivelAcesso}
+              />
+            )}
+          </div>
+
+          <div className={styles.participantesBox}>
+            <h2>Participantes</h2>
+            {participantes.length === 0 ? (
+              <p>Nenhum participante encontrado.</p>
+            ) : (
+              <ul className={styles.participantesLista}>
+                {participantes.map((participante) => (
+                  <li key={participante.id_usuario} className={styles.participanteItem}>
+                    <span className={styles.participanteNome}>{participante.nome_login}</span>
+                    <span className={`${styles.nivelTag} ${styles[`nivel_${participante.nivel_acesso}`]}`}>
+                      {participante.nivel_acesso === "admin"
+                        ? "Admin"
+                        : participante.nivel_acesso === "auxiliar"
+                        ? "Auxiliar"
+                        : "Membro"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className={styles.comunidadeAcoesFinal}>
+            {nivelAcesso === "admin" && (
+              <button className={styles.excluirComunidadeBtn} onClick={handleExcluirComunidade}>
+                Excluir comunidade
+              </button>
+            )}
+            <button className={styles.sairComunidadeBtn} onClick={handleSairComunidade}>
+              Sair da comunidade
+            </button>
           </div>
         </>
       )}

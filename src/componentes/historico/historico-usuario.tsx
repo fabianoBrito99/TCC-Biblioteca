@@ -17,19 +17,25 @@ interface Historico {
 const HistoricoUsuario: React.FC<{ userId: string }> = ({ userId }) => {
   const [historico, setHistorico] = useState<Historico[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHistorico = async () => {
       try {
-        const response = await fetch(`https://api.helenaramazzotte.online/api/historico/${userId}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`https://api.helenaramazzotte.online/api/historico/${userId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (response.status === 404) {
+          setHistorico([]);
+          return;
+        }
         if (!response.ok) {
           throw new Error("Erro ao buscar histórico.");
         }
         const data = await response.json();
-        setHistorico(data);
+        setHistorico(Array.isArray(data) ? data : []);
       } catch{
-        setError("Erro desconhecido.");
+        setHistorico([]);
       } finally {
         setLoading(false);
       }
@@ -42,12 +48,8 @@ const HistoricoUsuario: React.FC<{ userId: string }> = ({ userId }) => {
     return <div>Carregando histórico...</div>;
   }
 
-  if (error) {
-    return <div>Erro: {error}</div>;
-  }
-
   if (historico.length === 0) {
-    return <div>Nenhum histórico encontrado.</div>;
+    return <div>Sem histórico.</div>;
   }
 
   return (

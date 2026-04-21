@@ -9,6 +9,7 @@ interface UsuarioProgresso {
 
 interface ProgressoObjetivoProps {
   idObjetivo: number;
+  tipoMeta: "paginas" | "capitulos";
   progressoAtualizado: boolean;
   paginasInseridas: number;
   usuarioAtual: string;
@@ -20,6 +21,7 @@ const forcaPulo = -10;
 const cores = ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3"];
 const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   idObjetivo,
+  tipoMeta,
   progressoAtualizado,
   paginasInseridas,
   usuarioAtual,
@@ -28,6 +30,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   const [usuarios, setUsuarios] = useState<UsuarioProgresso[]>([]);
   const [animacaoAtiva, setAnimacaoAtiva] = useState(false);
   const [usuarioAnimando, setUsuarioAnimando] = useState<string>("");
+  const unidade = tipoMeta === "capitulos" ? "capítulos" : "páginas";
 
  
 
@@ -52,8 +55,30 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     []
   );
 
+  const desenharTagNome = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      nome: string,
+      deslocamentoY: number
+    ) => {
+      const larguraNome = Math.max(60, nome.length * 7 + 10);
+      const tagX = Math.max(4, Math.min(x - larguraNome / 2, 800 - larguraNome - 4));
+      const tagY = y - 56 - deslocamentoY;
+      ctx.fillStyle = corDoUsuario(nome);
+      ctx.beginPath();
+      ctx.roundRect(tagX, tagY, larguraNome, 18, 6);
+      ctx.fill();
+      ctx.fillStyle = "black";
+      ctx.font = "10px Arial";
+      ctx.fillText(nome, tagX + 6, tagY + 12);
+    },
+    [corDoUsuario]
+  );
+
   const desenharJesusParado = useCallback(
-    (ctx: CanvasRenderingContext2D, x: number, y: number, nome: string) => {
+    (ctx: CanvasRenderingContext2D, x: number, y: number) => {
       ctx.fillStyle = "#fdf6e3";
       desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
       ctx.fillRect(x, y - 30, 16, 30);
@@ -81,24 +106,12 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fillRect(x - 4, y - 26, 4, 10);
       desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
       ctx.fillRect(x + 16, y - 26, 4, 10);
-
-      const larguraNome = nome.length * 7 + 10;
-      const posTextoX = x - nome.length * 1;
-
-      ctx.fillStyle = corDoUsuario(nome);
-      ctx.beginPath();
-      ctx.roundRect(x - 20, 75, larguraNome, 18, 6);
-      ctx.fill();
-
-      ctx.fillStyle = "black";
-      ctx.font = "10px Arial";
-      ctx.fillText(nome, posTextoX, 88);
     },
-    [corDoUsuario, desenharParte]
+    [desenharParte]
   );
 
   const desenharJesusCorrendo = useCallback(
-    (ctx: CanvasRenderingContext2D, x: number, y: number, nome: string) => {
+    (ctx: CanvasRenderingContext2D, x: number, y: number) => {
       const passo = Math.floor(performance.now() / 100) % 2;
       ctx.fillStyle = "#fdf6e3";
       desenharParte(ctx, () => ctx.rect(x, y - 30, 16, 30));
@@ -134,20 +147,8 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fillRect(x - 4, y - 26, 4, 10);
       desenharParte(ctx, () => ctx.rect(x + 16, y - 26, 4, 10));
       ctx.fillRect(x + 16, y - 26, 4, 10);
-
-      const larguraNome = nome.length * 7 + 10;
-      const posTextoX = x - nome.length * 3;
-
-      ctx.fillStyle = corDoUsuario(nome);
-      ctx.beginPath();
-      ctx.roundRect(x - 20, 75, larguraNome, 18, 6);
-      ctx.fill();
-
-      ctx.fillStyle = "black";
-      ctx.font = "10px Arial";
-      ctx.fillText(nome, posTextoX, 88);
     },
-    [corDoUsuario, desenharParte]
+    [desenharParte]
   );
 
   // Carrega progresso ao montar / quando idObjetivo muda
@@ -205,19 +206,19 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fillStyle = "#b5651d";
       ctx.fillRect(0, 150, canvas.width, 50);
 
+      const ocupacaoX: number[] = [];
       usuarios.forEach((u) => {
         const posX = (u.paginas_lidas / u.total_paginas) * canvas.width;
-        ctx.fillStyle = "#ccc";
-        ctx.fillRect(posX - 20, 75, u.nome_login.length * 7 + 10, 18);
-        ctx.fillStyle = "black";
-        ctx.font = "10px Arial";
-        ctx.fillText(u.nome_login, posX - u.nome_login.length * 3, 88);
-        desenharJesusParado(ctx, posX, 130, u.nome_login);
+        desenharJesusParado(ctx, posX, 130);
+
+        const conflitos = ocupacaoX.filter((x) => Math.abs(x - posX) < 45).length;
+        ocupacaoX.push(posX);
+        desenharTagNome(ctx, posX + 8, 130, u.nome_login, conflitos * 18);
       });
     };
 
     desenhar();
-  }, [usuarios, animacaoAtiva, desenharJesusParado]);
+  }, [usuarios, animacaoAtiva, desenharJesusParado, desenharTagNome]);
 
   // Loop da animação
   useEffect(() => {
@@ -297,6 +298,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       });
 
       // outros usuários
+      const ocupacaoX: number[] = [];
       usuarios.forEach((u) => {
         if (u.nome_login === usuarioAnimando) return;
         const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
@@ -318,7 +320,10 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
           posX = fimDosCactos + 100;
         }
 
-        desenharJesusParado(ctx, posX, 130, u.nome_login);
+        desenharJesusParado(ctx, posX, 130);
+        const conflitos = ocupacaoX.filter((x) => Math.abs(x - posX) < 45).length;
+        ocupacaoX.push(posX);
+        desenharTagNome(ctx, posX + 8, 130, u.nome_login, conflitos * 18);
       });
 
       // física
@@ -334,7 +339,8 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         personagemX += 2;
       }
 
-      desenharJesusCorrendo(ctx, personagemX, personagemY, usuarioAnimando);
+      desenharJesusCorrendo(ctx, personagemX, personagemY);
+      desenharTagNome(ctx, personagemX + 8, personagemY, usuarioAnimando, 0);
 
       const passouTodosOsCactos = cactos.every((c) => c.x + 10 < personagemX);
       if (personagemX >= destinoX && personagemY === 130 && passouTodosOsCactos) {
@@ -354,15 +360,45 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     paginasInseridas,
     desenharJesusParado,
     desenharJesusCorrendo,
+    desenharTagNome,
   ]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={styles["game-canvas"]}
-      width={800}
-      height={200}
-    />
+    <div className={styles.gameWrapper}>
+      <div className={styles.gameLegend}>
+        Progresso do desafio em {unidade}
+      </div>
+      <canvas
+        ref={canvasRef}
+        className={styles["game-canvas"]}
+        width={800}
+        height={220}
+      />
+      <div className={styles.progressoLista}>
+        {usuarios
+          .slice()
+          .sort((a, b) => b.paginas_lidas - a.paginas_lidas)
+          .map((u) => {
+            const total = Number(u.total_paginas) || 1;
+            const lido = Number(u.paginas_lidas) || 0;
+            const percentual = Math.min(100, Math.round((lido / total) * 100));
+            return (
+              <div className={styles.progressoItem} key={u.nome_login}>
+                <div className={styles.progressoHeader}>
+                  <strong>{u.nome_login}</strong>
+                  <span>
+                    {lido}/{total} {unidade}
+                  </span>
+                </div>
+                <div className={styles.barraBg}>
+                  <div className={styles.barraFill} style={{ width: `${percentual}%` }} />
+                </div>
+                <div className={styles.percentual}>{percentual}%</div>
+              </div>
+            );
+          })}
+      </div>
+    </div>
   );
 };
 

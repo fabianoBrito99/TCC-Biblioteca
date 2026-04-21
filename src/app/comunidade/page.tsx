@@ -6,8 +6,11 @@ import styles from "@/app/comunidade/comunidade.module.css";
 import Input from "@/componentes/forms/input";
 import Button from "@/componentes/forms/button";
 
+const API_BASE = "https://api.helenaramazzotte.online/api";
+
 interface Comunidade {
   id_comunidade: number;
+  slug: string;
   nome: string;
   descricao: string;
   tipo: string;
@@ -25,20 +28,23 @@ export default function ComunidadeListPage() {
   const [objetivo, ] = useState("");
   const [tipo, setTipo] = useState("publica");
   const [userId, setUserId] = useState<number | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
   // Obtém o ID do usuário logado do localStorage
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
+    const storedToken = localStorage.getItem("token");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
     }
+    setToken(storedToken);
   }, []);
 
   // Função para carregar comunidades e status do usuário
   const fetchComunidades = useCallback(async () => {
     try {
-      const response = await fetch("/api/comunidade");
+      const response = await fetch(`${API_BASE}/comunidade`);
       const data = await response.json();
 
       if (Array.isArray(data)) {
@@ -48,7 +54,7 @@ export default function ComunidadeListPage() {
           const statuses: StatusUsuario = {};
           for (const comunidade of data) {
             const statusResponse = await fetch(
-              `https://api.helenaramazzotte.online/api/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
+              `${API_BASE}/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
             );
             const statusData = await statusResponse.json();
             statuses[comunidade.id_comunidade] = statusData.status;
@@ -82,24 +88,20 @@ export default function ComunidadeListPage() {
       descricao,
       objetivo,
       tipo,
-      id_adm: userId,
     };
 
-    const response = await fetch("/api/comunidade", {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE}/comunidade`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(comunidadeData),
     });
 
     if (response.ok) {
-      const { id } = await response.json();
-
-      // Adicionar automaticamente o administrador à comunidade
-      await fetch(`/api/comunidade/${id}/entrar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fk_id_usuario: userId, tipo: "publica" }),
-      });
+      const { id, slug } = await response.json();
 
       alert("Comunidade criada com sucesso!");
       setStatusUsuario((prev) => ({
@@ -107,6 +109,7 @@ export default function ComunidadeListPage() {
         [id]: "aceito",
       }));
       fetchComunidades();
+      router.push(`/comunidade/${slug || `comunidade-${id}`}`);
     } else {
       alert("Erro ao criar a comunidade");
     }
@@ -122,7 +125,10 @@ export default function ComunidadeListPage() {
     const status = statusUsuario[comunidadeId] || "nao_inscrito";
 
     if (status === "aceito") {
-      router.push(`/comunidade/${comunidadeId}`);
+      const comunidade = comunidades.find((c) => c.id_comunidade === comunidadeId);
+      if (comunidade?.slug) {
+        router.push(`/comunidade/${comunidade.slug}`);
+      }
       return;
     }
 
@@ -131,14 +137,21 @@ export default function ComunidadeListPage() {
       return;
     }
 
-    await fetch(`/api/comunidade/${comunidadeId}/entrar`, {
+    const token = localStorage.getItem("token");
+    await fetch(`${API_BASE}/comunidade/${comunidadeId}/entrar`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fk_id_usuario: userId, tipo }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ tipo }),
     });
 
     if (tipo === "publica") {
-      router.push(`/comunidade/${comunidadeId}`);
+      const comunidade = comunidades.find((c) => c.id_comunidade === comunidadeId);
+      if (comunidade?.slug) {
+        router.push(`/comunidade/${comunidade.slug}`);
+      }
       setStatusUsuario((prev) => ({
         ...prev,
         [comunidadeId]: "aceito",
@@ -151,6 +164,31 @@ export default function ComunidadeListPage() {
       }));
     }
   };
+
+  const handleSairDaComunidade = async (comunidadeId: number) => {
+    if (!token) return;
+    const confirmou = window.confirm("Deseja sair desta comunidade?");
+    if (!confirmou) return;
+
+    const resp = await fetch(`${API_BASE}/comunidade/${comunidadeId}/sair`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      alert(data.error || "Não foi possível sair da comunidade.");
+      return;
+    }
+    await fetchComunidades();
+    alert("Você saiu da comunidade.");
+  };
+
+  const minhasComunidades = comunidades.filter(
+    (c) => statusUsuario[c.id_comunidade] === "aceito"
+  );
+  const outrasComunidades = comunidades.filter(
+    (c) => statusUsuario[c.id_comunidade] !== "aceito"
+  );
 
   return (
     <div className={styles.container}>
@@ -180,12 +218,35 @@ export default function ComunidadeListPage() {
         </form>
       </div>
       <div>
-      <h1 className={styles.titleCom}>Comunidades</h1>
+        <h1 className={styles.titleCom}>Minhas Comunidades</h1>
+      </div>
+      <div className={styles.listaComunidade}>
+        {minhasComunidades.length === 0 && <p>Você ainda não participa de nenhuma comunidade.</p>}
+        {minhasComunidades.map((comunidade) => {
+          return (
+            <div key={comunidade.id_comunidade} className={styles.comunidadeCard}>
+              <h2>{comunidade.nome}</h2>
+              <p>{comunidade.descricao}</p>
+              <button onClick={() => handleEntrar(comunidade.id_comunidade, comunidade.tipo)}>
+                Acessar
+              </button>
+              <button
+                className={styles.sairComunidadeBtn}
+                onClick={() => handleSairDaComunidade(comunidade.id_comunidade)}
+              >
+                Sair da comunidade
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div>
+        <h1 className={styles.titleCom}>Outras Comunidades</h1>
       </div>
 
       <div className={styles.listaComunidade}>
-       
-        {comunidades.map((comunidade) => {
+        {outrasComunidades.map((comunidade) => {
           const status = statusUsuario[comunidade.id_comunidade] || "nao_inscrito";
 
           return (

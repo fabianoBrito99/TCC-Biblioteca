@@ -36,6 +36,75 @@ function avaliarSenha(pwd: string) {
   return { forte, regras };
 }
 
+const FOTO_MAX_BYTES = 350 * 1024; // 350 KB (sem base64)
+const FOTO_MAX_DIM = 1024;
+const LIMITE_FOTO_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+
+const loadImageFromFile = (file: File): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Não foi possível carregar a imagem."));
+    };
+    img.src = url;
+  });
+
+const canvasToBlob = (
+  canvas: HTMLCanvasElement,
+  quality: number
+): Promise<Blob> =>
+  new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Falha ao converter imagem."));
+          return;
+        }
+        resolve(blob);
+      },
+      "image/jpeg",
+      quality
+    );
+  });
+
+async function compressFotoPerfilToDataUrl(file: File): Promise<string> {
+  const img = await loadImageFromFile(file);
+
+  const scale = Math.min(1, FOTO_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+  const width = Math.max(1, Math.round(img.naturalWidth * scale));
+  const height = Math.max(1, Math.round(img.naturalHeight * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Falha ao preparar compressão da imagem.");
+
+  ctx.drawImage(img, 0, 0, width, height);
+
+  let quality = 0.82;
+  let bestBlob = await canvasToBlob(canvas, quality);
+
+  while (bestBlob.size > FOTO_MAX_BYTES && quality >= 0.45) {
+    quality -= 0.08;
+    bestBlob = await canvasToBlob(canvas, quality);
+  }
+
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Falha ao gerar base64 da imagem."));
+    reader.readAsDataURL(bestBlob);
+  });
+}
+
 export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [activeTab, setActiveTab] = useState<"usuario" | "endereco">("usuario");
   const [username, setUsername] = useState("");
@@ -50,6 +119,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const [fotoPerfil, setFotoPerfil] = useState<File | null>(null);
   const [capaPreview, setCapaPreview] = useState<string | null>(null);
   const [fotoBase64, setFotoBase64] = useState<string | null>(null);
+  const [processandoFoto, setProcessandoFoto] = useState(false);
+  const [erroFotoLimite, setErroFotoLimite] = useState<string | null>(null);
   const [cep, setCep] = useState("");
   const [rua, setRua] = useState("");
   const [bairro, setBairro] = useState("");
@@ -67,14 +138,6 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
 
   useEffect(() => {
     if (fotoPerfil) {
-      const reader = new FileReader();
-      reader.onloadend = () => setFotoBase64(reader.result as string);
-      reader.readAsDataURL(fotoPerfil);
-    }
-  }, [fotoPerfil]);
-
-  useEffect(() => {
-    if (fotoPerfil) {
       const objectUrl = URL.createObjectURL(fotoPerfil);
       setCapaPreview(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
@@ -82,9 +145,35 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     setCapaPreview(null);
   }, [fotoPerfil]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setFotoPerfil(file);
+    if (!file) return;
+
+    if (file.size > LIMITE_FOTO_UPLOAD_BYTES) {
+      setErroFotoLimite(
+        "Troque a foto: essa é maior que o limite de 10MB."
+      );
+      setFotoPerfil(null);
+      setCapaPreview(null);
+      setFotoBase64(null);
+      setProcessandoFoto(false);
+      return;
+    }
+
+    setErroFotoLimite(null);
+    setFotoPerfil(file);
+    setProcessandoFoto(true);
+
+    try {
+      const compressed = await compressFotoPerfilToDataUrl(file);
+      setFotoBase64(compressed);
+    } catch (error) {
+      console.error("Erro ao processar foto de perfil:", error);
+      setFotoBase64(null);
+      alert("Não foi possível processar a foto. Tente outra imagem.");
+    } finally {
+      setProcessandoFoto(false);
+    }
   };
 
   const handleCepBlur = () => {
@@ -121,6 +210,14 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     }
     if (!fotoBase64) {
       alert("Por favor, selecione uma foto de perfil.");
+      return;
+    }
+    if (erroFotoLimite) {
+      alert("Troque a foto: essa é maior que o limite de 10MB.");
+      return;
+    }
+    if (processandoFoto) {
+      alert("Aguarde o processamento da foto terminar.");
       return;
     }
 
@@ -171,7 +268,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     ? "Senha forte ✅"
     : "A senha deve ter 8–64 caracteres, com minúsculas, MAIÚSCULAS, números e caractere especial.";
 
-  const botaoDesabilitado = !forte || !senhasBatem;
+  const botaoDesabilitado =
+    !forte || !senhasBatem || processandoFoto || !!erroFotoLimite;
 
   return (
     <div className={styles.viewport}>
@@ -409,6 +507,16 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                       accept="image/*"
                       onChange={handleFileChange}
                     />
+                    <p
+                      className={styles.senhasp}
+                      style={{
+                        color: erroFotoLimite ? "#c62828" : "#2e7d32",
+                      }}
+                    >
+                      {erroFotoLimite
+                        ? erroFotoLimite
+                        : "Tamanho máximo permitido: 10MB."}
+                    </p>
                     {capaPreview && (
                       <div className={styles.capaContainerLivro}>
                         <Image

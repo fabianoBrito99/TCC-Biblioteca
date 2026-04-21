@@ -1,0 +1,45 @@
+.wrap {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  background: #fdf8e2;
+  color: #2a2a3f;
+}
+
+.wrap h1 {
+  font-size: 3rem;
+  margin: 0 0 0.5rem;
+}
+
+.wrap p {
+  margin: 0.2rem 0;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.btn,
+.btnSecondary {
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.btn {
+  background: #3d5afe;
+  color: #fff;
+}
+
+.btnSecondary {
+  background: #e8ecff;
+  color: #2a2a3f;
+}

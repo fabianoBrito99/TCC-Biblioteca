@@ -1,231 +1,195 @@
-/* Botões */
-.botaoEnviarAvaliacao {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  width: 100%;
-}
-
-.botaoEnviarAvaliacao:hover {
-  background-color: #0056b3;
-}
-
-.curtirBtn {
-  font-size: 0.9rem;
-  cursor: pointer;
-  background: none;
-  border: none;
-  color: gray;
-  transition: color 0.3s, transform 0.2s;
-}
-
-.curtirBtn:hover {
-  transform: scale(1.05);
-}
-
-.curtirBtn.curtido {
-  color: red;
-}
-
-.curtirBtn.naoCurtido {
-  color: gray;
-}
-
-/* Respostas */
-.respostas {
-  margin-left: 20px;
-  border-left: 2px solid #ddd;
-  padding-left: 10px;
-  margin-top: 10px;
-}
-
-.resposta {
-  margin-top: 5px;
-}
-
-/* Tab Navigation */
-.tabContainer {
+.comentariosContainer {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  flex-direction: column;
+  height: clamp(360px, 62vh, 680px);
+  background: #fff;
+  border: 1px solid #e4e8fb;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.tabButton {
-  padding: 10px;
-  cursor: pointer;
-  border: none;
-  background-color: transparent;
-  font-weight: bold;
-  transition: color 0.3s, border-bottom 0.3s;
-}
-
-.tabButton:hover,
-.tabButton.active {
-  color: #007bff;
-  border-bottom: 2px solid #007bff;
-}
-
-/* Ajuste para data e botões de responder */
-.flexRes {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.responder {
-  background: none;
-  border: none;
-  color: #007bff;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.responder:hover {
-  text-decoration: underline;
+.mensagensArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
 }
 
 .comentariosFixo {
-  position: fixed;
-  bottom: 0px;
-  width: 14%;
-  z-index: 2;
+  position: relative;
+  background: #fff;
+  padding: 0.4rem;
+  border-top: 1px solid #e5e7f8;
+  z-index: 3;
 }
 
 .buttonEnviar {
-  position: fixed;
-  background: linear-gradient(
-    to left,
-    rgba(0, 110, 255, 0.507),
-    rgba(108, 105, 248, 0.856)
-  );
-  border-radius: 15px;
-  border: 2px solid #fff;
-  padding: 14px 27px;
-  bottom: 15px;
-  right: 5px;
-}
-.buttonEnviar:hover {
-  background: linear-gradient(
-    to left,
-    rgba(0, 110, 255, 0.678),
-    rgb(107, 105, 248)
-  );
-  border: 2px solid #0400ff;
-  border-color: rgba(4, 78, 175, 0.507);
-  box-shadow: 0 0 0 1px rgb(2, 67, 247);
-}
-
-
-
-/* Contêiner do comentário */
-.comentarioContainer {
-  position: relative;
-  display: flex;
-  justify-content: flex-start;
-  margin: 20px 55px;
-  gap: 5px;
-}
-
-/* Foto do usuário */
-.fotoUsuario {
-  position: relative;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  left: -80px;
-  top: -10px; /* Alinha a foto verticalmente */
-}
-
-/* Card do comentário */
-.cardComentario {
-  background-color: #f9f9f9;
+  margin-top: 0.3rem;
+  width: 100%;
+  border: none;
   border-radius: 10px;
-  padding: 15px;
-  position: relative;
-  max-width: 90%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-left: 5px solid #a4bbdf;
-  word-wrap: break-word;
-  flex-grow: 1;
-  
+  padding: 0.55rem;
+  background: linear-gradient(90deg, #3e66ff, #3f97ff);
 }
 
-/* Setinha do card (comentário de outro usuário) */
-.cardComentario::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: -15px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 15px 15px 20px 0;
-  border-color: transparent #a4bbdf transparent transparent;
+.replyingTag {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  background: #eef3ff;
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  margin-bottom: 0.3rem;
 }
 
-/* Nome do usuário */
-.nomeUsuario {
-  position: relative;
-  top: -40px;
-  left: -10px;
-  font-weight: bold;
-  font-size: 1rem;
-  color: #333;
+.replyingTag button {
+  border: none;
+  background: transparent;
+  color: #2d5bdb;
+  cursor: pointer;
 }
 
-/* Mensagem */
-.mensagem {
-  position: relative;
-  top: -30px;
-  text-align: start;
-  margin: 10px 0;
-  font-size: 0.9rem;
-  color: #555;
+.comentarioContainer {
+  display: flex;
+  margin: 0.6rem 0;
 }
 
-/* Data do comentário */
-.data {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  font-size: 0.8rem;
-  color: #999;
+.cardComentario {
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.65rem;
+  border: 1px solid #e3e7ff;
+  width: 100%;
 }
 
-/* Comentário do usuário logado */
 .usuarioLogado .cardComentario {
-  background-color: #e0f7fa;
-  border-right: 5px solid #75b8b0;
-  border-left: none;
-  margin-right: 10px;
-  margin-left: auto; 
+  background: #edf9ff;
+  border-color: #bee2f1;
 }
 
-/* Setinha do card (comentário do usuário logado) */
-.usuarioLogado .cardComentario::after {
-  content: "";
-  position: absolute;
-  top:10px; 
-  left: 225px; 
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 15px 0 15px 20px;
-  border-color: transparent transparent transparent #75b8b0;
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
-/* Foto do usuário logado */
-.usuarioLogado .fotoUsuario {
-  left: auto;
-  right: -120%;
+.fotoUsuario {
+  border-radius: 999px;
+  object-fit: cover;
 }
-.usuarioLogado .nomeUsuario{
-  left: 150px;
+
+.nomeUsuario {
+  font-weight: 700;
+}
+
+.mensagem {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+}
+
+.replyPreview {
+  border-left: 3px solid #5a7cff;
+  background: #eef3ff;
+  border-radius: 8px;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.82rem;
+  color: #2b3250;
+  margin-bottom: 0.4rem;
+}
+
+.comentarioFooter {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.data {
+  color: #6a708f;
+}
+
+.replyBtn,
+.seenBtn {
+  border: none;
+  background: #f2f4ff;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.seenAvatars {
+  display: inline-flex;
+}
+
+.seenAvatar {
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid #fff;
+  margin-left: -6px;
+}
+
+.seenAvatars .seenAvatar:first-child {
+  margin-left: 0;
+}
+
+.replyList {
+  margin-top: 0.55rem;
+  border-left: 2px solid #d6defd;
+  padding-left: 0.55rem;
+}
+
+.nested {
+  margin: 0.4rem 0 0.2rem;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  padding: 1rem;
+}
+
+.modalCard {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.8rem;
+}
+
+.seenList {
+  list-style: none;
+  margin: 0.6rem 0;
+  padding: 0;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.seenList li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0;
+}
+
+.closeModalBtn {
+  width: 100%;
+  border: none;
+  background: #3e66ff;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .comentariosContainer {
+    height: min(62vh, 520px);
+  }
 }

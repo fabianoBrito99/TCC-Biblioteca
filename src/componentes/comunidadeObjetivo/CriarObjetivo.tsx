@@ -5,16 +5,24 @@ import Button from "../forms/button";
 
 interface CriarObjetivoProps {
   comunidadeId: number;
+  onObjetivoCriado?: () => void;
 }
 
-const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
+type TipoMeta = "paginas" | "capitulos";
+
+const CriarObjetivo: React.FC<CriarObjetivoProps> = ({
+  comunidadeId,
+  onObjetivoCriado,
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const [totalPaginas, setTotalPaginas] = useState<number>(0);
+  const [tipoMeta, setTipoMeta] = useState<TipoMeta>("paginas");
+  const [totalMeta, setTotalMeta] = useState<number>(0);
   const [objetivoAtivo, setObjetivoAtivo] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
   // Verifica se já existe um objetivo ativo
   useEffect(() => {
@@ -41,19 +49,30 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
       return;
     }
 
+    if (totalMeta <= 0) {
+      alert("Informe uma meta maior que zero.");
+      return;
+    }
+
+    setSalvando(true);
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(
         "https://api.helenaramazzotte.online/api/comunidade/objetivo",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({
             fk_id_comunidade: comunidadeId,
             titulo,
             descricao,
             data_inicio: dataInicio,
             data_fim: dataFim,
-            total_paginas: totalPaginas,
+            total_paginas: totalMeta,
+            tipo_meta: tipoMeta,
           }),
         }
       );
@@ -67,8 +86,11 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
       alert("Objetivo criado com sucesso!");
       setModalOpen(false);
       setObjetivoAtivo(true);
+      onObjetivoCriado?.();
     } catch (error) {
       console.error("Erro ao criar objetivo:", error);
+    } finally {
+      setSalvando(false);
     }
   };
 
@@ -117,14 +139,28 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({ comunidadeId }) => {
                 onChange={(e) => setDataFim(e.target.value)}
                 required
               />
+              <label className={styles.rotuloMeta} htmlFor="tipo-meta">
+                Tipo de Meta
+              </label>
+              <select
+                id="tipo-meta"
+                className={styles.selectMeta}
+                value={tipoMeta}
+                onChange={(e) => setTipoMeta(e.target.value as TipoMeta)}
+              >
+                <option value="paginas">Páginas</option>
+                <option value="capitulos">Capítulos</option>
+              </select>
               <Input
-                label="Total de Páginas"
+                label={`Total de ${tipoMeta === "capitulos" ? "Capítulos" : "Páginas"}`}
                 type="number"
-                value={totalPaginas}
-                onChange={(e) => setTotalPaginas(Number(e.target.value))}
+                value={totalMeta}
+                onChange={(e) => setTotalMeta(Number(e.target.value))}
                 required
               />
-              <Button type="submit">Salvar</Button>
+              <Button type="submit" disabled={salvando}>
+                {salvando ? "Salvando..." : "Salvar"}
+              </Button>
               <div className={styles.fechar}>
                 <Button type="button" onClick={() => setModalOpen(false)}>
                   Fechar

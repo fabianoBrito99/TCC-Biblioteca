@@ -26,6 +26,67 @@ async function salvarImagemNoDisco(file, tipo = "capas") {
   return `${IMAGES_BASE_URL}/${tipo}/${nome}`;
 }
 
+function garantirCategoriaComCor(categoriaPrincipal, corCima, corBaixo, cb) {
+  const nome = String(categoriaPrincipal || "").trim();
+  if (!nome) return cb(new Error("Categoria principal não informada"));
+
+  connection.query(
+    `SELECT id_categoria
+     FROM Categoria
+     WHERE categoria_principal = ?
+     ORDER BY id_categoria ASC`,
+    [nome],
+    (errSel, rows) => {
+      if (errSel) return cb(errSel);
+
+      if (!rows || rows.length === 0) {
+        connection.query(
+          `INSERT INTO Categoria (categoria_principal, cor_cima, cor_baixo) VALUES (?, ?, ?)`,
+          [nome, corCima, corBaixo],
+          (errIns, insRes) => {
+            if (errIns) return cb(errIns);
+            return cb(null, insRes.insertId);
+          }
+        );
+        return;
+      }
+
+      const keepId = rows[0].id_categoria;
+      const duplicados = rows.slice(1).map((r) => r.id_categoria);
+
+      connection.query(
+        `UPDATE Categoria
+         SET cor_cima = ?, cor_baixo = ?
+         WHERE id_categoria = ?`,
+        [corCima, corBaixo, keepId],
+        (errUpd) => {
+          if (errUpd) return cb(errUpd);
+
+          if (!duplicados.length) return cb(null, keepId);
+
+          connection.query(
+            `UPDATE Livro_Categoria
+             SET fk_id_categoria = ?
+             WHERE fk_id_categoria IN (?)`,
+            [keepId, duplicados],
+            (errRelink) => {
+              if (errRelink) return cb(errRelink);
+              connection.query(
+                `DELETE FROM Categoria WHERE id_categoria IN (?)`,
+                [duplicados],
+                (errDel) => {
+                  if (errDel) return cb(errDel);
+                  return cb(null, keepId);
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
 
 function show(request, response) {
   const codigo = request.params.codigo;
@@ -38,7 +99,6 @@ function show(request, response) {
             E.quantidade_estoque, 
             Ed.nome_editora,
             GROUP_CONCAT(DISTINCT C.categoria_principal ORDER BY C.categoria_principal SEPARATOR '||') AS categorias,
-            GROUP_CONCAT(DISTINCT S.nome_subcategoria   ORDER BY S.nome_subcategoria   SEPARATOR '||') AS subcategorias,
             GROUP_CONCAT(DISTINCT A.nome                ORDER BY A.nome                SEPARATOR '||') AS autores,
             COALESCE(R.media_avaliacoes, 0) AS media_avaliacoes
      FROM Livro L
@@ -46,7 +106,6 @@ function show(request, response) {
      LEFT JOIN Editora         Ed ON L.fk_id_editora   = Ed.id_editora
      LEFT JOIN Livro_Categoria LC ON L.id_livro        = LC.fk_id_livros
      LEFT JOIN Categoria       C  ON LC.fk_id_categoria= C.id_categoria
-     LEFT JOIN Subcategoria    S  ON S.fk_id_categoria = C.id_categoria
      LEFT JOIN Autor_Livros    AL ON L.id_livro        = AL.fk_id_livros
      LEFT JOIN Autor           A  ON AL.fk_id_autor    = A.id_autor
      LEFT JOIN (
@@ -68,7 +127,6 @@ function show(request, response) {
 
       const row = resultado[0];
       const categoriasArr    = row.categorias    ? row.categorias.split("||").filter(Boolean)    : [];
-      const subcategoriasArr = row.subcategorias ? row.subcategorias.split("||").filter(Boolean) : [];
       const autoresArr       = row.autores       ? row.autores.split("||").filter(Boolean)       : [];
       const capaUrl          = row.foto_capa_url || null;
 
@@ -79,7 +137,7 @@ function show(request, response) {
         foto_capa: capaUrl,
         capa: capaUrl,
         categorias: categoriasArr,
-        subcategorias: subcategoriasArr,
+        subcategorias: [],
         autores: autoresArr,
       };
 
@@ -103,7 +161,6 @@ SELECT
 
   -- agrega sem duplicar
   GROUP_CONCAT(DISTINCT C.categoria_principal ORDER BY C.categoria_principal SEPARATOR '||') AS categorias,
-  GROUP_CONCAT(DISTINCT S.nome_subcategoria   ORDER BY S.nome_subcategoria   SEPARATOR '||') AS subcategorias,
   GROUP_CONCAT(DISTINCT A.nome                ORDER BY A.nome                SEPARATOR '||') AS autores,
 
   -- média por livro
@@ -114,7 +171,6 @@ LEFT JOIN Estoque         E  ON L.fk_id_estoque   = E.id_estoque
 LEFT JOIN Editora         Ed ON L.fk_id_editora   = Ed.id_editora
 LEFT JOIN Livro_Categoria LC ON L.id_livro        = LC.fk_id_livros
 LEFT JOIN Categoria       C  ON LC.fk_id_categoria= C.id_categoria
-LEFT JOIN Subcategoria    S  ON S.fk_id_categoria = C.id_categoria
 LEFT JOIN Autor_Livros    AL ON L.id_livro        = AL.fk_id_livros
 LEFT JOIN Autor           A  ON AL.fk_id_autor    = A.id_autor
 
@@ -139,7 +195,6 @@ ORDER BY L.id_livro DESC;
 
     const livros = resultado.map((row) => {
       const categoriasArr   = row.categorias   ? row.categorias.split("||").filter(Boolean)   : [];
-      const subcategoriasArr= row.subcategorias? row.subcategorias.split("||").filter(Boolean): [];
       const autoresArr      = row.autores      ? row.autores.split("||").filter(Boolean)      : [];
 
       const capaUrl = row.foto_capa_url || null;
@@ -154,7 +209,7 @@ ORDER BY L.id_livro DESC;
 
         // também enviamos os arrays completos
         categorias: categoriasArr,
-        subcategorias: subcategoriasArr,
+        subcategorias: [],
         autores: autoresArr,
       };
     });
@@ -172,7 +227,6 @@ async function create(request, response) {
       quantidade_paginas,
       editora,                 // apenas nome
       categoria_principal,
-      subcategorias,
       quantidade_estoque,
       cor_cima,
       cor_baixo,
@@ -184,14 +238,6 @@ async function create(request, response) {
       ? autores
       : Object.keys(request.body)
           .filter((k) => k.startsWith("autores["))
-          .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)))
-          .map((k) => request.body[k])
-          .filter(Boolean);
-
-    const subcatsArray = Array.isArray(subcategorias)
-      ? subcategorias
-      : Object.keys(request.body)
-          .filter((k) => k.startsWith("subcategorias["))
           .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)))
           .map((k) => request.body[k])
           .filter(Boolean);
@@ -293,32 +339,15 @@ async function create(request, response) {
               }
 
               // 5) Categoria principal + subcategorias
-              connection.query(
-                `SELECT id_categoria FROM Categoria WHERE categoria_principal = ? LIMIT 1`,
-                [categoria_principal],
-                (errCat, catRows) => {
-                  if (errCat) return response.status(500).json({ erro: "Erro ao buscar categoria" });
-
-                  const afterGotCategoria = (fk_id_categoria) => {
-                    // Subcategorias (apenas texto ligado à categoria)
-                    inserirSubcategorias(subcatsArray, fk_id_categoria);
-
-                    // Vincula livro à categoria principal
-                    associarCategoriaAoLivro(livroId, fk_id_categoria, response);
-                  };
-
-                  if (!catRows || catRows.length === 0) {
-                    connection.query(
-                      `INSERT INTO Categoria (categoria_principal, cor_cima, cor_baixo) VALUES (?, ?, ?)`,
-                      [categoria_principal, cor_cima, cor_baixo],
-                      (errNewCat, newCatRes) => {
-                        if (errNewCat) return response.status(500).json({ erro: "Erro ao criar categoria" });
-                        afterGotCategoria(newCatRes.insertId);
-                      }
-                    );
-                  } else {
-                    afterGotCategoria(catRows[0].id_categoria);
+              garantirCategoriaComCor(
+                categoria_principal,
+                cor_cima,
+                cor_baixo,
+                (errCat, fk_id_categoria) => {
+                  if (errCat || !fk_id_categoria) {
+                    return response.status(500).json({ erro: "Erro ao criar/atualizar categoria" });
                   }
+                  associarCategoriaAoLivro(livroId, fk_id_categoria, response);
                 }
               );
             }
@@ -332,37 +361,6 @@ async function create(request, response) {
   }
 }
 
-
-function inserirSubcategorias(subcategorias, fk_id_categoria) {
-  if (Array.isArray(subcategorias) && subcategorias.length > 0) {
-    subcategorias.forEach((subcategoria) => {
-      connection.query(
-        `INSERT INTO Subcategoria (nome_subcategoria, fk_id_categoria) VALUES (?, ?)`,
-        [subcategoria, fk_id_categoria],
-        (err) => {
-          if (err) console.error("Erro ao adicionar subcategoria:", err);
-          else console.log("Subcategoria adicionada:", subcategoria);
-        }
-      );
-    });
-  }
-}
-
-
-function inserirSubcategorias(subcategorias, fk_id_categoria) {
-  if (Array.isArray(subcategorias) && subcategorias.length > 0) {
-    subcategorias.forEach((subcategoria) => {
-      connection.query(
-        `INSERT INTO Subcategoria (nome_subcategoria, fk_id_categoria) VALUES (?, ?)`,
-        [subcategoria, fk_id_categoria],
-        (err) => {
-          if (err) console.error("Erro ao adicionar subcategoria:", err);
-          else console.log("Subcategoria adicionada:", subcategoria);
-        }
-      );
-    });
-  }
-}
 
 function associarAutorAoLivro(livroId, autorId) {
   connection.query(
@@ -738,7 +736,6 @@ async function update(request, response) {
       quantidade_paginas,
       editora,                 // apenas nome
       categoria_principal,
-      subcategorias,
       quantidade_estoque,
       cor_cima,
       cor_baixo,
@@ -750,14 +747,6 @@ async function update(request, response) {
       ? autores
       : Object.keys(request.body)
           .filter((k) => k.startsWith("autores["))
-          .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)))
-          .map((k) => request.body[k])
-          .filter(Boolean);
-
-    const subcatsArray = Array.isArray(subcategorias)
-      ? subcategorias
-      : Object.keys(request.body)
-          .filter((k) => k.startsWith("subcategorias["))
           .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)))
           .map((k) => request.body[k])
           .filter(Boolean);
@@ -812,25 +801,6 @@ async function update(request, response) {
             );
           });
 
-        // 3) Categoria principal (busca/insere)
-        const ensureCategoria = () =>
-          new Promise((resolve, reject) => {
-            if (!categoria_principal) return reject(new Error("Categoria principal não informada"));
-            connection.query(
-              `SELECT id_categoria FROM Categoria WHERE categoria_principal = ? LIMIT 1`,
-              [categoria_principal],
-              (e1, r1) => {
-                if (e1) return reject(e1);
-                if (r1 && r1.length) return resolve(r1[0].id_categoria);
-                connection.query(
-                  `INSERT INTO Categoria (categoria_principal, cor_cima, cor_baixo) VALUES (?, ?, ?)`,
-                  [categoria_principal, cor_cima, cor_baixo],
-                  (e2, r2) => (e2 ? reject(e2) : resolve(r2.insertId))
-                );
-              }
-            );
-          });
-
         // 4) Utilitários de query (prometizados)
         const q = (sql, params=[]) =>
           new Promise((resolve, reject) =>
@@ -839,7 +809,12 @@ async function update(request, response) {
 
         try {
           const fk_id_editora = await ensureEditora();
-          const fk_id_categoria = await ensureCategoria();
+          const fk_id_categoria = await new Promise((resolve, reject) => {
+            garantirCategoriaComCor(categoria_principal, cor_cima, cor_baixo, (errCat, idCat) => {
+              if (errCat || !idCat) return reject(errCat || new Error("Erro de categoria"));
+              resolve(idCat);
+            });
+          });
 
           // 5) Atualiza os campos do Livro
           const anoPublicacaoFormatado = new Date(anoPublicacao || Date.now());
@@ -874,23 +849,7 @@ async function update(request, response) {
             [id, fk_id_categoria]
           );
 
-          // 8) Garante subcategorias existirem (ligadas à categoria) — sem apagar as antigas globais
-          for (const sub of subcatsArray) {
-            const nome = (sub || "").trim();
-            if (!nome) continue;
-            const existe = await q(
-              `SELECT id_subcategoria FROM Subcategoria WHERE nome_subcategoria = ? AND fk_id_categoria = ? LIMIT 1`,
-              [nome, fk_id_categoria]
-            );
-            if (!Array.isArray(existe) || existe.length === 0) {
-              await q(
-                `INSERT INTO Subcategoria (nome_subcategoria, fk_id_categoria) VALUES (?, ?)`,
-                [nome, fk_id_categoria]
-              );
-            }
-          }
-
-          // 9) Atualiza autores (recria vínculos)
+          // 8) Atualiza autores (recria vínculos)
           await q(`DELETE FROM Autor_Livros WHERE fk_id_livros = ?`, [id]);
           for (const autorNome of autoresArray) {
             const nome = (autorNome || "").trim();

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 import styles from "./usuarioDetalhes.module.css";
 import Image from "next/image";
+import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 
 
 interface Usuario {
@@ -19,9 +20,15 @@ export default function UsuarioDetalhes({
 }: {
   params: { id: string };
 }) {
+  const getAuthHeaders = (): HeadersInit => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState<boolean>(false);
   const [editando, setEditando] = useState<boolean>(false);
   const [novoTipoUsuario, setNovoTipoUsuario] = useState<string>("");
 
@@ -29,8 +36,15 @@ export default function UsuarioDetalhes({
     const fetchUsuario = async () => {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/usuario/${params.id}`
+          `https://api.helenaramazzotte.online/api/usuario/${params.id}`,
+          {
+            headers: getAuthHeaders(),
+          }
         );
+        if (response.status === 401 || response.status === 403) {
+          setForbidden(true);
+          return;
+        }
         if (!response.ok) {
           throw new Error("Erro ao buscar usuário");
         }
@@ -54,7 +68,10 @@ export default function UsuarioDetalhes({
         `https://api.helenaramazzotte.online/api/usuario/${usuario.id_usuario}/tipo`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({ tipo_usuario: novoTipoUsuario }),
         }
       );
@@ -73,6 +90,7 @@ export default function UsuarioDetalhes({
   };
 
   if (loading) return <div>Carregando dados do usuário...</div>;
+  if (forbidden) return <AcessoNegado />;
   if (error) return <div>{error}</div>;
 
   return (

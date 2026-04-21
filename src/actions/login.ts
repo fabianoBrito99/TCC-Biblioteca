@@ -4,7 +4,7 @@ import apiError from "@/functions/api-error";
 import { cookies } from "next/headers";
 
 export interface LoginResponse {
-  data: { id_usuario: string } | null;
+  data: { id_usuario: string; token: string } | null;
   ok: boolean;
   error: string;
 }
@@ -48,7 +48,11 @@ export default async function login(
       path: "/",
     });
 
-    return { data: { id_usuario: data.usuario.id_usuario }, ok: true, error: "" };
+    return {
+      data: { id_usuario: data.usuario.id_usuario, token: data.token },
+      ok: true,
+      error: "",
+    };
   } catch (error: unknown) {
     return apiError(error);
   }
