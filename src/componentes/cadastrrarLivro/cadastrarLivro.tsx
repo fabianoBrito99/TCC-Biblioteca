@@ -21,8 +21,50 @@ type Categoria = {
   cor_baixo: string;
 };
 
+type SearchMode = "title" | "author" | "isbn";
+
+type ExternalBookSuggestion = {
+  id: string;
+  source: "google" | "openlibrary" | "gutendex";
+  title: string;
+  description?: string;
+  publishedYear?: string;
+  pageCount?: number;
+  authors: string[];
+  publisher?: string;
+  coverUrl?: string;
+  isbn?: string;
+};
+
+const CHRISTIAN_HINTS = [
+  "cpad",
+  "editora vida",
+  "vida",
+  "graca",
+  "graça",
+  "orvalho",
+  "hagnos",
+  "fiel",
+  "betania",
+  "bethania",
+  "mundo cristao",
+  "mundo cristão",
+  "shedd",
+  "bv books",
+  "central gospel",
+  "evangel",
+  "igreja",
+  "teologia",
+  "devocional",
+  "biblia",
+  "bíblia",
+  "crist",
+  "pastor",
+  "discipulado",
+];
+
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
-const LAST_BOOK_NAME_KEY = "last_book_name_after_save";
+const LAST_CATEGORY_KEY = "last_book_category_after_save";
 
 export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) {
   // ==========================
@@ -32,7 +74,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   const [descricao, setDescricao] = useState<string>("");
   const [anoPublicacao, setAnoPublicacao] = useState<string>("");
   const [quantidade_paginas, setQuantidadePaginas] = useState<string>("");
-  const [quantidade_estoque, setQuantidadeEstoque] = useState<string>("");
+  const [quantidade_estoque, setQuantidadeEstoque] = useState<string>("1");
 
   const [categoria, setCategoria] = useState<string>("");
 
@@ -57,6 +99,10 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   // Erros do form (ex: capa > 10MB)
   const [formError, setFormError] = useState<string | null>(null);
   const [formMsg, setFormMsg] = useState<string>("");
+  const [bookSuggestions, setBookSuggestions] = useState<ExternalBookSuggestion[]>([]);
+  const [showBookSuggestions, setShowBookSuggestions] = useState<boolean>(false);
+  const [bookLookupLoading, setBookLookupLoading] = useState<boolean>(false);
+  const [bookLookupMsg, setBookLookupMsg] = useState<string>("");
 
   // ==========================
   // REFS IMPORTANTES
@@ -122,9 +168,9 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
   // ==========================
   useEffect(() => {
     try {
-      const lastName = sessionStorage.getItem(LAST_BOOK_NAME_KEY);
-      if (lastName) {
-        setNomeLivro(lastName);
+      const lastCategory = sessionStorage.getItem(LAST_CATEGORY_KEY);
+      if (lastCategory) {
+        setCategoria(lastCategory);
       }
     } catch {
       // noop
@@ -147,6 +193,7 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
         setCategoriaSugestoes(categorias);
         setAutorSugestoes(autoresLista);
         setEditoraSugestoes(editorasApi.map((e) => e.nome_editora));
+
       } catch (error) {
         console.error("Erro ao buscar sugestões:", error);
       }
@@ -154,6 +201,231 @@ export default function CadastrarLivro({ onToggle }: { onToggle?: () => void }) 
 
     void fetchSuggestions();
   }, []);
+
+  useEffect(() => {
+    if (!categoria || categoriaSugestoes.length === 0) return;
+    const selecionada = categoriaSugestoes.find((c) => c.categoria_principal === categoria);
+    if (!selecionada) return;
+    setCorCima(selecionada.cor_cima);
+    setCorBaixo(selecionada.cor_baixo);
+  }, [categoria, categoriaSugestoes]);
+
+  useEffect(() => {
+    const query = normalizeSpaces(nomeLivro);
+    if (query.length < 3) {
+      setBookSuggestions([]);
+      setBookLookupLoading(false);
+      setBookLookupMsg("");
+      return;
+    }
+
+    const controller = new AbortController();
+    const { mode, value } = getSearchMode(query);
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setBookLookupLoading(true);
+        setBookLookupMsg("Buscando sugestões...");
+        try {
+          const googleQueries = new Set<string>();
+          if (mode === "isbn") {
+            googleQueries.add(`isbn:${value}`);
+          } else if (mode === "author") {
+            googleQueries.add(`inauthor:${value}`);
+            googleQueries.add(`${value} cristão`);
+            googleQueries.add(`${value} inpublisher:cpad`);
+            googleQueries.add(`${value} inpublisher:\"editora vida\"`);
+          } else {
+            googleQueries.add(`intitle:${value}`);
+            googleQueries.add(`\"${value}\"`);
+            googleQueries.add(`${value} cristão`);
+            googleQueries.add(`${value} inpublisher:cpad`);
+            googleQueries.add(`${value} inpublisher:\"editora vida\"`);
+            googleQueries.add(`${value} inpublisher:graca`);
+            googleQueries.add(`${value} inpublisher:orvalho`);
+            googleQueries.add(`${value} subject:christian`);
+            googleQueries.add(`${value} subject:religion`);
+          }
+
+          const googleRequests = Array.from(googleQueries)
+            .slice(0, 6)
+            .map((q) =>
+              fetch(
+                `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
+                  q
+                )}&maxResults=6&langRestrict=pt&printType=books&orderBy=relevance`,
+                { signal: controller.signal }
+              )
+            );
+
+          const openParams = new URLSearchParams();
+          openParams.set("limit", "12");
+          openParams.set("language", "por");
+          if (mode === "isbn") openParams.set("isbn", value);
+          if (mode === "author") openParams.set("author", value);
+          if (mode === "title") openParams.set("title", value);
+          const openUrl = `https://openlibrary.org/search.json?${openParams.toString()}`;
+
+          const gutendexUrl =
+            mode === "isbn"
+              ? ""
+              : `https://gutendex.com/books?search=${encodeURIComponent(value)}`;
+
+          const [googleSettled, openResp, gutendexResp] = await Promise.all([
+            Promise.allSettled(googleRequests),
+            fetch(openUrl, { signal: controller.signal }),
+            gutendexUrl
+              ? fetch(gutendexUrl, { signal: controller.signal })
+              : Promise.resolve(null as Response | null),
+          ]);
+
+          const external: ExternalBookSuggestion[] = [];
+
+          for (const settled of googleSettled) {
+            if (settled.status !== "fulfilled" || !settled.value.ok) continue;
+            const googleData = (await settled.value.json()) as {
+              items?: Array<{
+                id: string;
+                volumeInfo?: {
+                  title?: string;
+                  description?: string;
+                  publishedDate?: string;
+                  pageCount?: number;
+                  authors?: string[];
+                  publisher?: string;
+                  imageLinks?: { thumbnail?: string; small?: string; smallThumbnail?: string };
+                  industryIdentifiers?: Array<{ type?: string; identifier?: string }>;
+                };
+              }>;
+            };
+            for (const item of googleData.items ?? []) {
+              const info = item.volumeInfo ?? {};
+              const title = normalizeSpaces(info.title || "");
+              if (!title) continue;
+              const cover =
+                info.imageLinks?.thumbnail || info.imageLinks?.small || info.imageLinks?.smallThumbnail || undefined;
+              const isbn = info.industryIdentifiers?.find((id) => /isbn/i.test(id.type || ""))?.identifier;
+              external.push({
+                id: `g-${item.id}`,
+                source: "google",
+                title,
+                description: info.description ? sanitizeHtml(info.description) : undefined,
+                publishedYear: normalizeYear(info.publishedDate),
+                pageCount: info.pageCount,
+                authors: uniqueNames((info.authors ?? []).map((a) => normalizeSpaces(a))),
+                publisher: normalizeSpaces(info.publisher || "") || undefined,
+                coverUrl: cover ? cover.replace("http://", "https://") : undefined,
+                isbn: isbn ? normalizeSpaces(isbn) : undefined,
+              });
+            }
+          }
+
+          if (openResp.ok) {
+            const openData = (await openResp.json()) as {
+              docs?: Array<{
+                key?: string;
+                title?: string;
+                first_sentence?: string | { value?: string };
+                first_publish_year?: number;
+                number_of_pages_median?: number;
+                author_name?: string[];
+                publisher?: string[];
+                cover_i?: number;
+                isbn?: string[];
+              }>;
+            };
+            for (const [idx, doc] of (openData.docs ?? []).entries()) {
+              const title = normalizeSpaces(doc.title || "");
+              if (!title) continue;
+              const firstSentence =
+                typeof doc.first_sentence === "string"
+                  ? doc.first_sentence
+                  : normalizeSpaces(doc.first_sentence?.value || "");
+              external.push({
+                id: `ol-${doc.key || idx}`,
+                source: "openlibrary",
+                title,
+                description: firstSentence ? sanitizeHtml(firstSentence) : undefined,
+                publishedYear: doc.first_publish_year ? String(doc.first_publish_year) : undefined,
+                pageCount: doc.number_of_pages_median ?? undefined,
+                authors: uniqueNames((doc.author_name ?? []).map((a) => normalizeSpaces(a))),
+                publisher: normalizeSpaces(doc.publisher?.[0] || "") || undefined,
+                coverUrl: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : undefined,
+                isbn: doc.isbn?.[0] ? normalizeSpaces(doc.isbn[0]) : undefined,
+              });
+            }
+          }
+
+          if (gutendexResp && gutendexResp.ok) {
+            const gutData = (await gutendexResp.json()) as {
+              results?: Array<{
+                id: number;
+                title?: string;
+                languages?: string[];
+                authors?: Array<{ name?: string }>;
+                formats?: Record<string, string>;
+                subjects?: string[];
+              }>;
+            };
+            for (const result of gutData.results ?? []) {
+              const title = normalizeSpaces(result.title || "");
+              if (!title) continue;
+              const langs = result.languages ?? [];
+              if (langs.length > 0 && !langs.includes("pt")) continue;
+              external.push({
+                id: `gtx-${result.id}`,
+                source: "gutendex",
+                title,
+                description: normalizeSpaces((result.subjects ?? []).slice(0, 2).join(" • ")) || undefined,
+                authors: uniqueNames((result.authors ?? []).map((a) => normalizeSpaces(a.name || ""))),
+                coverUrl: result.formats?.["image/jpeg"] || result.formats?.["image/png"] || undefined,
+              });
+            }
+          }
+
+          const dedup: ExternalBookSuggestion[] = [];
+          const seen = new Set<string>();
+          for (const item of external) {
+            const signature = [
+              removeDiacritics(item.title.toLowerCase()),
+              removeDiacritics((item.authors[0] || "").toLowerCase()),
+              item.publishedYear || "",
+            ].join("|");
+            if (seen.has(signature)) continue;
+            seen.add(signature);
+            dedup.push(item);
+          }
+
+          const strict = dedup.filter((item) => isRelevantSuggestion(mode, value, item));
+          const relaxed =
+            strict.length >= 4
+              ? strict
+              : dedup.filter((item) => isRelevantSuggestionRelaxed(mode, value, item));
+
+          relaxed.sort((a, b) => suggestionScore(mode, value, b) - suggestionScore(mode, value, a));
+          const finalList = relaxed.slice(0, 8);
+          setBookSuggestions(finalList);
+          setShowBookSuggestions(true);
+          setBookLookupMsg(finalList.length ? `Sugestões encontradas (${finalList.length}).` : "Sem sugestões.");
+        } catch (error) {
+          if ((error as { name?: string })?.name !== "AbortError") {
+            console.error("Erro na busca de livros:", error);
+            setBookSuggestions([]);
+            setShowBookSuggestions(false);
+            setBookLookupMsg("Falha ao buscar sugestões.");
+          }
+        } finally {
+          setBookLookupLoading(false);
+        }
+      })();
+    }, 180);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nomeLivro]);
 
   // Preview da capa final
   useEffect(() => {
@@ -196,6 +468,123 @@ const isChromeIOS = (): boolean => {
   const ua = navigator.userAgent || "";
   return /CriOS/i.test(ua);
 };
+
+  const normalizeSpaces = (value: string): string => value.replace(/\s+/g, " ").trim();
+  const removeDiacritics = (value: string): string =>
+    value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const sanitizeHtml = (value: string): string =>
+    value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+  const normalizeYear = (value?: string): string | undefined => {
+    if (!value) return undefined;
+    const match = value.match(/\d{4}/);
+    return match ? match[0] : undefined;
+  };
+
+  const tokenize = (value: string): string[] =>
+    removeDiacritics(normalizeSpaces(value).toLowerCase())
+      .split(/[^a-z0-9]+/g)
+      .filter((t) => t.length >= 3);
+
+  const getSearchMode = (raw: string): { mode: SearchMode; value: string } => {
+    const q = normalizeSpaces(raw);
+    if (/^autor:/i.test(q)) {
+      return { mode: "author", value: normalizeSpaces(q.replace(/^autor:/i, "")) };
+    }
+    const cleanIsbn = q.replace(/[^0-9Xx]/g, "");
+    if (cleanIsbn.length === 10 || cleanIsbn.length === 13) {
+      return { mode: "isbn", value: cleanIsbn };
+    }
+    return { mode: "title", value: q };
+  };
+
+  const preferInternalName = (raw: string, internalList: string[]): string => {
+    const target = normalizeSpaces(raw).toLowerCase();
+    if (!target) return "";
+    const found = internalList.find((item) => normalizeSpaces(item).toLowerCase() === target);
+    return found ?? normalizeSpaces(raw);
+  };
+
+  const uniqueNames = (list: string[]): string[] => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const item of list) {
+      const key = removeDiacritics(normalizeSpaces(item).toLowerCase());
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(normalizeSpaces(item));
+    }
+    return out;
+  };
+
+  const relevanceRatio = (query: string, target: string): number => {
+    const q = tokenize(query);
+    if (q.length === 0) return 0;
+    const t = removeDiacritics(normalizeSpaces(target).toLowerCase());
+    const hits = q.filter((tk) => t.includes(tk)).length;
+    return hits / q.length;
+  };
+
+  const containsChristianHint = (value?: string): boolean => {
+    const t = removeDiacritics(normalizeSpaces(value || "").toLowerCase());
+    if (!t) return false;
+    return CHRISTIAN_HINTS.some((hint) => t.includes(removeDiacritics(hint.toLowerCase())));
+  };
+
+  const suggestionScore = (mode: SearchMode, query: string, item: ExternalBookSuggestion): number => {
+    const titleRatio = relevanceRatio(query, item.title);
+    const authorRatio = relevanceRatio(query, item.authors.join(" "));
+    const text = `${item.title} ${item.description || ""} ${item.publisher || ""}`.toLowerCase();
+    const christianBoost = containsChristianHint(text) ? 2 : 0;
+
+    if (mode === "author") return authorRatio * 10 + titleRatio * 2 + christianBoost;
+    if (mode === "isbn") {
+      const q = query.replace(/[^0-9Xx]/g, "").toLowerCase();
+      const i = (item.isbn || "").replace(/[^0-9Xx]/g, "").toLowerCase();
+      return (q && i && q === i ? 12 : 0) + christianBoost;
+    }
+    return titleRatio * 10 + authorRatio * 2 + christianBoost;
+  };
+
+  const isRelevantSuggestion = (mode: SearchMode, query: string, item: ExternalBookSuggestion): boolean => {
+    const titleRatio = relevanceRatio(query, item.title);
+    const authorRatio = relevanceRatio(query, item.authors.join(" "));
+    if (mode === "isbn") {
+      const q = query.replace(/[^0-9Xx]/g, "").toLowerCase();
+      const i = (item.isbn || "").replace(/[^0-9Xx]/g, "").toLowerCase();
+      return Boolean(q && i && q === i);
+    }
+    if (mode === "author") return authorRatio >= 0.5 || (authorRatio >= 0.4 && titleRatio >= 0.4);
+    return titleRatio >= 0.5 || (titleRatio >= 0.35 && authorRatio >= 0.4);
+  };
+
+  const isRelevantSuggestionRelaxed = (mode: SearchMode, query: string, item: ExternalBookSuggestion): boolean => {
+    const titleRatio = relevanceRatio(query, item.title);
+    const authorRatio = relevanceRatio(query, item.authors.join(" "));
+    if (mode === "isbn") {
+      const q = query.replace(/[^0-9Xx]/g, "").toLowerCase();
+      const i = (item.isbn || "").replace(/[^0-9Xx]/g, "").toLowerCase();
+      return Boolean(q && i && q === i);
+    }
+    if (mode === "author") return authorRatio >= 0.3 || containsChristianHint(item.publisher) || containsChristianHint(item.title);
+    return titleRatio >= 0.3 || containsChristianHint(item.publisher) || containsChristianHint(item.title);
+  };
+
+  const fetchImageAsFile = async (url: string, baseName: string): Promise<File | null> => {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const blob = await resp.blob();
+      if (!blob.type.startsWith("image/")) return null;
+      const ext = blob.type.includes("png") ? "png" : "jpg";
+      return new File([blob], `${baseName || "capa-auto"}.${ext}`, {
+        type: blob.type,
+        lastModified: Date.now(),
+      });
+    } catch {
+      return null;
+    }
+  };
 
   const bytesToMb = (b: number): string => (b / (1024 * 1024)).toFixed(2);
 
@@ -840,10 +1229,11 @@ const isChromeIOS = (): boolean => {
         setFormMsg("Livro cadastrado com sucesso!");
         onToggle?.();
         try {
-          sessionStorage.setItem(LAST_BOOK_NAME_KEY, nomeLivro);
+          sessionStorage.setItem(LAST_CATEGORY_KEY, categoria);
         } catch {
           // noop
         }
+        setNomeLivro("");
         window.location.reload();
       } else {
         setFormError("Erro ao cadastrar livro.");
@@ -851,6 +1241,27 @@ const isChromeIOS = (): boolean => {
     } catch (error) {
       console.error("Erro no envio:", error);
       setFormError("Erro ao cadastrar livro (network).");
+    }
+  };
+
+  const applyBookSuggestion = async (item: ExternalBookSuggestion): Promise<void> => {
+    setNomeLivro(item.title);
+    setShowBookSuggestions(false);
+
+    if (item.description) setDescricao(item.description);
+    if (item.publishedYear) setAnoPublicacao(item.publishedYear);
+    if (item.pageCount && item.pageCount > 0) setQuantidadePaginas(String(item.pageCount));
+    if (item.authors.length > 0) {
+      const adjustedAuthors = uniqueNames(item.authors.map((name) => preferInternalName(name, autorSugestoes)));
+      setAutores(adjustedAuthors.length > 0 ? adjustedAuthors : [""]);
+    }
+    if (item.publisher) setEditora(preferInternalName(item.publisher, editoraSugestoes));
+
+    if (item.coverUrl) {
+      const file = await fetchImageAsFile(item.coverUrl, item.title.replace(/[^\w\d-_]+/g, "-"));
+      if (file && file.size <= MAX_UPLOAD_BYTES) {
+        setCapaLivro(file);
+      }
     }
   };
 
@@ -862,13 +1273,38 @@ const isChromeIOS = (): boolean => {
       <h1 className={styles.titleCadastrar}>Cadastrar Livro</h1>
 
       <form className={styles.form} onSubmit={handleFormSubmit}>
-        <Input
-          label="Nome do Livro"
-          name="nomeLivro"
-          type="text"
-          value={nomeLivro}
-          onChange={(e) => setNomeLivro(e.target.value)}
-        />
+        <div className={styles.suggestionContainer}>
+          <Input
+            label="Nome do Livro"
+            name="nomeLivro"
+            type="text"
+            value={nomeLivro}
+            onChange={(e) => {
+              setNomeLivro(e.target.value);
+              setShowBookSuggestions(true);
+            }}
+            onFocus={() => setShowBookSuggestions(true)}
+          />
+          {showBookSuggestions && bookSuggestions.length > 0 && (
+            <ul className={styles.bookSuggestionList}>
+              {bookSuggestions.map((item) => (
+                <li key={item.id} onClick={() => void applyBookSuggestion(item)} className={styles.bookSuggestionItem}>
+                  <span className={styles.bookSuggestionTitle}>{item.title}</span>
+                  <small className={styles.bookSuggestionMeta}>
+                    {item.authors.slice(0, 2).join(", ") || "Autor não informado"}
+                    {item.publishedYear ? ` • ${item.publishedYear}` : ""}
+                    {item.publisher ? ` • ${item.publisher}` : ""}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+          {(bookLookupLoading || bookLookupMsg) && (
+            <div className={styles.formMsg}>
+              {bookLookupLoading ? "Buscando..." : bookLookupMsg}
+            </div>
+          )}
+        </div>
 
         {/* SINOPSE */}
         <div className={styles.descricaoWrap}>

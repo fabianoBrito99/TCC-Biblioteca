@@ -163,6 +163,43 @@
   border-radius: 5px;
 }
 
+.bookSuggestionList {
+  list-style: none;
+  margin: 8px 0 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #d6dce8;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.bookSuggestionItem {
+  width: 100%;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e4ebf7;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.bookSuggestionItem:last-child {
+  border-bottom: none;
+}
+
+.bookSuggestionItem:hover {
+  background: #eef5ff;
+}
+
+.bookSuggestionTitle {
+  display: block;
+  font-weight: 700;
+  color: #102a52;
+}
+
+.bookSuggestionMeta {
+  color: #4b5b72;
+}
+
 .btAdd{
   border-radius: 8px;
   padding: 5px;

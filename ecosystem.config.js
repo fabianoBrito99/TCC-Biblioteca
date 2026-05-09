@@ -26,6 +26,18 @@ module.exports = {
       instances: 1,
       autorestart: true,
       env: { NODE_ENV: "production" }
+    },
+    {
+      name: "cpu-guard",
+      cwd: "/srv/apps/biblioteca",
+      script: "/bin/bash",
+      args: "-lc ./ops/cpu-guard.sh",
+      instances: 1,
+      autorestart: true,
+      env: {
+        SCAN_INTERVAL: 15,
+        CPU_THRESHOLD: 80
+      }
     }
   ]
 }

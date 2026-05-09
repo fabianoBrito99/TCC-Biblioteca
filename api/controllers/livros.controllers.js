@@ -148,73 +148,152 @@ function show(request, response) {
 
 
 function list(request, response) {
-  const sql = `
-SELECT
-  L.id_livro,
-  L.nome_livro,
-  L.descricao,
-  L.ano_publicacao,
-  L.quantidade_paginas,
-  L.foto_capa_url,
-  E.quantidade_estoque,
-  Ed.nome_editora,
+  const paginaNum = Number.parseInt(request.query.pagina, 10);
+  const limiteNum = Number.parseInt(request.query.limite, 10);
+  const pagina = Number.isFinite(paginaNum) && paginaNum > 0 ? paginaNum : 1;
+  const limiteBase = Number.isFinite(limiteNum) && limiteNum > 0 ? limiteNum : 24;
+  const limite = Math.min(50, limiteBase);
+  const offset = (pagina - 1) * limite;
+  const busca = String(request.query.busca || "").trim();
 
-  -- agrega sem duplicar
-  GROUP_CONCAT(DISTINCT C.categoria_principal ORDER BY C.categoria_principal SEPARATOR '||') AS categorias,
-  GROUP_CONCAT(DISTINCT A.nome                ORDER BY A.nome                SEPARATOR '||') AS autores,
+  const filtros = [];
+  const filtrosParams = [];
+  if (busca) {
+    const like = `%${busca}%`;
+    filtros.push(`(
+      L.nome_livro LIKE ?
+      OR EXISTS (
+        SELECT 1
+        FROM Autor_Livros AL2
+        JOIN Autor A2 ON A2.id_autor = AL2.fk_id_autor
+        WHERE AL2.fk_id_livros = L.id_livro
+          AND A2.nome LIKE ?
+      )
+      OR EXISTS (
+        SELECT 1
+        FROM Livro_Categoria LC2
+        JOIN Categoria C2 ON C2.id_categoria = LC2.fk_id_categoria
+        WHERE LC2.fk_id_livros = L.id_livro
+          AND C2.categoria_principal LIKE ?
+      )
+    )`);
+    filtrosParams.push(like, like, like);
+  }
 
-  -- média por livro
-  COALESCE(R.media_avaliacoes, 0) AS media_avaliacoes
+  const whereSql = filtros.length ? `WHERE ${filtros.join(" AND ")}` : "";
 
-FROM Livro L
-LEFT JOIN Estoque         E  ON L.fk_id_estoque   = E.id_estoque
-LEFT JOIN Editora         Ed ON L.fk_id_editora   = Ed.id_editora
-LEFT JOIN Livro_Categoria LC ON L.id_livro        = LC.fk_id_livros
-LEFT JOIN Categoria       C  ON LC.fk_id_categoria= C.id_categoria
-LEFT JOIN Autor_Livros    AL ON L.id_livro        = AL.fk_id_livros
-LEFT JOIN Autor           A  ON AL.fk_id_autor    = A.id_autor
+  const sqlTotais = `
+    SELECT
+      COUNT(*) AS livros_unicos,
+      COALESCE(SUM(E.quantidade_estoque), 0) AS livros_total_estoque
+    FROM Livro L
+    LEFT JOIN Estoque E ON E.id_estoque = L.fk_id_estoque;
+  `;
 
-LEFT JOIN (
-  SELECT ALv.fk_id_livro AS livro_id, AVG(Av.nota) AS media_avaliacoes
-  FROM Avaliacoes_livro ALv
-  JOIN Avaliacoes Av ON ALv.fk_id_avaliacoes = Av.id_avaliacoes
-  GROUP BY ALv.fk_id_livro
-) R ON R.livro_id = L.id_livro
+  const sqlContagemFiltrada = `
+    SELECT COUNT(*) AS total_filtrado
+    FROM Livro L
+    ${whereSql};
+  `;
 
-GROUP BY
-  L.id_livro, L.nome_livro, L.descricao, L.ano_publicacao, L.quantidade_paginas, L.foto_capa_url,
-  E.quantidade_estoque, Ed.nome_editora
-ORDER BY L.id_livro DESC;
-`;
+  const sqlLista = `
+    SELECT
+      L.id_livro,
+      L.nome_livro,
+      L.descricao,
+      L.ano_publicacao,
+      L.quantidade_paginas,
+      L.foto_capa_url,
+      E.quantidade_estoque,
+      Ed.nome_editora,
+      GROUP_CONCAT(DISTINCT C.categoria_principal ORDER BY C.categoria_principal SEPARATOR '||') AS categorias,
+      GROUP_CONCAT(DISTINCT A.nome ORDER BY A.nome SEPARATOR '||') AS autores,
+      COALESCE(R.media_avaliacoes, 0) AS media_avaliacoes
+    FROM Livro L
+    LEFT JOIN Estoque E ON L.fk_id_estoque = E.id_estoque
+    LEFT JOIN Editora Ed ON L.fk_id_editora = Ed.id_editora
+    LEFT JOIN Livro_Categoria LC ON L.id_livro = LC.fk_id_livros
+    LEFT JOIN Categoria C ON LC.fk_id_categoria = C.id_categoria
+    LEFT JOIN Autor_Livros AL ON L.id_livro = AL.fk_id_livros
+    LEFT JOIN Autor A ON AL.fk_id_autor = A.id_autor
+    LEFT JOIN (
+      SELECT ALv.fk_id_livro AS livro_id, AVG(Av.nota) AS media_avaliacoes
+      FROM Avaliacoes_livro ALv
+      JOIN Avaliacoes Av ON ALv.fk_id_avaliacoes = Av.id_avaliacoes
+      GROUP BY ALv.fk_id_livro
+    ) R ON R.livro_id = L.id_livro
+    ${whereSql}
+    GROUP BY
+      L.id_livro,
+      L.nome_livro,
+      L.descricao,
+      L.ano_publicacao,
+      L.quantidade_paginas,
+      L.foto_capa_url,
+      E.quantidade_estoque,
+      Ed.nome_editora
+    ORDER BY L.id_livro DESC
+    LIMIT ? OFFSET ?;
+  `;
 
-  connection.query(sql, (err, resultado) => {
-    if (err) {
-      console.error("Erro ao buscar livros:", err);
-      return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: err.message });
+  connection.query(sqlTotais, (errTotais, totaisRows) => {
+    if (errTotais) {
+      console.error("Erro ao calcular totais de livros:", errTotais);
+      return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errTotais.message });
     }
 
-    const livros = resultado.map((row) => {
-      const categoriasArr   = row.categorias   ? row.categorias.split("||").filter(Boolean)   : [];
-      const autoresArr      = row.autores      ? row.autores.split("||").filter(Boolean)      : [];
+    connection.query(sqlContagemFiltrada, filtrosParams, (errCount, countRows) => {
+      if (errCount) {
+        console.error("Erro ao contar livros filtrados:", errCount);
+        return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errCount.message });
+      }
 
-      const capaUrl = row.foto_capa_url || null;
+      const paramsLista = [...filtrosParams, limite, offset];
+      connection.query(sqlLista, paramsLista, (errLista, resultado) => {
+        if (errLista) {
+          console.error("Erro ao buscar livros:", errLista);
+          return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errLista.message });
+        }
 
-      return {
-        ...row,
-        // compatibilidade com o front atual:
-        categoria_principal: categoriasArr[0] || null,
-        autor: autoresArr[0] || null,
-        foto_capa: capaUrl,   // se algum componente ainda usar 'foto_capa'
-        capa: capaUrl,        // campo novo recomendado
+        const livros = resultado.map((row) => {
+          const categoriasArr = row.categorias ? row.categorias.split("||").filter(Boolean) : [];
+          const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
+          const capaUrl = row.foto_capa_url || null;
 
-        // também enviamos os arrays completos
-        categorias: categoriasArr,
-        subcategorias: [],
-        autores: autoresArr,
-      };
+          return {
+            ...row,
+            categoria_principal: categoriasArr[0] || null,
+            autor: autoresArr[0] || null,
+            foto_capa: capaUrl,
+            capa: capaUrl,
+            categorias: categoriasArr,
+            subcategorias: [],
+            autores: autoresArr,
+          };
+        });
+
+        const livrosUnicos = Number(totaisRows?.[0]?.livros_unicos || 0);
+        const livrosTotalEstoque = Number(totaisRows?.[0]?.livros_total_estoque || 0);
+        const totalFiltrado = Number(countRows?.[0]?.total_filtrado || 0);
+        const totalPaginas = Math.max(1, Math.ceil(totalFiltrado / limite));
+
+        return response.json({
+          livros,
+          totais: {
+            livros_unicos: livrosUnicos,
+            livros_total_estoque: livrosTotalEstoque,
+          },
+          paginacao: {
+            pagina,
+            limite,
+            total_itens: totalFiltrado,
+            total_paginas: totalPaginas,
+            tem_proxima: pagina < totalPaginas,
+            tem_anterior: pagina > 1,
+          },
+        });
+      });
     });
-
-    return response.json({ livros });
   });
 }
 
