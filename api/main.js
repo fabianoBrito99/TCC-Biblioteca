@@ -23,12 +23,13 @@ const app = express();
 
 
 const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const isLocalOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || "");
 
 
 app.use(cors({
   origin: function (origin, callback) {
-    // permite sem Origin (curl/postman) ou se estiver na lista
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    // permite sem Origin (curl/postman), localhost para desenvolvimento local, ou origens configuradas
+    if (!origin || isLocalOrigin(origin) || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     return callback(new Error('Não permitido por CORS: ' + origin));

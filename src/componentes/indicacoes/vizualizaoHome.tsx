@@ -6,6 +6,9 @@ import styles from "./vizualizacao.module.css";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+
 interface FotoCapaRaw {
   data: number[]; // bytes vindos do backend (ex.: Buffer do MySQL)
 }
@@ -52,7 +55,7 @@ const IndicacoesDisplay = () => {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    fetch("https://api.helenaramazzotte.online/api/indicacoes")
+    fetch(`${API_BASE}/api/indicacoes`)
       .then((res) => res.json())
       .then((data: IndicacoesResp) => {
         const formatted: IndicacaoView[] = (data?.indicacoes ?? []).map((ind) => {

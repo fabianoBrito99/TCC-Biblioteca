@@ -7,6 +7,9 @@ import styles from "./conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+
 interface User {
   id_usuario: string;
   foto_usuario: string | null; // base64 (sem prefixo) ou null
@@ -83,7 +86,7 @@ export default function ContaPage() {
 
       try {
         const res = await fetch(
-          `https://api.helenaramazzotte.online/api/usuario/${userId}`,
+          `${API_BASE}/api/usuario/${userId}`,
           {
             cache: "no-store",
             headers: getAuthHeaders(),

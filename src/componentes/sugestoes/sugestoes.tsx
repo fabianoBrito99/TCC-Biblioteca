@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import styles from "./sugestoes.module.css";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+
 type FotoCapaRaw =
   | { type: "Buffer"; data: number[] }   // comum quando vem de MySQL Buffer serializado
   | { data: number[] };                  // variação sem "type"
@@ -34,7 +37,7 @@ export default function SugestoesLivros({ categoria }: Props) {
     async function fetchLivros() {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/livro/categoria/${encodeURIComponent(
+          `${API_BASE}/livro/categoria/${encodeURIComponent(
             categoria
           )}`
         );
@@ -85,6 +88,12 @@ export default function SugestoesLivros({ categoria }: Props) {
     paginaAtual * livrosPorPagina
   );
 
+  const abrirLivro = (livro: Livro) => {
+    sessionStorage.setItem("livroSelecionadoId", String(livro.id_livro));
+    sessionStorage.setItem("livroSelecionadoNome", livro.nome_livro);
+    router.push("/livro");
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.grid}>
@@ -94,11 +103,11 @@ export default function SugestoesLivros({ categoria }: Props) {
             <div
               key={livro.id_livro}
               className={styles.cardLivro}
-              onClick={() => router.push(`/livro/${livro.id_livro}`)}
+              onClick={() => abrirLivro(livro)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === "Enter") router.push(`/livro/${livro.id_livro}`);
+                if (e.key === "Enter") abrirLivro(livro);
               }}
             >
               <Image

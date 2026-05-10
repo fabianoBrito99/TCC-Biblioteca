@@ -7,6 +7,9 @@ import Image from "next/image";
 import { useCallback } from "react";
 import SugestoesLivros from "@/componentes/sugestoes/sugestoes";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+
 interface Resposta {
   id_resposta: number;
   resposta: string;
@@ -76,7 +79,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
 
   const fetchLivro = useCallback(async () => {
     try {
-      const response = await fetch(`https://api.helenaramazzotte.online/livro/${livroId}`);
+      const response = await fetch(`${API_BASE}/livro/${livroId}`);
       if (!response.ok) throw new Error("Erro na resposta da API");
       const data = await response.json();
       if (data.erro) {
@@ -92,7 +95,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/livro/${livroId}/comentarios?usuarioId=${usuarioId}`
+        `${API_BASE}/api/livro/${livroId}/comentarios?usuarioId=${usuarioId}`
       );
       const data = await response.json();
       setComentarios(data);
@@ -104,7 +107,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
   const fetchAvaliacoes = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/livro/${livroId}/avaliacoes`
+        `${API_BASE}/api/livro/${livroId}/avaliacoes`
       );
       const data = await response.json();
       setAvaliacoes(data.avaliacoes || []);
@@ -124,7 +127,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
   const handleCurtirComentario = async (idComentario: number) => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comentario/curtir`,
+        `${API_BASE}/api/comentario/curtir`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -169,7 +172,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
     if (livro && livro.quantidade_estoque > 0) {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/emprestimos/${livro.id_livro}/reservar`,
+          `${API_BASE}/api/emprestimos/${livro.id_livro}/reservar`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -190,7 +193,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
   const handleEnviarAvaliacao = async () => {
     if (comentario && avaliacao) {
       try {
-        await fetch(`https://api.helenaramazzotte.online/api/livro/${livroId}/avaliacao`, {
+        await fetch(`${API_BASE}/api/livro/${livroId}/avaliacao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -212,7 +215,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
 
   const handleEnviarComentario = async () => {
     try {
-      const response = await fetch(`https://api.helenaramazzotte.online/api/comentario`, {
+      const response = await fetch(`${API_BASE}/api/comentario`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -234,7 +237,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
     if (resposta) {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/comentario/responder`,
+          `${API_BASE}/api/comentario/responder`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

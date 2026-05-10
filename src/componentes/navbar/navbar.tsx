@@ -22,6 +22,9 @@ import Notificacoes from "../notificacoes/notificacoes";
 import ComunidadesUsuario from "../comunidade/listar-comunidade-do-usuario";
 import Image from "next/image";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+
 type User = {
   id: string;
   foto_usuario: string | null;
@@ -90,7 +93,7 @@ export default function Navbar() {
       if (userId) {
         try {
           const res = await fetch(
-            `https://api.helenaramazzotte.online/api/usuario/${userId}`,
+            `${API_BASE}/api/usuario/${userId}`,
             {
               headers: getAuthHeaders(),
             }

@@ -4,6 +4,9 @@ import React, { useState, useEffect } from "react";
 import { FaBell } from "react-icons/fa";
 import styles from "./notificacoes.module.css";
 
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+
 interface Notificacao {
   id_notificacao: number;
   mensagem: string;
@@ -36,7 +39,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const gerarNotificacoes = async () => {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/notificacoes/gerar/${usuarioId}`,
+          `${API_BASE}/api/notificacoes/gerar/${usuarioId}`,
           { method: "POST" }
         );
         if (!response.ok) throw new Error("Erro ao gerar notificações");
@@ -59,7 +62,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const fetchNotificacoes = async () => {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/notificacoes/${usuarioId}`
+          `${API_BASE}/api/notificacoes/${usuarioId}`
         );
         if (!response.ok) throw new Error("Erro ao buscar notificações");
         const data = await response.json();
@@ -76,7 +79,7 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
   const handleMarcarLida = async (idNotificacao: number) => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/notificacoes/${idNotificacao}/lida`,
+        `${API_BASE}/api/notificacoes/${idNotificacao}/lida`,
         { method: "PATCH" }
       );
 
