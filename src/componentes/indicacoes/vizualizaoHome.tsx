@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "./vizualizacao.module.css";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 interface FotoCapaRaw {
   data: number[]; // bytes vindos do backend (ex.: Buffer do MySQL)
@@ -11,8 +12,11 @@ interface FotoCapaRaw {
 
 interface IndicacaoAPI {
   id_indicacao: number;
+  id_livro: number;
   nome_livro: string;
-  nome_autor: string;
+  nome_autor?: string | null;
+  autor?: string | null;
+  media_avaliacoes?: number | null;
   descricao?: string | null;
   foto_capa?: string | FotoCapaRaw | null; // pode vir já como base64/string ou como bytes
 }
@@ -23,10 +27,12 @@ interface IndicacoesResp {
 
 interface IndicacaoView {
   id_indicacao: number;
+  id_livro: number;
   nome_livro: string;
   nome_autor: string;
   descricao?: string | null;
   foto_capa: string; // sempre uma URL (data:image/jpeg;base64,...) ou placeholder
+  media_avaliacoes: number;
 }
 
 function bytesToDataUrlJPEG(bytes: number[]): string {
@@ -41,6 +47,7 @@ function bytesToDataUrlJPEG(bytes: number[]): string {
 }
 
 const IndicacoesDisplay = () => {
+  const router = useRouter();
   const [indicacoes, setIndicacoes] = useState<IndicacaoView[]>([]);
   const [index, setIndex] = useState(0);
 
@@ -64,10 +71,12 @@ const IndicacoesDisplay = () => {
 
           return {
             id_indicacao: ind.id_indicacao,
+            id_livro: ind.id_livro,
             nome_livro: ind.nome_livro,
-            nome_autor: ind.nome_autor,
+            nome_autor: ind.nome_autor || ind.autor || "Autor nao informado",
             descricao: ind.descricao ?? null,
             foto_capa: foto,
+            media_avaliacoes: Number(ind.media_avaliacoes || 0),
           };
         });
 
@@ -99,13 +108,29 @@ const IndicacoesDisplay = () => {
   if (indicacoes.length === 0) return <p>Carregando indicações...</p>;
 
   const atual = indicacoes[index];
+  const abrirIndicacao = () => {
+    sessionStorage.setItem("livroSelecionadoId", String(atual.id_livro));
+    sessionStorage.setItem("livroSelecionadoNome", atual.nome_livro);
+    router.push("/livro");
+  };
 
   return (
-    <div className={styles.carouselContainer}>
+    <div
+      className={styles.carouselContainer}
+      onClick={abrirIndicacao}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          abrirIndicacao();
+        }
+      }}
+    >
     
       <div className={styles.grid}>
         <div className={styles.grid1}>
-        <button className={styles.arrow1} onClick={prevSlide}>
+        <button className={styles.arrow1} onClick={(e) => { e.stopPropagation(); prevSlide(); }}>
         <FaArrowLeft />
       </button>
            <h1>{atual.nome_livro}</h1>
@@ -115,6 +140,17 @@ const IndicacoesDisplay = () => {
           </p>
 
            <h4 className={styles.autor}>{atual.nome_autor}</h4>
+           <div className={styles.media}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={atual.media_avaliacoes >= star ? styles.starAtiva : styles.starInativa}
+              >
+                ★
+              </span>
+            ))}
+            <strong>{atual.media_avaliacoes.toFixed(1)}</strong>
+           </div>
         </div>
         <div className={styles.grid2}>
           <Image
@@ -138,7 +174,7 @@ const IndicacoesDisplay = () => {
             height={450}
             className={styles.image2}
           />
-          <button className={styles.arrow2} onClick={nextSlide} aria-label="Próximo">
+          <button className={styles.arrow2} onClick={(e) => { e.stopPropagation(); nextSlide(); }} aria-label="Próximo">
             <FaArrowRight />
           </button>
         </div>

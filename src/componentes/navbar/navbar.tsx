@@ -162,8 +162,13 @@ export default function Navbar() {
           <ComunidadesUsuario usuarioId={user?.id} />
         </div>
 
-        <div>
+        <div className={styles.logoStage} aria-label="Helena Ramazzotte">
+          <span className={styles.logoGlow}></span>
           <Image className={styles.logo} src="/img/Frame8.png" alt="" width={300} height={100}/>
+          <span className={styles.bookFlame}>
+            <span className={styles.bookWing}></span>
+            <span className={styles.crossLight}></span>
+          </span>
         </div>
 
         {/* Menu Toggle */}

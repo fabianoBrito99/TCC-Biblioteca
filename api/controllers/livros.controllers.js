@@ -155,12 +155,15 @@ function list(request, response) {
   const limite = Math.min(50, limiteBase);
   const offset = (pagina - 1) * limite;
   const busca = String(request.query.busca || "").trim();
+  const categoria = String(request.query.categoria || "").trim();
 
   const filtros = [];
   const filtrosParams = [];
+  const filtrosCategorias = [];
+  const filtrosCategoriasParams = [];
   if (busca) {
     const like = `%${busca}%`;
-    filtros.push(`(
+    const filtroBusca = `(
       L.nome_livro LIKE ?
       OR EXISTS (
         SELECT 1
@@ -176,11 +179,27 @@ function list(request, response) {
         WHERE LC2.fk_id_livros = L.id_livro
           AND C2.categoria_principal LIKE ?
       )
-    )`);
+    )`;
+    filtros.push(filtroBusca);
+    filtrosCategorias.push(filtroBusca);
     filtrosParams.push(like, like, like);
+    filtrosCategoriasParams.push(like, like, like);
+  }
+  if (categoria) {
+    filtros.push(`EXISTS (
+      SELECT 1
+      FROM Livro_Categoria LCF
+      JOIN Categoria CF ON CF.id_categoria = LCF.fk_id_categoria
+      WHERE LCF.fk_id_livros = L.id_livro
+        AND CF.categoria_principal = ?
+    )`);
+    filtrosParams.push(categoria);
+    filtrosCategorias.push("C.categoria_principal = ?");
+    filtrosCategoriasParams.push(categoria);
   }
 
   const whereSql = filtros.length ? `WHERE ${filtros.join(" AND ")}` : "";
+  const whereCategoriasSql = filtrosCategorias.length ? `WHERE ${filtrosCategorias.join(" AND ")}` : "";
 
   const sqlTotais = `
     SELECT
@@ -194,6 +213,31 @@ function list(request, response) {
     SELECT COUNT(*) AS total_filtrado
     FROM Livro L
     ${whereSql};
+  `;
+
+  const sqlContagemCategorias = `
+    SELECT
+      C.categoria_principal,
+      COALESCE(NULLIF(MAX(C.cor_cima), ''), '#111827') AS cor_cima,
+      COALESCE(NULLIF(MAX(C.cor_baixo), ''), '#4b5563') AS cor_baixo,
+      COALESCE(SUM(E.quantidade_estoque), 0) AS quantidade
+    FROM Livro L
+    LEFT JOIN Estoque E ON E.id_estoque = L.fk_id_estoque
+    JOIN Livro_Categoria LC ON L.id_livro = LC.fk_id_livros
+    JOIN Categoria C ON LC.fk_id_categoria = C.id_categoria
+    ${whereCategoriasSql}
+    GROUP BY C.categoria_principal
+    ORDER BY quantidade DESC, C.categoria_principal ASC;
+  `;
+
+  const sqlCategoriasOpcoes = `
+    SELECT
+      C.categoria_principal,
+      COALESCE(NULLIF(MAX(C.cor_cima), ''), '#111827') AS cor_cima,
+      COALESCE(NULLIF(MAX(C.cor_baixo), ''), '#4b5563') AS cor_baixo
+    FROM Categoria C
+    GROUP BY C.categoria_principal
+    ORDER BY C.categoria_principal ASC;
   `;
 
   const sqlLista = `
@@ -248,49 +292,80 @@ function list(request, response) {
         return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errCount.message });
       }
 
-      const paramsLista = [...filtrosParams, limite, offset];
-      connection.query(sqlLista, paramsLista, (errLista, resultado) => {
-        if (errLista) {
-          console.error("Erro ao buscar livros:", errLista);
-          return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errLista.message });
+      connection.query(sqlContagemCategorias, filtrosCategoriasParams, (errCategorias, categoriasRows) => {
+        if (errCategorias) {
+          console.error("Erro ao contar livros por categoria:", errCategorias);
+          return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errCategorias.message });
         }
 
-        const livros = resultado.map((row) => {
-          const categoriasArr = row.categorias ? row.categorias.split("||").filter(Boolean) : [];
-          const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
-          const capaUrl = row.foto_capa_url || null;
+        connection.query(sqlCategoriasOpcoes, (errOpcoes, categoriasOpcoesRows) => {
+          if (errOpcoes) {
+            console.error("Erro ao buscar opções de categorias:", errOpcoes);
+            return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errOpcoes.message });
+          }
 
-          return {
-            ...row,
-            categoria_principal: categoriasArr[0] || null,
-            autor: autoresArr[0] || null,
-            foto_capa: capaUrl,
-            capa: capaUrl,
-            categorias: categoriasArr,
-            subcategorias: [],
-            autores: autoresArr,
-          };
-        });
+          const paramsLista = [...filtrosParams, limite, offset];
+          connection.query(sqlLista, paramsLista, (errLista, resultado) => {
+            if (errLista) {
+              console.error("Erro ao buscar livros:", errLista);
+              return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errLista.message });
+            }
 
-        const livrosUnicos = Number(totaisRows?.[0]?.livros_unicos || 0);
-        const livrosTotalEstoque = Number(totaisRows?.[0]?.livros_total_estoque || 0);
-        const totalFiltrado = Number(countRows?.[0]?.total_filtrado || 0);
-        const totalPaginas = Math.max(1, Math.ceil(totalFiltrado / limite));
+            const livros = resultado.map((row) => {
+              const categoriasArr = row.categorias ? row.categorias.split("||").filter(Boolean) : [];
+              const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
+              const capaUrl = row.foto_capa_url || null;
 
-        return response.json({
-          livros,
-          totais: {
-            livros_unicos: livrosUnicos,
-            livros_total_estoque: livrosTotalEstoque,
-          },
-          paginacao: {
-            pagina,
-            limite,
-            total_itens: totalFiltrado,
-            total_paginas: totalPaginas,
-            tem_proxima: pagina < totalPaginas,
-            tem_anterior: pagina > 1,
-          },
+              return {
+                ...row,
+                categoria_principal: categoriasArr[0] || null,
+                autor: autoresArr[0] || null,
+                foto_capa: capaUrl,
+                capa: capaUrl,
+                categorias: categoriasArr,
+                subcategorias: [],
+                autores: autoresArr,
+              };
+            });
+
+            const categoriasContagem = categoriasRows.map((row) => ({
+              categoria_principal: row.categoria_principal,
+              cor_cima: row.cor_cima,
+              cor_baixo: row.cor_baixo,
+              quantidade: Number(row.quantidade || 0),
+            }));
+            const categoriasOpcoes = categoriasOpcoesRows.map((row) => ({
+              categoria_principal: row.categoria_principal,
+              cor_cima: row.cor_cima,
+              cor_baixo: row.cor_baixo,
+            }));
+            const livrosUnicos = Number(totaisRows?.[0]?.livros_unicos || 0);
+            const livrosTotalEstoque = Number(totaisRows?.[0]?.livros_total_estoque || 0);
+            const totalFiltrado = Number(countRows?.[0]?.total_filtrado || 0);
+            const totalPaginas = Math.max(1, Math.ceil(totalFiltrado / limite));
+
+            return response.json({
+              livros,
+              totais: {
+                livros_unicos: livrosUnicos,
+                livros_total_estoque: livrosTotalEstoque,
+              },
+              categorias_contagem: categoriasContagem,
+              categorias_opcoes: categoriasOpcoes,
+              filtros: {
+                busca,
+                categoria,
+              },
+              paginacao: {
+                pagina,
+                limite,
+                total_itens: totalFiltrado,
+                total_paginas: totalPaginas,
+                tem_proxima: pagina < totalPaginas,
+                tem_anterior: pagina > 1,
+              },
+            });
+          });
         });
       });
     });

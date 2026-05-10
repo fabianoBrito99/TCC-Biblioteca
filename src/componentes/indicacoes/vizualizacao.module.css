@@ -1,7 +1,8 @@
 .carouselContainer {
   width: 99vw;
   gap: 20px;
-
+  cursor: pointer;
+  margin: 0 0 18px;
 }
 
 .grid {
@@ -77,7 +78,45 @@
 }
 
 .autor{
-  margin-top: 20px;
+  margin-top: 8px;
+  font-size: .9rem;
+  line-height: 1.2;
+}
+
+.grid h1 {
+  font-size: 1.45rem;
+  line-height: 1.08;
+  margin: 0 0 8px;
+}
+
+.grid p {
+  max-width: 48ch;
+  max-height: 128px;
+  overflow: hidden;
+  font-size: .82rem;
+  line-height: 1.25;
+}
+
+.media {
+  display:flex;
+  align-items:center;
+  gap:3px;
+  margin-top:8px;
+  font-size:1rem;
+}
+
+.media strong {
+  color:#fff8c7;
+  font-size:.85rem;
+  margin-left:4px;
+}
+
+.starAtiva {
+  color:#ffc400;
+}
+
+.starInativa {
+  color:#7c8794;
 }
 
 @media (max-width: 1050px) {
@@ -113,7 +152,7 @@ width: 50%;
   gap: 50px;
 }
 .grid h1{
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   margin-bottom: 10px;
 }
   .grid p{
@@ -134,7 +173,7 @@ width: 65%;
 @media (max-width: 400px) {
 
 .grid h1{
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   margin-bottom: 10px;
 }
   .grid p{

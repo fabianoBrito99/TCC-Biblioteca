@@ -2,7 +2,7 @@
 
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { fetchCategorias, fetchLivros } from "@/actions/categorias";
+import { fetchCategorias, fetchLivrosPorCategoria } from "@/actions/categorias";
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
@@ -38,54 +38,51 @@ interface FetchLivrosResp {
   livros?: APILivroRaw[];
 }
 
-/** Normalizador de string (acentos/NBSP/espaços) */
-const norm = (s?: string | null) =>
-  String(s ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
-    .replace(/\u00A0/g, " ") // NBSP -> espaço
-    .replace(/\s+/g, " ") // colapsa espaços
-    .trim()
-    .toLowerCase();
+type LivrosPorCategoria = Record<string, Livro[]>;
 
 const Home: React.FC = () => {
   const [categorias, setCategorias] = useState<string[]>([]);
-  const [livros, setLivros] = useState<Livro[]>([]);
+  const [livrosPorCategoria, setLivrosPorCategoria] = useState<LivrosPorCategoria>({});
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const categoriasData = (await fetchCategorias()) as FetchCategoriasResp;
-        const livrosData = (await fetchLivros()) as FetchLivrosResp;
+        const listaCategorias = categoriasData?.categorias ?? [];
+        setCategorias(listaCategorias);
 
-        setCategorias(categoriasData?.categorias ?? []);
+        const respostas = await Promise.all(
+          listaCategorias.map(async (categoria) => {
+            const livrosData = (await fetchLivrosPorCategoria(categoria, 15)) as FetchLivrosResp;
+            const normalizados: Livro[] = (livrosData?.livros ?? []).map(
+              (l: APILivroRaw): Livro => {
+                const src = l.capa ?? l.foto_capa_url ?? "/placeholder-cover.png";
+                const categoriaPrincipal =
+                  l.categoria_principal ??
+                  (Array.isArray(l.categorias) ? l.categorias[0] ?? null : null);
+                const autorSingular =
+                  l.autor ??
+                  (Array.isArray(l.autores) ? l.autores[0] ?? null : null);
 
-        // Normaliza para o shape Livro
-        const normalizados: Livro[] = (livrosData?.livros ?? []).map(
-          (l: APILivroRaw): Livro => {
-            const src = l.capa ?? l.foto_capa_url ?? "/placeholder-cover.png";
-            const categoria =
-              l.categoria_principal ??
-              (Array.isArray(l.categorias) ? l.categorias[0] ?? null : null);
-            const autorSingular =
-              l.autor ??
-              (Array.isArray(l.autores) ? l.autores[0] ?? null : null);
+                return {
+                  id_livro: String(l.id_livro),
+                  nome_livro: l.nome_livro,
+                  foto_capa_url: src,
+                  capa: src,
+                  categoria_principal: categoriaPrincipal,
+                  autor: autorSingular,
+                  media_avaliacoes: l.media_avaliacoes ?? 0,
+                  categorias: Array.isArray(l.categorias) ? l.categorias : [],
+                };
+              }
+            );
 
-            return {
-              id_livro: String(l.id_livro),
-              nome_livro: l.nome_livro,
-              foto_capa_url: src,
-              capa: src,
-              categoria_principal: categoria,
-              autor: autorSingular,
-              media_avaliacoes: l.media_avaliacoes ?? 0,
-              categorias: Array.isArray(l.categorias) ? l.categorias : [],
-            };
-          }
+            return [categoria, normalizados] as const;
+          })
         );
 
-        setLivros(normalizados);
+        setLivrosPorCategoria(Object.fromEntries(respostas));
       } catch (error) {
         console.error("Erro ao carregar os dados:", error);
       } finally {
@@ -111,15 +108,7 @@ const Home: React.FC = () => {
 
       <div id="categorias-section" className={styles.categoriasSection}>
         {categorias.map((categoria) => {
-          const alvo = norm(categoria);
-
-          const livrosFiltrados = livros.filter((livro) => {
-            // cria um set com categoria_principal + todas as categorias do livro
-            const setCats = new Set<string>();
-            setCats.add(norm(livro.categoria_principal));
-            (livro.categorias ?? []).forEach((c) => setCats.add(norm(c)));
-            return setCats.has(alvo);
-          });
+          const livrosFiltrados = livrosPorCategoria[categoria] ?? [];
 
           return (
             <div key={categoria}>

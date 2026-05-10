@@ -23,12 +23,19 @@ function listarIndicacoes(req, res) {
       L.id_livro,
       L.nome_livro,
       L.foto_capa_url,
-      GROUP_CONCAT(DISTINCT A.nome ORDER BY A.nome SEPARATOR '||') AS autores
+      GROUP_CONCAT(DISTINCT A.nome ORDER BY A.nome SEPARATOR '||') AS autores,
+      COALESCE(R.media_avaliacoes, 0) AS media_avaliacoes
     FROM Indicacoes I
     JOIN Livro L              ON I.fk_id_livro = L.id_livro
     LEFT JOIN Autor_Livros AL ON L.id_livro   = AL.fk_id_livros
     LEFT JOIN Autor A         ON AL.fk_id_autor = A.id_autor
-    GROUP BY I.id_indicacao, L.id_livro, L.nome_livro, L.foto_capa_url
+    LEFT JOIN (
+      SELECT ALv.fk_id_livro AS livro_id, AVG(Av.nota) AS media_avaliacoes
+      FROM Avaliacoes_livro ALv
+      JOIN Avaliacoes Av ON ALv.fk_id_avaliacoes = Av.id_avaliacoes
+      GROUP BY ALv.fk_id_livro
+    ) R ON R.livro_id = L.id_livro
+    GROUP BY I.id_indicacao, L.id_livro, L.nome_livro, L.foto_capa_url, R.media_avaliacoes
     ORDER BY I.id_indicacao DESC
     LIMIT 5;
   `;
@@ -55,6 +62,7 @@ function listarIndicacoes(req, res) {
         // autor “principal” + lista completa
         autor: autoresArr[0] || null,
         autores: autoresArr,
+        media_avaliacoes: Number(row.media_avaliacoes || 0),
       };
     });
 

@@ -1,12 +1,21 @@
 .wrapper { padding:24px; max-width:1180px; margin:0 auto; }
 .header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.summary { display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:14px; color:#374151; }
 .tools { display:flex; gap:8px; align-items:center; }
 .search { padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; min-width:320px; }
+.categoryFilter { padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; min-width:220px; background:#fff; color:#111827; }
 .refresh, .new { padding:10px 14px; border-radius:8px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; }
 .new { background:#111827; color:#fff; border-color:#111827; }
+.categoryCounts { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px; margin:0 0 18px; }
+.categoryCount { min-height:74px; padding:12px; border:0; border-radius:8px; color:#fff; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; text-align:left; box-shadow:0 2px 8px rgba(0,0,0,.10); text-shadow:0 1px 2px rgba(0,0,0,.28); }
+.categoryCount span { font-size:14px; line-height:1.25; font-weight:700; overflow-wrap:anywhere; }
+.categoryCount strong { font-size:24px; line-height:1; }
+.categoryCount[aria-pressed="true"] { outline:3px solid #111827; outline-offset:2px; }
 .loading, .empty { padding:24px; color:#6b7280; }
 .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
 .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.cardPublico { cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; }
+.cardPublico:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(0,0,0,.12); }
 .cover { display:flex; justify-content:center; align-items:center; padding:8px; background:#f9fafb; border-radius:8px; }
 .body { display:flex; flex-direction:column; gap:4px; }
 .title { font-size:16px; line-height:1.3; margin:0; }
@@ -31,4 +40,5 @@
   .header { flex-direction:column; align-items:flex-start; }
   .tools { width:100%; flex-wrap:wrap; }
   .search { min-width:0; width:100%; }
+  .categoryFilter { min-width:0; width:100%; }
 }

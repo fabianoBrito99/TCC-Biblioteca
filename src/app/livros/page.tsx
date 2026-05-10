@@ -28,6 +28,15 @@ type TotaisLivros = {
   livros_total_estoque: number;
 };
 
+type CategoriaContagem = {
+  categoria_principal: string;
+  cor_cima: string;
+  cor_baixo: string;
+  quantidade: number;
+};
+
+type CategoriaOpcao = Omit<CategoriaContagem, "quantidade">;
+
 type Paginacao = {
   pagina: number;
   limite: number;
@@ -52,15 +61,26 @@ export default function ListarLivrosPage() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [buscaDebounced, setBuscaDebounced] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [categoriasContagem, setCategoriasContagem] = useState<CategoriaContagem[]>([]);
+  const [categoriasOpcoes, setCategoriasOpcoes] = useState<CategoriaOpcao[]>([]);
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [urlReady, setUrlReady] = useState(false);
+  const [modoPublico, setModoPublico] = useState(false);
 
-  const carregar = useCallback(async (pagina = paginaAtual, termoBusca = buscaDebounced, signal?: AbortSignal) => {
+  const carregar = useCallback(async (
+    pagina = paginaAtual,
+    termoBusca = buscaDebounced,
+    categoria = categoriaFiltro,
+    signal?: AbortSignal
+  ) => {
     setLoading(true);
     try {
       const qs = new URLSearchParams();
       qs.set("pagina", String(pagina));
       qs.set("limite", String(LIMITE_POR_PAGINA));
       if (termoBusca) qs.set("busca", termoBusca);
+      if (categoria) qs.set("categoria", categoria);
 
       const resp = await fetch(`${API_BASE}/livro?${qs.toString()}`, {
         cache: "no-store",
@@ -77,6 +97,12 @@ export default function ListarLivrosPage() {
         livros_unicos: Number.isFinite(unicos) ? unicos : 0,
         livros_total_estoque: Number.isFinite(totalEstoque) ? totalEstoque : 0,
       });
+      setCategoriasContagem(
+        Array.isArray(data?.categorias_contagem) ? data.categorias_contagem : []
+      );
+      setCategoriasOpcoes(
+        Array.isArray(data?.categorias_opcoes) ? data.categorias_opcoes : []
+      );
 
       const totalPaginasApi = Number(data?.paginacao?.total_paginas ?? 1);
       const totalPaginas = Number.isFinite(totalPaginasApi) && totalPaginasApi > 0 ? totalPaginasApi : 1;
@@ -98,6 +124,7 @@ export default function ListarLivrosPage() {
       console.error(e);
       setLivros([]);
       setTotais({ livros_unicos: 0, livros_total_estoque: 0 });
+      setCategoriasContagem([]);
       setPaginacao({
         pagina: 1,
         limite: LIMITE_POR_PAGINA,
@@ -109,7 +136,16 @@ export default function ListarLivrosPage() {
     } finally {
       setLoading(false);
     }
-  }, [buscaDebounced, paginaAtual]);
+  }, [buscaDebounced, categoriaFiltro, paginaAtual]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const categoriaParam = params.get("categoria")?.trim() || "";
+    const modoParam = params.get("modo")?.trim().toLowerCase() || "";
+    if (categoriaParam) setCategoriaFiltro(categoriaParam);
+    setModoPublico(modoParam === "publico");
+    setUrlReady(true);
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -120,13 +156,14 @@ export default function ListarLivrosPage() {
 
   useEffect(() => {
     setPaginaAtual(1);
-  }, [buscaDebounced]);
+  }, [buscaDebounced, categoriaFiltro]);
 
   useEffect(() => {
+    if (!urlReady) return;
     const controller = new AbortController();
-    carregar(paginaAtual, buscaDebounced, controller.signal);
+    carregar(paginaAtual, buscaDebounced, categoriaFiltro, controller.signal);
     return () => controller.abort();
-  }, [carregar, paginaAtual, buscaDebounced]);
+  }, [carregar, paginaAtual, buscaDebounced, categoriaFiltro, urlReady]);
 
   const excluir = async (id: number | string) => {
     const ok = window.confirm(
@@ -142,7 +179,7 @@ export default function ListarLivrosPage() {
         const err = await resp.json().catch(() => ({}));
         throw new Error(err?.erro || "Falha ao excluir");
       }
-      await carregar(paginaAtual, buscaDebounced);
+      await carregar(paginaAtual, buscaDebounced, categoriaFiltro);
     } catch (e) {
       console.error(e);
       alert("Não foi possível excluir o livro.");
@@ -151,6 +188,13 @@ export default function ListarLivrosPage() {
 
   const editar = (id: number | string) => {
     router.push(`${CADASTRAR_PATH}/${id}`);
+  };
+
+  const abrirLivroPublico = (livro: Livro) => {
+    if (!modoPublico) return;
+    sessionStorage.setItem("livroSelecionadoId", String(livro.id_livro));
+    sessionStorage.setItem("livroSelecionadoNome", livro.nome_livro);
+    router.push("/livro");
   };
 
   const paginasExibidas = useMemo(() => {
@@ -178,17 +222,34 @@ export default function ListarLivrosPage() {
     return saida;
   }, [paginaAtual, paginacao.total_paginas]);
 
+  const temFiltroAtivo = Boolean(buscaDebounced || categoriaFiltro);
+  const opcoesCategoria = categoriasOpcoes.length
+    ? categoriasOpcoes
+    : categoriasContagem.map(({ categoria_principal, cor_cima, cor_baixo }) => ({
+        categoria_principal,
+        cor_cima,
+        cor_baixo,
+      }));
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
         <h1>Livros</h1>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 14, color: "#374151" }}>
-            Títulos únicos: <strong>{totais.livros_unicos}</strong>
-          </span>
-          <span style={{ fontSize: 14, color: "#374151" }}>
-            Total em estoque: <strong>{totais.livros_total_estoque}</strong>
-          </span>
+        <div className={styles.summary}>
+          {temFiltroAtivo ? (
+            <span>
+              Resultado(s): <strong>{paginacao.total_itens}</strong>
+            </span>
+          ) : (
+            <>
+              <span>
+                Títulos únicos: <strong>{totais.livros_unicos}</strong>
+              </span>
+              <span>
+                Total em estoque: <strong>{totais.livros_total_estoque}</strong>
+              </span>
+            </>
+          )}
         </div>
         <div className={styles.tools}>
           <input
@@ -197,21 +258,59 @@ export default function ListarLivrosPage() {
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
+          <select
+            className={styles.categoryFilter}
+            value={categoriaFiltro}
+            onChange={(e) => setCategoriaFiltro(e.target.value)}
+            aria-label="Filtrar por categoria"
+          >
+            <option value="">Todas as categorias</option>
+            {opcoesCategoria.map((categoria) => (
+              <option
+                key={categoria.categoria_principal}
+                value={categoria.categoria_principal}
+              >
+                {categoria.categoria_principal}
+              </option>
+            ))}
+          </select>
           <button
             className={styles.refresh}
-            onClick={() => carregar(paginaAtual, buscaDebounced)}
+            onClick={() => carregar(paginaAtual, buscaDebounced, categoriaFiltro)}
             disabled={loading}
           >
             {loading ? "Carregando..." : "Atualizar"}
           </button>
-          <button
-            className={styles.new}
-            onClick={() => router.push(CADASTRAR_PATH)}
-          >
-            + Novo Livro
-          </button>
+          {!modoPublico && (
+            <button
+              className={styles.new}
+              onClick={() => router.push(CADASTRAR_PATH)}
+            >
+              + Novo Livro
+            </button>
+          )}
         </div>
       </div>
+
+      {categoriasContagem.length > 0 && (
+        <div className={styles.categoryCounts}>
+          {categoriasContagem.map((categoria) => (
+            <button
+              key={categoria.categoria_principal}
+              type="button"
+              className={styles.categoryCount}
+              style={{
+                background: `linear-gradient(135deg, ${categoria.cor_cima}, ${categoria.cor_baixo})`,
+              }}
+              onClick={() => setCategoriaFiltro(categoria.categoria_principal)}
+              aria-pressed={categoriaFiltro === categoria.categoria_principal}
+            >
+              <span>{categoria.categoria_principal}</span>
+              <strong>{categoria.quantidade}</strong>
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className={styles.loading}>Carregando…</div>
@@ -225,7 +324,19 @@ export default function ListarLivrosPage() {
             const capa =
               livro.foto_capa_url || livro.capa || "/placeholder-cover.png";
             return (
-              <div key={livro.id_livro} className={styles.card}>
+              <div
+                key={livro.id_livro}
+                className={`${styles.card} ${modoPublico ? styles.cardPublico : ""}`}
+                onClick={() => abrirLivroPublico(livro)}
+                role={modoPublico ? "button" : undefined}
+                tabIndex={modoPublico ? 0 : undefined}
+                onKeyDown={(e) => {
+                  if (modoPublico && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    abrirLivroPublico(livro);
+                  }
+                }}
+              >
                 <div className={styles.cover}>
                   <Image
                     src={capa}
@@ -244,20 +355,22 @@ export default function ListarLivrosPage() {
                     {livro.categoria_principal || "Sem categoria"}
                   </p>
                 </div>
-                <div className={styles.actions}>
-                  <button
-                    className={styles.edit}
-                    onClick={() => editar(livro.id_livro)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className={styles.delete}
-                    onClick={() => excluir(livro.id_livro)}
-                  >
-                    Excluir
-                  </button>
-                </div>
+                {!modoPublico && (
+                  <div className={styles.actions}>
+                    <button
+                      className={styles.edit}
+                      onClick={() => editar(livro.id_livro)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className={styles.delete}
+                      onClick={() => excluir(livro.id_livro)}
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

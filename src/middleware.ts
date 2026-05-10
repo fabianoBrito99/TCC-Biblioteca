@@ -84,6 +84,9 @@ export function middleware(req: NextRequest) {
   if (role) {
     const allowed = permissoes[role];
     if (!isPathAllowed(pathname, allowed)) {
+      if (pathname === "/livros" && url.searchParams.get("modo") === "publico") {
+        return NextResponse.next();
+      }
       const origin = getOrigin(req);
       const to = new URL("/login", origin);
       to.searchParams.set("next", pathname + search);

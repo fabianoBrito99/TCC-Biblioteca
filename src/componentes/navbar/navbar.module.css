@@ -1,5 +1,7 @@
 .nav100 {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: fixed;
   top: 0px;
   background: linear-gradient(
@@ -12,10 +14,21 @@
     #3c58d4
   );
   box-shadow: 0 8px 8px rgba(0, 0, 2, 0.308);
-  height: 80px;
+  height: 64px;
   width: 100%;
   position: fixed;
   z-index: 30; /* Lower z-index so it stays behind the menu */
+  overflow: hidden;
+}
+
+.nav100::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,211,86,.22) 48%, rgba(255,245,190,.34) 50%, rgba(255,211,86,.22) 52%, transparent 100%);
+  transform:translateX(-120%);
+  animation:navWarmth 8s ease-in-out infinite;
+  pointer-events:none;
 }
 
 .navMenu {
@@ -108,11 +121,11 @@
 
 .perfil {
   position: absolute;
-  right: 10px;
+  right: 12px;
   border-radius: 40%;
   top: 8px;
-  height: 60px;
-  width: 70px;
+  height: 48px;
+  width: 54px;
   z-index: 100;
 }
 
@@ -127,8 +140,8 @@
 
 .menuIconContainer {
   position: absolute;
-  left: 8px;
-  top: 10px;
+  left: 10px;
+  top: 9px;
   width: 40px;
   height: 55px;
   cursor: pointer;
@@ -217,22 +230,87 @@
 
 .notificacoes {
   position: absolute;
-  right: 150px;
-  top: 25px;
+  right: 118px;
+  top: 17px;
 }
 .comunidadeUser {
   position: absolute;
-  right: 90px;
-  top: 18px;
+  right: 68px;
+  top: 12px;
   z-index: 10;
 }
 
+.logoStage {
+  position:relative;
+  width:172px;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:logoEntrance 1.2s ease both;
+}
+
 .logo {
-  height: 75px;
-  position: absolute;
-  left: 790px;
-  top: 5px;
-  z-index: 1;
+  width:150px;
+  height:auto;
+  position: relative;
+  z-index: 2;
+  filter:drop-shadow(0 0 8px rgba(67,83,210,.28));
+  animation:logoReveal 2.8s ease both;
+}
+
+.logoGlow {
+  position:absolute;
+  width:112px;
+  height:34px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(255,218,92,.58), rgba(255,180,42,.18) 42%, transparent 72%);
+  filter:blur(7px);
+  opacity:.75;
+  animation:goldPulse 3.6s ease-in-out infinite;
+}
+
+.bookFlame {
+  position:absolute;
+  right:18px;
+  top:12px;
+  width:28px;
+  height:28px;
+  z-index:3;
+  pointer-events:none;
+  animation:bookOpen 4.8s ease-in-out infinite;
+}
+
+.bookWing {
+  position:absolute;
+  inset:8px 4px 5px;
+  border-radius:3px 3px 8px 8px;
+  border:1px solid rgba(255,255,255,.72);
+  border-top:0;
+  background:linear-gradient(90deg, rgba(255,255,255,.35), rgba(255,210,67,.55), rgba(255,255,255,.35));
+  box-shadow:0 0 12px rgba(255,196,58,.65);
+}
+
+.crossLight {
+  position:absolute;
+  left:12px;
+  top:4px;
+  width:4px;
+  height:18px;
+  border-radius:2px;
+  background:#fff8cf;
+  box-shadow:0 0 10px #ffd04f, 0 0 20px rgba(255,178,27,.55);
+}
+
+.crossLight::after {
+  content:"";
+  position:absolute;
+  left:-6px;
+  top:6px;
+  width:16px;
+  height:4px;
+  border-radius:2px;
+  background:#fff8cf;
 }
 
 /* Fumaça */
@@ -305,6 +383,34 @@
   }
 }
 
+@keyframes logoEntrance {
+  from { opacity:0; transform:translateY(-8px) scale(.96); }
+  to { opacity:1; transform:translateY(0) scale(1); }
+}
+
+@keyframes logoReveal {
+  0% { clip-path:inset(0 100% 0 0); opacity:.35; }
+  45% { clip-path:inset(0 38% 0 0); opacity:1; }
+  100% { clip-path:inset(0 0 0 0); opacity:1; }
+}
+
+@keyframes goldPulse {
+  0%, 100% { transform:scale(.88); opacity:.46; }
+  50% { transform:scale(1.14); opacity:.88; }
+}
+
+@keyframes bookOpen {
+  0%, 58%, 100% { transform:scale(.86) rotate(0deg); opacity:.45; }
+  68% { transform:scale(1.05) rotate(-2deg); opacity:1; }
+  78% { transform:scale(1) rotate(2deg); opacity:.9; }
+}
+
+@keyframes navWarmth {
+  0%, 48% { transform:translateX(-120%); opacity:0; }
+  58% { opacity:1; }
+  76%, 100% { transform:translateX(120%); opacity:0; }
+}
+
 .logoFogo {
   position: relative;
   top: -50px;
@@ -313,9 +419,6 @@
 
 /* Media Queries para dispositivos menores */
 @media (max-width: 1500px) {
-  .logo {
-    left: 660px;
-  }
 }
 
 @media (max-width: 1224px) {
