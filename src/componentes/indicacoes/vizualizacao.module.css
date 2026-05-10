@@ -20,7 +20,7 @@
 
 .grid1 {
   display: flex;
-  margin-left: 30px;
+  margin-left: 0px;
   flex-direction: column;
 }
 
@@ -148,7 +148,7 @@ width: 50%;
 }
 @media (max-width: 450px) {
 .grid{
-  margin-top: -50px;
+  margin-top: 50px;
   gap: 50px;
 }
 .grid h1{

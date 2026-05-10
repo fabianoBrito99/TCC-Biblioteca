@@ -1,34 +1,34 @@
 .nav100 {
+  --river-origin: 50%;
+  --nav-height: 68px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: fixed;
-  top: 0px;
-  background: linear-gradient(
-    to right,
-    #3c58d4,
-    #5b71d6,
-    #ffffff,
-    #fff,
-    #5b71d6,
-    #3c58d4
-  );
-  box-shadow: 0 8px 8px rgba(0, 0, 2, 0.308);
-  height: 64px;
+  top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  position: fixed;
-  z-index: 30; /* Lower z-index so it stays behind the menu */
+  max-width: 100vw;
+  height: var(--nav-height);
+  padding-inline: clamp(54px, 6vw, 110px);
+  box-sizing: border-box;
   overflow: hidden;
+  isolation: isolate;
+  background: transparent;
+  box-shadow: 0 8px 18px rgba(142, 166, 255, 0.16);
+  z-index: 30;
 }
 
-.nav100::after {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(90deg, transparent 0%, rgba(255,211,86,.22) 48%, rgba(255,245,190,.34) 50%, rgba(255,211,86,.22) 52%, transparent 100%);
-  transform:translateX(-120%);
-  animation:navWarmth 8s ease-in-out infinite;
-  pointer-events:none;
+.nav100::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 38%, rgba(2, 20, 78, 0.16) 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.14) 100%);
+  animation: navGlow 9s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .navMenu {
@@ -39,23 +39,17 @@
   top: 10px;
   bottom: 0;
   left: 0;
-  z-index: 100;
-  transition: height 0.5s ease;
   overflow: hidden;
   border-radius: 0 0 70px 0;
-  z-index: 3;
-}
-
-.menuContent {
-  padding-top: 50px;
+  transition: height 0.5s ease;
+  z-index: 25;
 }
 
 .navMenu.navOpen {
   margin-top: 50px;
   height: 100vh;
   border-radius: 0 0 140px 0;
-  box-shadow: 0 0px 16px rgb(116, 104, 0);
-
+  box-shadow: 0 0 16px rgba(116, 104, 0, 0.65);
 }
 
 .navMenu ul {
@@ -64,9 +58,15 @@
   margin: 0;
 }
 
+.navHover {
+  position: relative;
+  z-index: 26;
+}
+
 .menuContent {
   display: flex;
   flex-direction: column;
+  padding-top: 50px;
 }
 
 .navItem {
@@ -75,12 +75,13 @@
   justify-content: center;
   padding: 5px;
 }
+
 .navItem a {
   display: flex;
-  align-items: start;
-  justify-content: start;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 10px;
-  color: #000000;
+  color: #000;
 }
 
 .navMenu li {
@@ -95,62 +96,316 @@
   margin-left: 5px;
 }
 
-#home-icon {
-  position: relative;
-  top: 10px;
-  margin-left: 5px;
-  cursor: pointer;
-  z-index: 10; /* Ensure it's clickable */
-}
-
-#closeMenu {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: none;
-  background: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: rgb(148, 5, 5);
-}
-
-.sair {
-  position: relative;
-  bottom: -25vh;
-}
-
-.perfil {
-  position: absolute;
-  right: 12px;
-  border-radius: 40%;
-  top: 8px;
-  height: 48px;
-  width: 54px;
-  z-index: 100;
-}
-
 .navHover .menuContent li:hover {
-  background: linear-gradient(to left, #e7d570, rgba(255, 255, 255, 0.938));
+  background: linear-gradient(to left, #e7d570, rgba(255, 255, 255, 0.94));
   padding: 5px;
   margin: 0;
   color: rgb(55, 69, 82);
-  border-radius: 0 20% 20% 0px;
+  border-radius: 0 20% 20% 0;
   border: 1px solid rgb(215, 218, 250);
 }
 
 .menuIconContainer {
   position: absolute;
   left: 10px;
-  top: 9px;
+  top: 10px;
   width: 40px;
-  height: 55px;
+  height: 48px;
   cursor: pointer;
   transition: transform 0.4s ease;
-  z-index: 99;
+  z-index: 8;
 }
 
 .menuIconContainer.rotated {
   transform: rotate(60deg);
+}
+
+.menuIcon {
+  filter: drop-shadow(0 3px 6px rgba(19, 42, 118, 0.35));
+}
+
+.perfil,
+.iconContainer {
+  position: absolute;
+  right: 12px;
+  top: 9px;
+  z-index: 8;
+}
+
+.perfil {
+  width: 54px;
+  height: 48px;
+  border-radius: 40%;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(14, 26, 78, 0.25);
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.notificacoes {
+  position: absolute;
+  right: 118px;
+  top: 17px;
+  z-index: 8;
+}
+
+.comunidadeUser {
+  position: absolute;
+  right: 68px;
+  top: 12px;
+  z-index: 8;
+}
+
+.navRiver {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.navRiver::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(360deg, rgba(255, 255, 255, 0.94) 0%, rgba(162, 241, 255, 0.94) 18%, rgba(46, 166, 243, 0.98) 50%, rgba(8, 93, 192, 0.96) 100%),
+    repeating-linear-gradient(-8deg, rgba(255, 255, 255, 0.18) 0 10px, rgba(4, 54, 144, 0.18) 10px 22px),
+    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.9), transparent 34%);
+  background-size: 100% 100%, 42px 20px, 100% 100%;
+  animation: riverTextureMove 3.4s linear infinite, riverUndulate 4.8s ease-in-out infinite;
+  opacity: 0.98;
+}
+
+.navRiver::after {
+  content: "";
+  position: absolute;
+  inset: 7px 0 6px;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(24, 151, 255), transparent 22%),
+    linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.42) 50%, transparent 100%);
+  animation: centerCurrent 5.8s ease-in-out infinite;
+  opacity: 0.85;
+}
+
+.riverLane {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  opacity: 0;
+  filter: drop-shadow(0 0 14px rgba(74, 194, 255, 0.42));
+}
+
+.riverLane::before,
+.riverLane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.riverLane::before {
+  background: repeating-radial-gradient(
+    circle at 0 50%,
+    rgba(255, 255, 255, 0.9) 0 4px,
+    rgba(255, 255, 255, 0) 5px 18px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  animation: foamSlide 5.2s 2.3s linear infinite;
+}
+
+.riverLane::after {
+  background:
+    radial-gradient(circle at 0 50%, rgba(255, 255, 255, 0.65), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 40%, rgba(0, 99, 198, 0.24) 100%);
+  opacity: 0.66;
+}
+
+.riverLeft {
+  left: var(--river-origin);
+  transform: translateX(-100%) scaleX(0);
+  transform-origin: right center;
+  clip-path: polygon(100% 50%, 92% 10%, 0 0, 0 100%, 92% 90%);
+  animation: riverRevealLeft 1.55s 1.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.riverRight {
+  left: var(--river-origin);
+  transform: scaleX(0);
+  transform-origin: left center;
+  clip-path: polygon(0 50%, 8% 10%, 100% 0, 100% 100%, 8% 90%);
+  animation: riverRevealRight 1.55s 1.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.riverTexture {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(112, 224, 255, 0.42) 24%, rgba(22, 144, 231, 0.18) 55%, rgba(8, 92, 183, 0.42) 100%),
+    repeating-linear-gradient(-10deg, rgba(255, 255, 255, 0.14) 0 9px, rgba(9, 43, 138, 0.14) 9px 22px);
+  background-size: 100% 100%, 40px 20px;
+  animation: riverTextureMove 3.2s 2.2s linear infinite, riverUndulate 4.6s 2.2s ease-in-out infinite;
+}
+
+.logoStage {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  z-index: 4;
+  width: min(250px, calc(100vw - 210px));
+  max-width: calc(100vw - 210px);
+  height: calc(var(--nav-height) - 10px);
+  min-width: 0;
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  animation: logoStageEnter 1s ease both;
+  overflow: hidden;
+}
+
+.logoStage::before {
+  content: "";
+  position: absolute;
+  width: 68%;
+  height: 58%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 240, 183, 0.85), rgba(255, 212, 107, 0.22) 45%, transparent 72%);
+  filter: blur(10px);
+  animation: haloPulse 4.2s ease-in-out infinite;
+}
+
+.logoSvg {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 6px 12px rgba(33, 56, 151, 0.18));
+}
+
+.logoLetterGroup,
+.logoNameGroup,
+.logoBookGroup {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logoBookPlacement {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logoLetterGroup {
+  animation: logoLetterEnter 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.logoNameGroup {
+  opacity: 0;
+  animation: logoNameEnter 0.9s 0.5s ease both;
+}
+
+.logoBookGroup {
+  opacity: 0;
+  animation: logoBookEnter 0.9s 1.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.logoLetterMain {
+  fill: url(#logo-h-fill);
+  stroke: #164b88;
+  stroke-width: 7px;
+  stroke-linejoin: round;
+}
+
+.logoLetterInset {
+  fill: #dbe4ff;
+  opacity: 0.82;
+}
+
+.logoNameTop,
+.logoNameBottom {
+  font-family: "Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif;
+  font-weight: 900;
+  letter-spacing: 2px;
+  fill: #2540b4;
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 3px;
+}
+
+.logoNameTop {
+  font-size: 48px;
+}
+
+.logoNameBottom {
+  font-size: 32px;
+}
+
+.logoBookBase {
+  fill: rgba(101, 142, 232, 0.22);
+}
+
+.logoBookLeftPage,
+.logoBookRightPage,
+.logoCrossGroup {
+  transform-box: fill-box;
+}
+
+.logoBookLeftPage {
+  transform-origin: right center;
+  animation: bookOpenLeft 0.85s 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.logoBookRightPage {
+  transform-origin: left center;
+  animation: bookOpenRight 0.85s 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.logoCrossGroup {
+  transform-origin: center;
+  animation: crossRise 0.7s 1.85s ease both;
+}
+
+.logoBookPage {
+  fill: url(#logo-book-fill);
+  stroke: #1146f5;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(255, 219, 122, 0.35));
+}
+
+.logoBookSpine {
+  fill: none;
+  stroke: #7a67e4;
+  stroke-width: 4px;
+  stroke-linecap: round;
+}
+
+.logoCrossVertical,
+.logoCrossHorizontal {
+  fill: none;
+  stroke: #fff6b5;
+  stroke-width: 4px;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(255, 216, 93, 0.7));
+  animation: crossGlow 3.4s 2.45s ease-in-out infinite;
+}
+
+.logoBookWave {
+  fill: none;
+  stroke: #2e9cf0;
+  stroke-width: 5px;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px rgba(74, 194, 255, 0.72));
+  animation: bookWater 3.8s 2.35s ease-in-out infinite;
 }
 
 .inputContainer1 {
@@ -166,7 +421,7 @@
   border-radius: 30px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 1px 1px 5px rgba(192, 192, 192, 0.815);
+  box-shadow: 1px 1px 5px rgba(192, 192, 192, 0.82);
   z-index: 4;
   margin-top: -65px;
 }
@@ -197,7 +452,7 @@
 .inputContainer1 .input:focus,
 .inputContainer1 .input:hover {
   outline: none;
-  border-color: rgba(97, 113, 253, 0.664);
+  border-color: rgba(97, 113, 253, 0.66);
   background: linear-gradient(to left, rgb(94, 184, 245), rgb(255, 231, 231));
   box-shadow: 0 0 0 4px rgba(28, 2, 46, 0.1);
 }
@@ -223,370 +478,475 @@
   background-color: #f0f0f0;
 }
 
-.navMenu {
-  z-index: 25;
-}
-
-
-.notificacoes {
-  position: absolute;
-  right: 118px;
-  top: 17px;
-}
-.comunidadeUser {
-  position: absolute;
-  right: 68px;
-  top: 12px;
-  z-index: 10;
-}
-
-.logoStage {
-  position:relative;
-  width:172px;
-  height:58px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  animation:logoEntrance 1.2s ease both;
-}
-
-.logo {
-  width:150px;
-  height:auto;
+.sair {
   position: relative;
-  z-index: 2;
-  filter:drop-shadow(0 0 8px rgba(67,83,210,.28));
-  animation:logoReveal 2.8s ease both;
+  bottom: -25vh;
 }
 
-.logoGlow {
-  position:absolute;
-  width:112px;
-  height:34px;
-  border-radius:999px;
-  background:radial-gradient(circle, rgba(255,218,92,.58), rgba(255,180,42,.18) 42%, transparent 72%);
-  filter:blur(7px);
-  opacity:.75;
-  animation:goldPulse 3.6s ease-in-out infinite;
+@keyframes navGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
-.bookFlame {
-  position:absolute;
-  right:18px;
-  top:12px;
-  width:28px;
-  height:28px;
-  z-index:3;
-  pointer-events:none;
-  animation:bookOpen 4.8s ease-in-out infinite;
+@keyframes logoStageEnter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 10px)) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
-.bookWing {
-  position:absolute;
-  inset:8px 4px 5px;
-  border-radius:3px 3px 8px 8px;
-  border:1px solid rgba(255,255,255,.72);
-  border-top:0;
-  background:linear-gradient(90deg, rgba(255,255,255,.35), rgba(255,210,67,.55), rgba(255,255,255,.35));
-  box-shadow:0 0 12px rgba(255,196,58,.65);
+@keyframes haloPulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.56;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.88;
+  }
 }
 
-.crossLight {
-  position:absolute;
-  left:12px;
-  top:4px;
-  width:4px;
-  height:18px;
-  border-radius:2px;
-  background:#fff8cf;
-  box-shadow:0 0 10px #ffd04f, 0 0 20px rgba(255,178,27,.55);
-}
-
-.crossLight::after {
-  content:"";
-  position:absolute;
-  left:-6px;
-  top:6px;
-  width:16px;
-  height:4px;
-  border-radius:2px;
-  background:#fff8cf;
-}
-
-/* Fumaça */
-.smoke {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  background: rgb(10, 3, 3);
-  border-radius: 50%;
-  transform: translateX(-50%);
-  animation: smoke 3s infinite ease-in-out;
-}
-
-/* Texto */
-.text p {
-  margin: 0;
-  font-size: 25px;
-  font-weight: bold;
-  text-align: left;
-  color: #dbdfb6;
-}
-.text .sobrenome {
-  top: 12px;
-  left: -99px;
-  font-size: 13px;
-  position: relative;
-  font-family: --type-tree;
-}
-.text .biblioteca {
-  display: block;
-  font-size: 9px;
-  position: relative;
-  top: 10px;
-  color: #fff;
-  left: 19px;
-}
-
-.text .biblioteca::before,
-.text .biblioteca::after {
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 3px;
-  background: #ffffff;
-  top: 30%;
-}
-
-.text .biblioteca::before {
-  left: -15px;
-  border-radius: 0% 50% 50% 0%;
-}
-
-.text .biblioteca::after {
-  left: 60px;
-  border-radius: 50% 0% 0% 50%;
-}
-
-/* Animações */
-
-@keyframes smoke {
+@keyframes logoLetterEnter {
   0% {
-    transform: translate(-50%, 0) scale(0.5);
-    opacity: 0.6;
+    opacity: 0;
+    transform: translateX(-18px) scale(0.76);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(3px) scale(1.04);
   }
   100% {
-    transform: translate(-50%, -60px) scale(1.2);
-    opacity: 0;
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }
 
-@keyframes logoEntrance {
-  from { opacity:0; transform:translateY(-8px) scale(.96); }
-  to { opacity:1; transform:translateY(0) scale(1); }
+@keyframes logoNameEnter {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
 }
 
-@keyframes logoReveal {
-  0% { clip-path:inset(0 100% 0 0); opacity:.35; }
-  45% { clip-path:inset(0 38% 0 0); opacity:1; }
-  100% { clip-path:inset(0 0 0 0); opacity:1; }
+@keyframes logoBookEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.68) rotate(-8deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.08) rotate(3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
 }
 
-@keyframes goldPulse {
-  0%, 100% { transform:scale(.88); opacity:.46; }
-  50% { transform:scale(1.14); opacity:.88; }
+@keyframes bookOpenLeft {
+  0% {
+    transform: perspective(120px) rotateY(-82deg) skewY(8deg);
+  }
+  100% {
+    transform: perspective(120px) rotateY(-16deg) skewY(2deg);
+  }
 }
 
-@keyframes bookOpen {
-  0%, 58%, 100% { transform:scale(.86) rotate(0deg); opacity:.45; }
-  68% { transform:scale(1.05) rotate(-2deg); opacity:1; }
-  78% { transform:scale(1) rotate(2deg); opacity:.9; }
+@keyframes bookOpenRight {
+  0% {
+    transform: perspective(120px) rotateY(82deg) skewY(-8deg);
+  }
+  100% {
+    transform: perspective(120px) rotateY(16deg) skewY(-2deg);
+  }
 }
 
-@keyframes navWarmth {
-  0%, 48% { transform:translateX(-120%); opacity:0; }
-  58% { opacity:1; }
-  76%, 100% { transform:translateX(120%); opacity:0; }
+@keyframes crossRise {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.72);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.logoFogo {
-  position: relative;
-  top: -50px;
-  left: -80px;
+@keyframes crossGlow {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
-/* Media Queries para dispositivos menores */
-@media (max-width: 1500px) {
+@keyframes bookWater {
+  0%,
+  100% {
+    stroke-dasharray: 10 14;
+    stroke-dashoffset: 0;
+    opacity: 0.75;
+  }
+  50% {
+    stroke-dasharray: 16 10;
+    stroke-dashoffset: -10;
+    opacity: 1;
+  }
 }
 
-@media (max-width: 1224px) {
-  .logo {
-    left: 360px;
+@keyframes riverRevealLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) scaleX(0);
+  }
+  45% {
+    opacity: 0.98;
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-100%) scaleX(1.04);
+  }
+  100% {
+    opacity: 0.96;
+    transform: translateX(-100%) scaleX(1);
+  }
+}
+
+@keyframes riverRevealRight {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  45% {
+    opacity: 0.98;
+  }
+  70% {
+    opacity: 1;
+    transform: scaleX(1.04);
+  }
+  100% {
+    opacity: 0.96;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes foamSlide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-36px);
+  }
+}
+
+@keyframes riverTextureMove {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 0 0, 42px 0, 0 0;
+  }
+}
+
+@keyframes riverUndulate {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(1px) scaleY(1.04);
+  }
+}
+
+@keyframes centerCurrent {
+  0%,
+  100% {
+    transform: scaleX(0.94);
+    opacity: 0.66;
+  }
+  50% {
+    transform: scaleX(1.04);
+    opacity: 0.95;
   }
 }
 
 @media (max-width: 1024px) {
   .navMenu {
-    width: 200px;
-    border-radius: 0;
+    width: 210px;
+  }
+
+  .nav100 {
+    --nav-height: 64px;
+    --river-origin: 50%;
+    padding-inline: 62px 112px;
   }
 
   .menuContent {
-    padding-top: 40px;
+    padding-top: 42px;
   }
 
   .navItem a {
     font-size: 14px;
   }
 
-  .logo {
-    left: 360px;
+  .riverLane {
+    width: 50%;
+    height: 100%;
+  }
+
+  .logoStage {
+    width: min(238px, calc(100vw - 186px));
+    max-width: calc(100vw - 186px);
+  }
+
+  .logoNameTop {
+    font-size: 39px;
+  }
+
+  .logoNameBottom {
+    font-size: 26px;
   }
 }
 
 @media (max-width: 820px) {
-  .logo {
-    left: 260px;
-  }
-}
-
-@media (max-width: 769px) {
   .nav100 {
-    height: 60px;
+    --nav-height: 60px;
+    --river-origin: 50%;
+    padding-inline: 58px 106px;
   }
 
-  .navMenu {
-    width: 180px;
+  .logoStage {
+    width: min(212px, calc(100vw - 172px));
+    max-width: calc(100vw - 172px);
   }
 
-  .menuContent {
-    padding-top: 30px;
-  }
-
-  .navItem a {
-    font-size: 12px;
-  }
-  .logo {
-    width: 35%;
-    left: 260px;
-    top: -45px;
-  }
-  .perfil {
-    height: 50px;
-    width: 60px;
-  }
-}
-@media (max-width: 620px) {
-  .logo {
-    width: 30%;
-    left: 180px;
-  }
-}
-@media (max-width: 500px) {
-  .logo {
-    width: 30%;
-    left: 130px;
-  }
-}
-@media (max-width: 480px) {
-  .nav100 {
-    height: 50px;
-    
-  }
-  .navMenu.navOpen{
-    width: 50%;
+  .riverLane {
     top: 0;
+    width: 50%;
+    height: 100%;
   }
 
+  .logoNameTop {
+    font-size: 33px;
+  }
+
+  .logoNameBottom {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav100 {
+    --nav-height: 54px;
+    --river-origin: 50%;
+    padding-inline: 50px 88px;
+  }
+ 
+
   .navMenu {
-    width: 20%;
-    
+    width: min(240px, 74vw);
   }
 
   .menuContent {
-    padding-top: 20px;
+    padding-top: 32px;
   }
 
   .navItem a {
-    font-size: 10px;
-  }
-  .notificacoes,
-  .comunidadeUser {
-    top: 10px;
-  }
-.logo {
-    width: 15%;
-    height: 60%;
-    left: 130px;
-    top: 10px;
-  }
-  .nav100 {
-    background: linear-gradient(
-      to right,
-      #3c58d4,
-      #ffffff,
-      #3c58d4,
-      #3c58d4,
-
-    );
-  }
-  .perfil {
-    position: fixed;
-    left: 350px;
-    height: 40px;
-    width: 50px;
+    font-size: 11px;
   }
 
-.notificacoes {
-  position: absolute;
-  right: 150px;
-  top: 25px;
-}
-
-
-}
-
-@media (max-width: 400px) {
-  .navMenu {
-    width: 20%;
-    margin: 0;
-    font-size: 0.1rem;
-  }
-
-  .logo {
-    width: 15%;
-    height: 60%;
-    left: 130px;
-    top: 10px;
-  }
-  .nav100 {
-    background: linear-gradient(
-      to right,
-      #3c58d4,
-      #ffffff,
-       #ffffff,
-      #3c58d4,
-      #3c58d4,
-    );
-  }
-    .perfil {
-    position: fixed;
-    left: 330px;
-    height: 40px;
-    width: 50px;
+  .logoStage {
+    width: min(186px, calc(100vw - 148px));
+    max-width: calc(100vw - 148px);
   }
 
   .notificacoes {
-  position: fixed;
-  left: 280px;
-  top: 10px;
-  height: 1px;
-  width: 2px;
-  z-index: 999;
+    right: 74px;
+    top: 13px;
+    transform: scale(0.88);
+    transform-origin: center;
+  }
+
+  .comunidadeUser {
+    right: 46px;
+    top: 10px;
+    transform: scale(0.9);
+    transform-origin: center;
+  }
+
+  .perfil,
+  .iconContainer {
+    right: 8px;
+    top: 8px;
+  }
+
+  .perfil {
+    width: 36px;
+    height: 33px;
+  }
+
+  .menuIconContainer {
+    top: 5px;
+    left: 4px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .riverLane {
+    top: 0;
+    width: 50%;
+    height: 100%;
+  }
+
+  .logoNameTop {
+    font-size: 23px;
+    letter-spacing: 1px;
+  }
+
+  .logoNameBottom {
+    font-size: 15px;
+    letter-spacing: 0.8px;
+  }
+
+  .menuIcon {
+    transform: scale(0.76);
+    transform-origin: top left;
+  }
 }
-.menuIconContainer{
-  top: 2px;
+
+@media (max-width: 480px) {
+  .nav100 {
+    --nav-height: 48px;
+    --river-origin: 50%;
+    padding-inline: 42px 78px;
+  }
+
+  .navMenu {
+    width: 0;
+    top: 0;
+  }
+
+  .navMenu.navOpen {
+    width: min(220px, 76vw);
+    margin-top: 42px;
+  }
+
+  .navItem a {
+    font-size: 9px;
+  }
+
+  .logoStage {
+    width: min(168px, calc(100vw - 124px));
+    max-width: calc(100vw - 124px);
+    height: calc(var(--nav-height) - 9px);
+  }
+
+  .notificacoes {
+    right: 66px;
+    top: 10px;
+    transform: scale(0.78);
+  }
+
+  .comunidadeUser {
+    right: 39px;
+    top: 8px;
+    transform: scale(0.8);
+  }
+
+  .perfil,
+  .iconContainer {
+    right: 6px;
+    top: 7px;
+  }
+
+  .perfil {
+    width: 30px;
+    height: 28px;
+  }
+
+  .menuIconContainer {
+    top: 4px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .riverLane {
+    top: 0;
+    width: 50%;
+    height: 100%;
+  }
+
+  .logoNameTop {
+    font-size: 19px;
+    letter-spacing: 0.6px;
+  }
+
+  .logoNameBottom {
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .menuIcon {
+    transform: scale(0.66);
+  }
 }
+
+@media (max-width: 380px) {
+  .nav100 {
+    --nav-height: 46px;
+    --river-origin: 50%;
+    padding-inline: 38px 72px;
+  }
+
+  .logoStage {
+    width: min(154px, calc(100vw - 112px));
+    max-width: calc(100vw - 112px);
+    height: calc(var(--nav-height) - 10px);
+  }
+
+  .riverLane {
+    top: 0;
+    width: 50%;
+    height: 100%;
+  }
+
+  .notificacoes {
+    right: 58px;
+  }
+
+  .comunidadeUser {
+    right: 34px;
+  }
+
+  .perfil {
+    width: 28px;
+    height: 26px;
+  }
+
+  .logoNameTop {
+    font-size: 16px;
+  }
+
+  .logoNameBottom {
+    font-size: 11px;
+  }
 }

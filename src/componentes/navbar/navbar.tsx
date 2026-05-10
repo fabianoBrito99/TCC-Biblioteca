@@ -31,6 +31,85 @@ type User = {
   tipo_usuario: string;
 };
 
+function AnimatedNavbarLogo() {
+  return (
+    <div className={styles.logoStage} aria-label="Helena Lamazzotte">
+      <svg
+        className={styles.logoSvg}
+        viewBox="0 0 320 120"
+        role="img"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="logo-h-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="70%" stopColor="#eef2ff" />
+            <stop offset="100%" stopColor="#d7e0ff" />
+          </linearGradient>
+          <linearGradient
+            id="logo-book-fill"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
+            <stop offset="0%" stopColor="#fffef8" />
+            <stop offset="58%" stopColor="#ffe288" />
+            <stop offset="100%" stopColor="#f4b63d" />
+          </linearGradient>
+        </defs>
+
+        <g className={styles.logoLetterGroup}>
+          <path
+            className={styles.logoLetterMain}
+            d="M24 15h28v30h31V15h28v90H83V71H52v34H24V15Z"
+          />
+          <path
+            className={styles.logoLetterInset}
+            d="M37 27h10v65H37V27Zm51 0h10v65H88V27Zm-36 28h31v9H52v-9Z"
+          />
+        </g>
+
+        <g className={styles.logoNameGroup}>
+          <text x="118" y="46" className={styles.logoNameTop}>
+            ELENA
+          </text>
+          <text x="118" y="82" className={styles.logoNameBottom}>
+            RAMAZZOTTE
+          </text>
+        </g>
+
+        <g className={styles.logoBookGroup}>
+          <g className={styles.logoBookPlacement}>
+            <path
+              className={styles.logoBookBase}
+              d="M229 69c10-5 22-5 32 0 5 2 8 4 9 6h-50c2-2 5-4 9-6Z"
+            />
+            <g className={styles.logoBookLeftPage}>
+              <path
+                className={styles.logoBookPage}
+                d="M239 33c-10 0-18 4-25 9v24c7-4 15-6 25-6V33Z"
+              />
+            </g>
+            <g className={styles.logoBookRightPage}>
+              <path
+                className={styles.logoBookPage}
+                d="M239 33c10 0 18 4 25 9v24c-7-4-15-6-25-6V33Z"
+              />
+            </g>
+            <path className={styles.logoBookSpine} d="M239 33v34" />
+            <g className={styles.logoCrossGroup}>
+              <path className={styles.logoCrossVertical} d="M243 14v20" />
+              <path className={styles.logoCrossHorizontal} d="M236 22h14" />
+            </g>
+            <path className={styles.logoBookWave} d="M218 75c13-8 31-8 43 0" />
+          </g>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -142,6 +221,14 @@ export default function Navbar() {
   return (
     <nav className={`${styles.navMenu} ${menuOpen ? styles.navOpen : ""}`}>
       <div className={styles.nav100}>
+        <div className={styles.navRiver} aria-hidden="true">
+          <span className={`${styles.riverLane} ${styles.riverLeft}`}>
+            <span className={styles.riverTexture}></span>
+          </span>
+          <span className={`${styles.riverLane} ${styles.riverRight}`}>
+            <span className={styles.riverTexture}></span>
+          </span>
+        </div>
         {/* Avatar do usuário */}
         {user ? (
           <Link href="/conta">
@@ -165,14 +252,7 @@ export default function Navbar() {
           <ComunidadesUsuario usuarioId={user?.id} />
         </div>
 
-        <div className={styles.logoStage} aria-label="Helena Ramazzotte">
-          <span className={styles.logoGlow}></span>
-          <Image className={styles.logo} src="/img/Frame8.png" alt="" width={300} height={100}/>
-          <span className={styles.bookFlame}>
-            <span className={styles.bookWing}></span>
-            <span className={styles.crossLight}></span>
-          </span>
-        </div>
+        <AnimatedNavbarLogo />
 
         {/* Menu Toggle */}
         <div className={styles.menuIconContainer}>

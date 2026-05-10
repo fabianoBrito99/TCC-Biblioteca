@@ -98,6 +98,7 @@
 @media (max-width: 400px) {
   .bellContainer{
     top: 0px;
-    left: -70px;
+    top: -10px;
+    left: -20px;
   }
 }

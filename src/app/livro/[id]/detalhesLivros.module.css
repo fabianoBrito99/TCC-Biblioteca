@@ -1,9 +1,5 @@
 .containerConsLiv {
-  background: linear-gradient(
-    to bottom,
-    rgba(173, 178, 197, 0.767),
-    rgba(136, 138, 255, 0.568)
-  );
+
   width: 100vw;
   height: 80vh;
   justify-content: center;
@@ -533,8 +529,7 @@
 .sugestoes{
   display: flex;
   flex-direction: column;
-  width: 60%;
-  margin-top: 30px;
+
 
 }
 
@@ -807,11 +802,7 @@
     font-size:1.55rem;
   }
 
-  .sugestoesContainer {
-    display:block;
-    width:100%;
-    margin-top:0;
-  }
+
 
   .sugestoesContainer h1 {
     width:100%;

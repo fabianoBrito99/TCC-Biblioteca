@@ -1,7 +1,6 @@
-.containerHome{
+.containerHome {
   background: #fdf8e2;
 }
-
 
 .section-carrosel-categorias .swiper-pagination {
   bottom: 10px;
@@ -22,24 +21,21 @@
   border-radius: 80px;
 }
 
-.cardLivro {
+/* .cardLivro {
   background: #fff;
-  width: 280px; 
-  height: 400px; 
+  width: 280px;
+  height: 400px;
   padding: 10px;
   border-radius: 10px;
   text-align: center;
   box-sizing: border-box;
   box-shadow: 0 10px 10px rgb(12, 8, 8);
   transition: transform 0.2s ease-in-out;
-  margin: 0 10px; 
+  margin: 0 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-
-}
-
-
+} */
 
 .categoriaContainer {
   margin: 20px 0;
@@ -51,7 +47,6 @@
   margin: 20px 0 10px 10px;
   text-transform: uppercase;
 }
-
 
 /* Remover desfoque - Certificar que nenhum estilo de desfoque seja aplicado */
 .section-carrosel-categorias .swiper-slide {
@@ -67,7 +62,6 @@
   margin-top: 90px;
 }
 
-
 .categoria {
   font-size: 24px;
   margin-bottom: 1px;
@@ -79,7 +73,7 @@
 }
 
 .cardLivro {
-  width: 250px; 
+  width: 250px;
   height: 500px;
   border-radius: 8px;
   overflow: hidden;
@@ -99,17 +93,15 @@
 .cardLivro h2,
 .cardLivro h4 {
   margin-top: 10px;
-  font-size: 1.25rem;
+  font-size: 0.7rem;
   color: #000000;
 }
 
-
 .cardLivro h4 {
   margin-top: 10px;
-  font-size: 1rem;
+  font-size: 0.5rem;
   color: #5e4c4c;
 }
-
 
 .estrela {
   font-size: 2rem;
@@ -142,19 +134,17 @@
 
 .tituloLivro {
   margin-top: 10px;
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #000;
   width: 100%;
   height: 50px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-
 
 .avaliacao {
   margin-top: 5px;
@@ -163,274 +153,282 @@
   gap: 2px;
 }
 
-.indicacoes{
+.indicacoes {
   margin-top: 80px;
-  }
+}
 
 .containerHome {
   min-height: 100vh;
-  background:#030608;
-  color:#f8fafc;
-  padding-bottom:32px;
-  overflow-x:hidden;
+  background: #fdf8e2;
+  color: #f8fafc;
+  padding-bottom: 32px;
+  overflow-x: hidden;
 }
 
 .indicacoes {
-  margin-top:0;
-  padding:0 0 18px;
-  background:#030608;
+  margin: 50px 0 20px 0;
+  padding: 0 0 18px;
+  background: #4d4123;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 
 .categoriasSection {
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-  padding:0 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 0 0 32px;
 }
 
 .categoriaContainer {
-  margin:0;
-  padding:0 0 0 14px;
+  margin: 0;
+  padding: 0 0 0 14px;
 }
 
 .rowHeader {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  min-height:28px;
-  padding-right:14px;
-  margin-bottom:8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  padding-right: 14px;
+  margin-bottom: 8px;
 }
 
 .categoria {
-  color:#f8fafc;
-  font-size:16px;
-  line-height:1.2;
-  margin:0;
-  font-weight:800;
-  text-transform:none;
+  color: #000000;
+  font-size: 16px;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 800;
+  text-transform: capitalize;
 }
 
 .bookRail {
-  width:100%;
-  overflow:visible;
-  padding:0 42px 2px 0;
+  width: 100%;
+  overflow: visible;
+  padding: 0 42px 2px 0;
 }
 
 .bookSlide {
-  width:112px !important;
-  cursor:pointer;
+  width: 112px !important;
+  cursor: pointer;
 }
 
 .moreSlide {
-  width:132px !important;
+  width: 132px !important;
 }
 
 .cardLivro {
-  width:112px;
-  height:auto;
-  min-height:224px;
-  margin:0;
-  padding:0;
-  background:transparent;
-  border:0;
-  border-radius:4px;
-  box-shadow:none;
-  overflow:visible;
-  text-align:left;
-  display:flex;
-  flex-direction:column;
-  align-items:stretch;
-  transition:transform .18s ease, filter .18s ease;
+  width: 112px;
+  height: auto;
+  min-height: 224px;
+  margin: 0;
+  padding: 5px;
+  background: #4d41234b;
+  border: 0;
+  border-radius: 4px;
+   box-shadow: 0 5px 10px 2px #4d41234b;
+  overflow: visible;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
 }
 
 .cardLivro:hover {
-  transform:scale(1.045);
-  filter:brightness(1.08);
+  transform: scale(1.045);
+  filter: brightness(1.08);
 }
 
 .capaLivro,
 .cardLivro img {
-  width:112px;
-  height:168px;
-  margin:0;
-  border-radius:4px;
-  object-fit:cover;
-  background:#111827;
-  box-shadow:0 10px 22px rgba(0,0,0,.42);
+  width: 112px;
+  height: 168px;
+  margin: 0;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #111827;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.42);
 }
 
 .tituloLivro {
-  margin:6px 0 0;
-  width:112px;
-  min-height:29px;
-  color:#f8fafc;
-  font-size:11px;
-  line-height:1.25;
-  font-weight:800;
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+  margin: 6px 0 0;
+  width: 112px;
+  color: #000000;
+  font-size: 11px;
+  line-height: 1.2;
 
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  word-break: normal;
+  overflow-wrap: normal;
+}
 .autor {
-  margin:3px 0 0;
-  width:112px;
-  color:#a7b0bb;
-  font-size:10px;
-  line-height:1.25;
-  font-weight:700;
-  display:-webkit-box;
-  -webkit-line-clamp:1;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
+  margin: 3px 0 0;
+  width: 112px;
+  color: #a7b0bb;
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .mediaLivro {
-  display:flex;
-  align-items:center;
-  gap:1px;
-  margin-top:4px;
-  font-size:11px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-top: 4px;
+  font-size: 11px;
 }
 
 .mediaLivro strong {
-  margin-left:3px;
-  color:#dbeafe;
-  font-size:10px;
+  margin-left: 3px;
+  color: #dbeafe;
+  font-size: 10px;
 }
 
 .starAtiva {
-  color:#ffc400;
+  color: #ffc400;
 }
 
 .starInativa {
-  color:#7c8794;
+  color: #7c8794;
 }
 
 .verMaisCard {
-  width:132px;
-  height:168px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:4px;
-  background:#161b22;
-  color:#f8fafc;
-  cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:flex-start;
-  gap:8px;
-  padding:14px;
-  text-align:left;
-  box-shadow:0 10px 22px rgba(0,0,0,.30);
+  width: 132px;
+  height: 168px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  background: #161b22;
+  color: #f8fafc;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px;
+  text-align: left;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
 }
 
 .verMaisCard span {
-  font-size:12px;
-  color:#60a5fa;
-  font-weight:900;
-  text-transform:uppercase;
+  font-size: 12px;
+  color: #60a5fa;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .verMaisCard strong {
-  font-size:14px;
-  line-height:1.2;
-  overflow-wrap:anywhere;
+  font-size: 14px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .navButton {
-  position:absolute;
-  top:52px;
-  z-index:3;
-  width:30px;
-  height:64px;
-  border:0;
-  border-radius:4px;
-  background:rgba(0,0,0,.58);
-  color:#fff;
-  cursor:pointer;
+  position: absolute;
+  top: 115px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(61, 56, 9, 0.58);
+  color: #fff;
+  cursor: pointer;
 }
 
 .navHidden {
-  display:none;
+  display: none;
 }
 
 .navButton::before {
-  display:block;
-  font-size:30px;
-  line-height:64px;
+  display: block;
+  font-size: 30px;
+  margin-top: -5px;
+
 }
 
 .navPrev {
-  left:0;
+  left: 0;
 }
 
 .navPrev::before {
-  content:"‹";
+  content: "‹";
 }
 
 .navNext {
-  right:6px;
+  right: 6px;
 }
 
 .navNext::before {
-  content:"›";
+  content: "›";
 }
 
 @media (min-width: 760px) {
   .categoriasSection {
-    gap:28px;
+    gap: 28px;
   }
 
   .categoriaContainer {
-    padding-left:28px;
+    padding-left: 28px;
   }
 
   .categoria {
-    font-size:20px;
+    font-size: 20px;
   }
 
   .bookSlide {
-    width:150px !important;
+    width: 150px !important;
   }
 
   .moreSlide {
-    width:170px !important;
+    width: 170px !important;
   }
 
   .cardLivro {
-    width:150px;
-    min-height:300px;
+    width: 150px;
+    min-height: 300px;
   }
 
   .capaLivro,
   .cardLivro img {
-    width:150px;
-    height:225px;
+    width: 150px;
+    height: 225px;
   }
 
   .tituloLivro,
   .autor {
-    width:150px;
+    width: 150px;
   }
 
   .tituloLivro {
-    font-size:12px;
+    font-size: 12px;
   }
 
   .autor {
-    font-size:10.5px;
+    font-size: 10.5px;
   }
 
   .verMaisCard {
-    width:170px;
-    height:225px;
+    width: 170px;
+    height: 225px;
   }
 
   .navButton {
-    top:80px;
+    top: 80px;
   }
 }
