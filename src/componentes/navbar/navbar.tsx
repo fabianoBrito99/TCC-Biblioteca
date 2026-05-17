@@ -46,6 +46,7 @@ function AnimatedNavbarLogo() {
             <stop offset="70%" stopColor="#eef2ff" />
             <stop offset="100%" stopColor="#d7e0ff" />
           </linearGradient>
+
           <linearGradient
             id="logo-book-fill"
             x1="0%"
@@ -54,8 +55,20 @@ function AnimatedNavbarLogo() {
             y2="100%"
           >
             <stop offset="0%" stopColor="#fffef8" />
-            <stop offset="58%" stopColor="#ffe288" />
-            <stop offset="100%" stopColor="#f4b63d" />
+            <stop offset="48%" stopColor="#ffeaa5" />
+            <stop offset="100%" stopColor="#f7c044" />
+          </linearGradient>
+
+          <linearGradient
+            id="logo-book-flip-fill"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="55%" stopColor="#fff4bd" />
+            <stop offset="100%" stopColor="#f7ca55" />
           </linearGradient>
         </defs>
 
@@ -71,44 +84,98 @@ function AnimatedNavbarLogo() {
         </g>
 
         <g className={styles.logoNameGroup}>
-          <text x="118" y="46" className={styles.logoNameTop}>
+          <text x="118" y="60" className={styles.logoNameTop}>
             ELENA
           </text>
-          <text x="118" y="82" className={styles.logoNameBottom}>
+          <text x="120" y="102" className={styles.logoNameBottom}>
             RAMAZZOTTE
           </text>
         </g>
 
         <g className={styles.logoBookGroup}>
           <g className={styles.logoBookPlacement}>
-            <path
-              className={styles.logoBookBase}
-              d="M229 69c10-5 22-5 32 0 5 2 8 4 9 6h-50c2-2 5-4 9-6Z"
+            <ellipse
+              className={styles.logoBookShadow}
+              cx="41"
+              cy="82"
+              rx="40"
+              ry="7"
             />
-            <g className={styles.logoBookLeftPage}>
+
+            <g className={styles.logoBookPages}>
               <path
-                className={styles.logoBookPage}
-                d="M239 33c-10 0-18 4-25 9v24c7-4 15-6 25-6V33Z"
+                className={`${styles.logoBookPage} ${styles.logoBookLeftPage}`}
+                d="M239 36 C229 30 216 30 204 37 L204 72 C216 66 229 66 239 73 Z"
               />
-            </g>
-            <g className={styles.logoBookRightPage}>
               <path
-                className={styles.logoBookPage}
-                d="M239 33c10 0 18 4 25 9v24c-7-4-15-6-25-6V33Z"
+                className={`${styles.logoBookPage} ${styles.logoBookRightPage}`}
+                d="M239 36 C251 30 265 31 278 39 L278 74 C265 66 251 66 239 73 Z"
               />
+
+              <path
+                className={styles.logoPageLine}
+                d="M212 45 C221 42 230 43 236 47"
+              />
+              <path
+                className={styles.logoPageLine}
+                d="M212 55 C222 52 230 53 236 57"
+              />
+              <path
+                className={styles.logoPageLine}
+                d="M247 47 C257 43 267 45 274 50"
+              />
+              <path
+                className={styles.logoPageLine}
+                d="M247 58 C258 54 267 56 274 61"
+              />
+
+              <path
+                className={styles.logoBookFlipPage}
+                d="M239 36 C251 30 265 31 278 39 L278 74 C265 66 251 66 239 73 Z"
+              >
+                <animate
+                  attributeName="d"
+                  dur="6s"
+                  begin="2.4s"
+                  repeatCount="indefinite"
+                  calcMode="spline"
+                  keyTimes="0;0.12;0.38;0.68;0.9;1"
+                  keySplines="0.22 1 0.36 1; 0.22 1 0.36 1; 0.22 1 0.36 1; 0.22 1 0.36 1; 0.22 1 0.36 1"
+                  values="
+                    M239 36 C239 36 239 36 239 36 L239 73 C239 73 239 73 239 73 Z;
+                    M239 36 C251 30 265 31 278 39 L278 74 C265 66 251 66 239 73 Z;
+                    M239 36 C246 31 252 32 257 37 L257 72 C251 68 245 68 239 73 Z;
+                    M239 36 C236 33 233 33 230 36 L230 72 C233 69 236 69 239 73 Z;
+                    M239 36 C229 30 216 30 204 37 L204 72 C216 66 229 66 239 73 Z;
+                    M239 36 C239 36 239 36 239 36 L239 73 C239 73 239 73 239 73 Z
+                  "
+                />
+                <animate
+                  attributeName="opacity"
+                  dur="4s"
+                  begin="2.4s"
+                  repeatCount="indefinite"
+                  keyTimes="0;0.12;0.38;0.68;0.9;1"
+                  values="0;1;1;0.95;0.82;0"
+                />
+              </path>
+
+              <path className={styles.logoBookSpine} d="M239 35 V75" />
             </g>
-            <path className={styles.logoBookSpine} d="M239 33v34" />
+
             <g className={styles.logoCrossGroup}>
-              <path className={styles.logoCrossVertical} d="M243 14v20" />
+              <path className={styles.logoCrossVertical} d="M243 13v21" />
               <path className={styles.logoCrossHorizontal} d="M236 22h14" />
             </g>
-            <path className={styles.logoBookWave} d="M218 75c13-8 31-8 43 0" />
+
+            <path className={styles.logoBookWave} d="M204 82 C221 74 258 74 278 82" />
           </g>
         </g>
       </svg>
     </div>
   );
 }
+
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
