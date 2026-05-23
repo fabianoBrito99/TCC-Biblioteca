@@ -77,7 +77,7 @@
 .titleCadastrar {
   font-family: var(--type-second);
   line-height: 1;
-  font-size: 3rem;
+  font-size: 1.9rem;
   margin: 1rem 0;
   position: relative;
   z-index: 1;
@@ -89,11 +89,11 @@
 .titleCadastrar::before {
   content: '';
   display: block;
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
   position: relative;
-  bottom: -15px;
-  left: 48px;
+  bottom: -12px;
+  left: 34px;
   border-radius: 0.2rem;
   z-index: -1;
   background:linear-gradient(to top, #625bec, #a9a8ca);
@@ -571,4 +571,20 @@
 
 .cropZoom {
   width: 100%;
+}
+
+
+@media (max-width: 900px) {
+.colorInputs input{
+  width: 150px;
+  height: 100px;
+}
+
+
+.dropdownButton {
+
+  left:290px ;
+  top: -32px;
+  
+}
 }

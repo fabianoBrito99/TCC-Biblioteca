@@ -133,7 +133,12 @@ const IndicacoesDisplay = () => {
     
       <div className={styles.grid}>
         <div className={styles.grid1}>
-        <button className={styles.arrow1} onClick={(e) => { e.stopPropagation(); prevSlide(); }}>
+        <button
+          type="button"
+          className={styles.arrow1}
+          onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+          aria-label="Anterior"
+        >
         <FaArrowLeft />
       </button>
            <h1>{atual.nome_livro}</h1>
@@ -177,7 +182,12 @@ const IndicacoesDisplay = () => {
             height={450}
             className={styles.image2}
           />
-          <button className={styles.arrow2} onClick={(e) => { e.stopPropagation(); nextSlide(); }} aria-label="Próximo">
+          <button
+            type="button"
+            className={styles.arrow2}
+            onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+            aria-label="Próximo"
+          >
             <FaArrowRight />
           </button>
         </div>

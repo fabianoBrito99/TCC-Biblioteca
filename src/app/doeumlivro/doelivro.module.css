@@ -39,13 +39,13 @@
 .sugiraDoe h1::before {
   content: "";
   display: block;
-  width: 1.3rem;
+  width: 1rem;
   height: 1.2rem;
   background: linear-gradient(to top, #625bec, #a9a8ca);
   position: relative;
   bottom: -10px;
-  left: 35px;
-  transform: translateX(-50%);
+  left: 27px;
+  transform: translateX(-55%);
   z-index: -1;
   clip-path: polygon(
     0% 0%,
@@ -62,7 +62,7 @@
 .sugestoes1 h1 {
   font-family: var(--type-second);
   line-height: 1;
-  font-size: 2rem;
+  font-size: 1.2rem;
   margin: 1rem 0;
   position: relative;
   z-index: 1;
@@ -74,13 +74,14 @@
 .sugestoes1 h1::before {
   content: "";
   display: block;
-  width: 1.3rem;
-  height: 1.2rem;
+  width: 1rem;
+  height: 1rem;
   background: linear-gradient(to top, #625bec, #a9a8ca);
   position: relative;
   bottom: -10px;
-  left: 35px;
-  transform: translateX(-50%);
+  left: 34px;
+  top: 7px;
+  transform: translateX(-128%);
   z-index: -1;
   clip-path: polygon(
     0% 0%,
@@ -274,13 +275,13 @@
     font-size: 2rem;
   }
   .pix {
-    left: 10px;
+    left: 60px;
     margin-bottom: 20px;
   }
 
   .qrcode {
     margin-bottom: 20px;
-    left: -140px;
+    left: -90px;
   }
 }
 @media (max-width: 600px) {

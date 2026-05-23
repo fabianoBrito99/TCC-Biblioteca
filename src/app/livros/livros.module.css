@@ -1,5 +1,5 @@
 .wrapper { padding:24px; max-width:1180px; margin:0 auto; }
-.header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.header { display:flex; margin-top: 30px; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
 .summary { display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:14px; color:#374151; }
 .tools { display:flex; gap:8px; align-items:center; }
 .search { padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; min-width:320px; }

@@ -153,9 +153,6 @@
   gap: 2px;
 }
 
-.indicacoes {
-  margin-top: 80px;
-}
 
 .containerHome {
   min-height: 100vh;
@@ -166,7 +163,7 @@
 }
 
 .indicacoes {
-  margin: 50px 0 20px 0;
+  margin: -10px 0 20px 0;
   padding: 0 0 18px;
   background: #4d4123;
   border-bottom-left-radius: 20px;
@@ -233,9 +230,11 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+
   transition:
     transform 0.18s ease,
     filter 0.18s ease;
+    
 }
 
 .cardLivro:hover {
@@ -341,14 +340,19 @@
 .navButton {
   position: absolute;
   top: 115px;
-  z-index: 3;
-  width: 40px;
-  height: 40px;
+  z-index: 20;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 50%;
   background: rgba(61, 56, 9, 0.58);
   color: #fff;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .navHidden {
@@ -358,8 +362,7 @@
 .navButton::before {
   display: block;
   font-size: 30px;
-  margin-top: -5px;
-
+  line-height: 1;
 }
 
 .navPrev {
@@ -371,7 +374,7 @@
 }
 
 .navNext {
-  right: 6px;
+  right: 8px;
 }
 
 .navNext::before {
@@ -430,5 +433,25 @@
 
   .navButton {
     top: 80px;
+  }
+}
+
+@media (max-width: 759px) {
+  .bookRail {
+    padding-right: 52px;
+  }
+
+  .navButton {
+    top: 78px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .navPrev {
+    left: 2px;
+  }
+
+  .navNext {
+    right: 10px;
   }
 }

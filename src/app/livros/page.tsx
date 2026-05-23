@@ -9,7 +9,7 @@ import styles from "./livros.module.css";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
 /** Página de cadastro/edição */
-const CADASTRAR_PATH = "/editar";
+const CADASTRAR_PATH = "/cadastrarLivro";
 const LIMITE_POR_PAGINA = 24;
 
 type Livro = {

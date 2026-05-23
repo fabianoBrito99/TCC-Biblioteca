@@ -42,6 +42,7 @@ const CategoriaSwiper: React.FC<{
 }> = ({ categoria_principal, livros }) => {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const swiperRef = useRef<SwiperInstance | null>(null);
   const [podeVoltar, setPodeVoltar] = useState(false);
   const [podeAvancar, setPodeAvancar] = useState(false);
 
@@ -83,9 +84,13 @@ const CategoriaSwiper: React.FC<{
       },
     });
 
+    swiperRef.current = swiper;
     atualizarControles(swiper);
 
-    return () => swiper.destroy(true, true);
+    return () => {
+      swiperRef.current = null;
+      swiper.destroy(true, true);
+    };
   }, [livros, nextCls, prevCls]);
 
   const handleCardClick = (livro: Livro) => {
@@ -101,6 +106,14 @@ const CategoriaSwiper: React.FC<{
     });
 
     router.push(`/livros?${qs.toString()}`);
+  };
+
+  const voltarSlide = () => {
+    swiperRef.current?.slidePrev();
+  };
+
+  const avancarSlide = () => {
+    swiperRef.current?.slideNext();
   };
 
   return (
@@ -173,6 +186,7 @@ const CategoriaSwiper: React.FC<{
           } ${prevCls}`}
           aria-label="Voltar"
           disabled={!podeVoltar}
+          onClick={voltarSlide}
         ></button>
 
         <button
@@ -182,6 +196,7 @@ const CategoriaSwiper: React.FC<{
           } ${nextCls}`}
           aria-label="Avancar"
           disabled={!podeAvancar}
+          onClick={avancarSlide}
         ></button>
       </div>
     </div>
