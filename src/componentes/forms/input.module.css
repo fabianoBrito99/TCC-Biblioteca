@@ -10,6 +10,7 @@
   display: block;
   width: 100%;
   font-size: 1rem;
+  gap: 10px;
   padding: 0.8rem;
   border-radius: 0.4rem;
   background: #f0fffc;
@@ -21,6 +22,7 @@
   border-color: rgba(4, 78, 175, 0.507);
   background: white;
   box-shadow: 0 0 0 3px rgb(2, 67, 247);
+ 
 }
 
 .input {
@@ -39,6 +41,7 @@
   position: absolute;
   top: 15px;
   left: 10px;
+  z-index: 2;
   font-size: 1rem;
   color: #3f3939;
   pointer-events: none;
@@ -54,6 +57,7 @@
   color: #fff;
   background: linear-gradient(to right, rgb(68, 70, 194), rgb(0, 81, 255));
   padding: 0 5px; /* Para evitar sobreposição */
+  z-index: 60;
 }
 
 .error {
@@ -63,9 +67,10 @@
 }
 
 
+
 @media (max-width: 480px) {
  .wrapper input{
-  margin-bottom: 5px;
+  margin-bottom: 10px;
   font-size: 0.5rem;
  }
  .label{

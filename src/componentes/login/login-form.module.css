@@ -60,6 +60,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 10px;
+
 }
 
 .button2 {
@@ -182,6 +183,11 @@
   position: relative;
   align-items: center;
   width: 100%;
+}
+
+.passwordContainer input {
+  position: relative;
+  z-index: 20;
 }
 
 .eyeIcon {
@@ -484,7 +490,7 @@
   cursor: pointer;
   color: #888;
   transition: color 0.3s ease;
-  z-index: 10;
+  z-index: 40;
 }
 
 .eyeIcon:hover {
@@ -494,13 +500,14 @@
 /* Ícone do marca-texto */
 .markerIcon {
   position: absolute;
-  top: -20%;
+  top: -50%;
   left: -30px; /* Começa fora do campo */
   transform: translateY(-60%);
   transform: rotateX(-20%);
-  z-index: 3;
+  z-index: 50;
   opacity: 0; /* Invisível no início */
   transition: left 0.9s ease-in, opacity 0s ease;
+  pointer-events: none;
 }
 
 .markerIcon.animateMarker {
@@ -511,9 +518,9 @@
 /* Animação do marca-texto */
 .highlightEffect {
   position: absolute;
-  top: 12px;
+  top: 5px;
   left: 0;
-  height: 50%;
+  height: 70%;
   width: 0;
   background: linear-gradient(
       to right,
@@ -529,13 +536,39 @@
       /* Faixa preta começa em 95% */ transparent 100%
         /* Transição suave para transparente */
     );
-  z-index: 1;
+  z-index: 32;
   transition: width 0.1s ease-in;
+  pointer-events: none;
 }
 
 .highlightEffect.visible {
   transition: width 0.9s ease-in;
   width: 100%; /* Preenche todo o campo */
+}
+
+@media (max-width: 900px) {
+ .h1Login{
+  font-size: 1.2rem;
+  margin-top: 70px;
+ }
+ .h1Login input{
+  z-index: 99;
+ }
+
+.subtitle2 {
+
+  font-size: 1.3rem;
+}
+
+.subtitle2::after {
+  content: "";
+  display: block;
+  background: #ddd;
+  height: 0.5rem;
+  width: 3rem;
+  border-radius: 0.2rem;
+}
+
 }
 
 @media (max-width: 550px) {
@@ -592,6 +625,30 @@
 
   .screenMobile .formFixo input {
     height: 50%;
+  }
+
+  .screenMobile input,
+  .form input {
+    position: relative;
+    z-index: 30;
+    background: transparent;
+    touch-action: manipulation;
+  }
+
+  .screenMobile input:focus,
+  .form input:focus {
+    background: transparent;
+  }
+
+  .screenMobile .passwordContainer input,
+  .passwordContainer input {
+    z-index: 31;
+    padding-right: 34px;
+  }
+
+  .screenMobile .eyeIcon,
+  .eyeIcon {
+    z-index: 45;
   }
 
   .screenMobile .senhasul {
