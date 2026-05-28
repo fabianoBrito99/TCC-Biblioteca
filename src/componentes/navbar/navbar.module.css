@@ -13,7 +13,7 @@
   height: var(--nav-height);
   padding-inline: clamp(54px, 6vw, 110px);
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
   background: transparent;
   box-shadow: 0 8px 18px rgba(142, 166, 255, 0.16);
@@ -251,12 +251,21 @@
   animation: riverTextureMove 3.2s 2.2s linear infinite, riverUndulate 4.6s 2.2s ease-in-out infinite;
 }
 
+/*
+  ===========================
+  ÁREA GERAL DA LOGO
+  ===========================
+  - width: largura máxima da logo dentro da navbar.
+  - top: sobe/desce a logo inteira.
+  - height: altura disponível para o SVG.
+  - overflow: hidden corta tudo que sair da área. Se a pomba/livro cortar, troque para visible.
+*/
 .logoStage {
   position: absolute;
   left: 50%;
   top: calc(55% - 8px);
   z-index: 4;
-  width: min(250px, calc(100vw - 210px));
+  width: min(465px, calc(100vw - 210px));
   max-width: calc(100vw - 210px);
   height: calc(var(--nav-height) - 10px);
   min-width: 0;
@@ -275,8 +284,8 @@
   width: 68%;
   height: 58%;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 240, 183, 0.85), rgba(4, 6, 122, 0.938) 45%, transparent 72%);
-  filter: blur(10px);
+  background: radial-gradient(circle, rgba(255, 248, 224, 0.78), rgba(7, 26, 56, 0.18) 48%, transparent 74%);
+  filter: blur(11px);
   animation: haloPulse 4.2s ease-in-out infinite;
 }
 
@@ -288,18 +297,23 @@
   pointer-events: none;
   background:
     linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.85) 48%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0.85) 52%, transparent 100%),
-    radial-gradient(circle at 50% 50%, rgba(164, 235, 255, 0.95), rgba(23, 143, 226, 0.72) 44%, transparent 72%);
-  filter: blur(1px) drop-shadow(0 0 12px rgba(95, 215, 255, 0.8));
+    radial-gradient(circle at 50% 50%, rgba(255, 249, 226, 0.94), rgba(7, 26, 56, 0.22) 44%, transparent 72%);
+  filter: blur(1px) drop-shadow(0 0 10px rgba(7, 26, 56, 0.26));
   animation: logoSeaOpen 1.45s ease-in-out forwards;
 }
 
+/*
+  SVG COMPLETO DA LOGO
+  - Aqui controla o SVG inteiro: texto, livro e pomba.
+  - O tamanho real do desenho também depende do viewBox no TSX.
+*/
 .logoSvg {
   width: 100%;
   max-width: 100%;
   height: 100%;
   max-height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 6px 12px rgba(33, 56, 151, 0.18));
+  filter: drop-shadow(0 5px 10px rgba(7, 26, 56, 0.2));
   opacity: 0;
   animation: logoAppearAfterSea 0.8s 1.15s ease forwards;
 }
@@ -346,28 +360,357 @@
   0% {
     opacity: 0;
     transform: scale(0.86);
-    filter: blur(5px) drop-shadow(0 6px 12px rgba(33, 56, 151, 0.18));
+    filter: blur(5px) drop-shadow(0 5px 10px rgba(7, 26, 56, 0.18));
   }
 
   100% {
     opacity: 1;
     transform: scale(1);
-    filter: blur(0) drop-shadow(0 6px 12px rgba(33, 56, 151, 0.18));
+    filter: blur(0) drop-shadow(0 5px 10px rgba(7, 26, 56, 0.2));
   }
 }
 
 
 
+/*
+  ===========================
+  BASE DE TRANSFORMAÇÕES SVG
+  ===========================
+  - transform-box e transform-origin ajudam as animações em SVG.
+  - Não remova estas propriedades, principalmente da pomba e do livro.
+*/
 .logoLetterGroup,
 .logoNameGroup,
-.logoBookGroup {
+.logoBookGroup,
+.logoDoveFlight,
+.logoDoveGroup,
+.logoDoveBody,
+.logoDoveWingMain,
+.logoDoveWingInner,
+.logoDoveHeadLine,
+.logoDoveTail,
+.logoDoveFeet,
+.logoDoveBranchFall,
+.logoDoveBranch,
+.logoDoveLeaf,
+.logoDoveEye,
+.logoDoveEyeBlink,
+.logoDoveBeak {
   transform-box: fill-box;
   transform-origin: center;
 }
 
+.logoDoveFlight {
+  /*
+    POMBA: VOO PELA NAVBAR
+    - --logo-dove-size aumenta/diminui a pomba inteira.
+    - --logo-dove-cycle controla o ciclo completo.
+      Hoje: vem da direita, pousa, espera 7s, sai para a esquerda, some 3s.
+    - --logo-dove-start-x: inicio vindo da direita. Pedido: translate(859px, 3px).
+    - --logo-dove-land-x: pouso sobre o "tt". Pedido: translate(359px, 3px).
+    - --logo-dove-exit-x: saida para esquerda. Pedido: translate(-359px, 3px).
+    - --logo-dove-y: altura geral do voo/pouso.
+  */
+  --logo-dove-size: 0.198;
+  --logo-dove-cycle: 14s;
+  --logo-dove-delay: 0s;
+  --logo-dove-start-x: 859px;
+  --logo-dove-land-x: 359px;
+  --logo-dove-exit-x: -359px;
+  --logo-dove-y: 3px;
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 0 0;
+  animation: logoDoveFlightCycle var(--logo-dove-cycle) var(--logo-dove-delay)
+    ease-in-out infinite;
+  pointer-events: none;
+}
+
+/*
+  ===========================
+  POMBA: GRUPO PRINCIPAL
+  ===========================
+  - Controla a animação da pomba inteira vindo voando e pousando.
+  - Para começar mais cedo, diminua o delay 1.2s em logoDoveFlyIn.
+  - Para voar mais rápido, diminua 1.65s.
+  - Para remover a microflutuação final, remova a linha logoDoveFloat.
+*/
+.logoDoveGroup {
+  /*
+    TEMPOS DA POMBA:
+    - Os tempos principais do voo agora ficam em .logoDoveFlight.
+    - Para mudar pouso, queda do galho e saida, ajuste os percentuais dos
+      keyframes logoDoveFlightCycle, logoDoveBranchDrop e logoDoveFeetCycle.
+  */
+  opacity: 1;
+}
+
+/*
+  POMBA: CORPO, ASA EXTERNA E CAUDA
+  - fill: cor interna da pomba.
+  - stroke: cor do contorno.
+  - stroke-width: espessura do contorno.
+  - Se quiser mais parecido com desenho de linha, reduza stroke-width para 2px ou 1.8px.
+*/
+.logoDoveBody,
+.logoDoveWingMainShape,
+.logoDoveTail {
+  fill: #fffdf7;
+  stroke: #071a38;
+  stroke-width: 2.45px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+  POMBA: SOMBRA DO CORPO
+  - Se quiser a pomba mais limpa/parecida com a referência preta, pode remover o filter.
+*/
+.logoDoveBody {
+  filter:
+    drop-shadow(0 1px 2px rgba(7, 26, 56, 0.1))
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+/*
+  POMBA: LINHAS INTERNAS
+  - logoDoveHeadLine: linha da cabeça/pescoço.
+  - logoDoveWingInner: linhas internas da asa e detalhe sobre o corpo.
+  - logoDoveNeck: marcação do pescoço/peito.
+  - Para deixar mais delicado, reduza stroke-width.
+*/
+.logoDoveHeadLine,
+.logoDoveWingInner,
+.logoDoveNeck {
+  fill: none;
+  stroke: rgba(7, 26, 56, 0.74);
+  stroke-width: 1.8px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+  POMBA: ASA QUE BATE
+  - transform-origin é o ponto de giro da asa.
+  - Se a asa bater estranho, ajuste para 25% 75% ou 18% 75%.
+  - 0.34s: velocidade da batida.
+  - 1.2s: atraso antes de começar.
+  - 6: quantidade de batidas.
+*/
+.logoDoveWingMain {
+  transform-origin: 10% 12%;
+  animation: logoDoveWingBeat 0.5s var(--logo-dove-delay) ease-in-out infinite;
+}
+
+.logoDoveWingMainShape {
+  fill: #ffffff;
+}
+
+/*
+  POMBA: BICO
+  - A forma do bico é ajustada no path do TSX.
+  - Aqui você muda cor e espessura do contorno.
+*/
+.logoDoveBeak {
+  fill: #fffdf7;
+  stroke: #071a38;
+  stroke-width: 1.65px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+  POMBA: OLHO
+  - Posição e tamanho do olho ficam no circle do TSX: cx, cy e r.
+*/
+.logoDoveEye {
+  fill: #071a38;
+  stroke: none;
+}
+
+/*
+  POMBA: PEZINHOS
+  - O desenho dos pés está no TSX.
+  - Aqui controla cor, espessura e animação do pouso.
+  - Para pés mais delicados, reduza stroke-width para 1px.
+*/
+.logoDoveFeet {
+  fill: none;
+  stroke: #071a38;
+  stroke-width: 1.35px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform-origin: top center;
+  animation: logoDoveFeetCycle var(--logo-dove-cycle) var(--logo-dove-delay) ease-in-out infinite;
+}
+
+/*
+  POMBA: GALHO / RAMO
+  - O tamanho/posição do galho fica no path do TSX.
+  - Aqui controla cor e espessura do traço.
+*/
+.logoDoveBranch {
+  fill: none;
+  stroke: #071a38;
+  stroke-width: 1.35px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+  POMBA: FOLHAS DO GALHO
+  - A posição de cada folha está nos paths do TSX.
+*/
+.logoDoveLeaf {
+  fill: #f8fff5;
+  stroke: #071a38;
+  stroke-width: 1.15px;
+}
+
+.logoDoveChest {
+  fill: #394143;
+  stroke: #1f2b31;
+  stroke-width: 1.5px;
+}
+
+.logoDoveHead {
+  fill: #010102;
+  stroke: #111827;
+  stroke-width: 1.4px;
+}
+
+.logoDoveTail {
+  fill: #202235;
+  stroke: #1f1d33;
+  stroke-width: 1.5px;
+}
+
+.logoDoveTail path:last-child {
+  fill: #303244;
+  stroke: #6f707a;
+}
+
+.logoDoveWingMainShape {
+  fill: #26313c;
+  stroke: #1c4b54;
+  stroke-width: 1.2px;
+}
+
+.logoDoveWingInner {
+  fill: none;
+  stroke: rgba(135, 226, 242, 0.64);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logoDoveWingShadow {
+  fill: none;
+  stroke: rgba(21, 75, 87, 0.5);
+  stroke-width: 3px;
+  stroke-linecap: round;
+}
+
+.logoDoveBeak {
+  fill: #34313b;
+  stroke: #232129;
+  stroke-width: 1px;
+}
+
+.logoDoveBeakDetail {
+  fill: #8b8ca0;
+  stroke: #565766;
+  stroke-width: 0.5px;
+}
+
+.logoDoveNostril {
+  fill: #2e2d38;
+  stroke: none;
+}
+
+.logoDoveBranch {
+  fill: none;
+  stroke: #645d2f;
+  stroke-width: 5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logoDoveBranchFall {
+  transform-origin: 138px 148px;
+  animation: logoDoveBranchDrop var(--logo-dove-cycle) var(--logo-dove-delay) ease-in-out infinite;
+}
+
+.logoDoveBranch path:nth-child(2) {
+  stroke: #908e65;
+  stroke-width: 3.7px;
+}
+
+.logoDoveBranchBase {
+  fill: #1c1a21;
+  stroke: none;
+}
+
+.logoDoveLeaf {
+  fill: #2b6b1e;
+  stroke: #183e11;
+  stroke-width: 0.5px;
+}
+
+.logoDoveLeaf:nth-of-type(4),
+.logoDoveLeaf:nth-of-type(6) {
+  fill: #1e5414;
+  stroke: #12330c;
+}
+
+.logoDoveLeaf:nth-of-type(7) {
+  fill: #338224;
+  stroke: #1e5114;
+}
+
+.logoDoveEye {
+  stroke: none;
+}
+
+.logoDoveEyeRing {
+  fill: #6b6e85;
+}
+
+.logoDoveEyeIrisOuter {
+  fill: #d9381e;
+}
+
+.logoDoveEyeIrisInner {
+  fill: #e2bd1b;
+}
+
+.logoDoveEyeBlink {
+  transform-origin: center;
+  animation: logoDoveEyeBlink 4s linear infinite;
+}
+
+.logoDovePupil {
+  fill: #111113;
+}
+
+.logoDoveEyeHighlight {
+  fill: #ffffff;
+}
+
+.logoDoveFeet {
+  stroke: #090202;
+  stroke-width: 7px;
+}
+
+.logoDoveFeet path:first-child,
+.logoDoveFeet path:nth-child(5) {
+  stroke-width: 10px;
+}
+
 .logoBookPlacement {
   transform-box: fill-box;
-  transform-origin: TOP;
+  transform-origin: top center;
 }
 
 .logoLetterGroup {
@@ -388,33 +731,34 @@
 .logoLetterMain {
  
   fill: url(#logo-h-fill);
-  stroke: #164b88;
-  stroke-width: 7px;
+  stroke: #071a38;
+  stroke-width: 4px;
   stroke-linejoin: round;
 }
 
 .logoLetterInset {
-  fill: #dbe4ff;
-  opacity: 0.82;
+  fill: #fff9ea;
+  opacity: 0.95;
 }
 
 .logoNameTop,
 .logoNameBottom {
-  font-family: "Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif;
-  font-weight: 900;
-  letter-spacing: 2px;
-  fill: #fefeffc0;
+  font-family: "Arial Rounded MT Bold", "Trebuchet MS", Arial, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0;
+  fill: #27210c;
   paint-order: stroke fill;
-  stroke: rgba(137, 233, 250, 0.92);
-  stroke-width: 3px;
+  stroke: rgba(255, 250, 235, 0.76);
+  stroke-width: 1.8px;
 }
 
 .logoNameTop {
-  font-size: 48px;
+  font-size: 47px;
 }
 
 .logoNameBottom {
-  font-size: 32px;
+  font-size: 54px;
+  font-weight: 900;
 }
 
 .logoBookBase {
@@ -422,7 +766,7 @@
 }
 
 .logoBookShadow {
-  fill: rgba(10, 60, 140, 0.2);
+  fill: rgba(7, 26, 56, 0.18);
   filter: blur(2px);
 }
 
@@ -449,12 +793,13 @@
 
 .logoBookFlipPage {
   fill: url(#logo-book-flip-fill);
-  stroke: #1146f5;
-  stroke-width: 2.8px;
+  stroke: #071a38;
+  stroke-width: 3px;
   stroke-linejoin: round;
+  stroke-linecap: round;
   filter:
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.75))
-    drop-shadow(0 0 7px rgba(255, 215, 92, 0.45));
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.72))
+    drop-shadow(0 0 7px rgba(7, 26, 56, 0.18));
 }
 
 .logoCrossGroup {
@@ -464,26 +809,27 @@
 
 .logoBookPage {
   fill: url(#logo-book-fill);
-  stroke: #1146f5;
+  stroke: #071a38;
   stroke-width: 3px;
   stroke-linejoin: round;
+  stroke-linecap: round;
   filter:
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
-    drop-shadow(0 0 8px rgba(255, 219, 122, 0.35));
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.58))
+    drop-shadow(0 0 8px rgba(7, 26, 56, 0.16));
 }
 
 .logoPageLine {
   fill: none;
-  stroke: rgba(33, 97, 210, 0.55);
-  stroke-width: 1.7px;
+  stroke: rgba(7, 26, 56, 0.54);
+  stroke-width: 2px;
   stroke-linecap: round;
-  opacity: 0.72;
+  opacity: 0.78;
 }
 
 .logoBookSpine {
   fill: none;
-  stroke: #3457f5;
-  stroke-width: 4px;
+  stroke: #071a38;
+  stroke-width: 4.4px;
   stroke-linecap: round;
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45));
 }
@@ -491,20 +837,20 @@
 .logoCrossVertical,
 .logoCrossHorizontal {
   fill: none;
-  stroke: #fff6b5;
-  stroke-width: 4px;
+  stroke: #071a38;
+  stroke-width: 3.6px;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 4px rgba(255, 216, 93, 0.7));
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.72));
   animation: crossGlow 3.4s 2.45s ease-in-out infinite;
 }
 
 .logoBookWave {
   fill: none;
-  stroke: #2e9cf0;
-  stroke-width: 5px;
+  stroke: #071a38;
+  stroke-width: 4px;
   stroke-linecap: round;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 8px rgba(74, 194, 255, 0.72));
+  opacity: 0.64;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.54));
 }
 
 .inputContainer1 {
@@ -612,6 +958,214 @@
   50% {
     transform: scale(1.06);
     opacity: 0.88;
+  }
+}
+
+
+/*
+  ===========================
+  ANIMAÇÃO: VOO E POUSO DA POMBA
+  ===========================
+  - 0% é de onde a pomba vem.
+  - 100% é a posição final definida no transform do TSX.
+  - translateX maior: vem mais da direita.
+  - translateY negativo: vem mais de cima.
+  - scale menor: começa menor.
+  - rotate: inclinação durante o voo.
+*/
+@keyframes logoDoveFlightCycle {
+  /*
+    TEMPOS DO CICLO:
+    Ciclo atual: 14s.
+    0%-17%   vem da direita: translate(859px, 3px).
+    17%-67%  pousa em translate(359px, 3px) e fica ~7s.
+    67%-79%  voa para a esquerda: translate(-359px, 3px), passando sobre a logo.
+    79%-100% fica invisivel por ~3s e reinicia vindo da direita.
+  */
+  0% {
+    opacity: 0;
+    transform:
+      translate(var(--logo-dove-start-x), calc(var(--logo-dove-y) - 12px))
+      scale(calc(var(--logo-dove-size) * 0.76))
+      rotate(9deg);
+  }
+  5% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 1;
+    transform:
+      translate(calc(var(--logo-dove-land-x) + 145px), calc(var(--logo-dove-y) - 6px))
+      scale(calc(var(--logo-dove-size) * 0.92))
+      rotate(3deg);
+  }
+  17%,
+  67% {
+    opacity: 1;
+    transform:
+      translate(var(--logo-dove-land-x), var(--logo-dove-y))
+      scale(var(--logo-dove-size))
+      rotate(0deg);
+  }
+  73% {
+    opacity: 1;
+    transform:
+      translate(36px, calc(var(--logo-dove-y) - 20px))
+      scale(calc(var(--logo-dove-size) * 0.9))
+      rotate(-7deg);
+  }
+  79% {
+    opacity: 0;
+    transform:
+      translate(var(--logo-dove-exit-x), calc(var(--logo-dove-y) - 36px))
+      scale(calc(var(--logo-dove-size) * 0.72))
+      rotate(-11deg);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(var(--logo-dove-exit-x), calc(var(--logo-dove-y) - 36px))
+      scale(calc(var(--logo-dove-size) * 0.72))
+      rotate(-11deg);
+  }
+}
+
+@keyframes logoDoveBranchDrop {
+  /*
+    TEMPOS DO GALHO:
+    0%-18% acompanha a pomba no bico.
+    20%-60% cai mais rapido.
+    60% fica invisivel cerca de 1s antes da pomba voar para esquerda.
+    60%-100% fica invisivel ate a pomba voltar.
+  */
+  0%,
+  18% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  26% {
+    opacity: 0.95;
+    transform: translate(-6px, 96px) rotate(-22deg);
+  }
+  45% {
+    opacity: 0.68;
+    transform: translate(-12px, 230px) rotate(-42deg);
+  }
+  60% {
+    opacity: 0;
+    transform: translate(-16px, 330px) rotate(-56deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-16px, 330px) rotate(-56deg);
+  }
+}
+
+@keyframes logoDoveFeetCycle {
+  0%,
+  13% {
+    opacity: 0;
+    transform: translateY(-12px) scaleY(0.45);
+  }
+  17%,
+  70% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+  79%,
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.55);
+  }
+}
+
+@keyframes logoDoveFlyIn {
+  0% {
+    opacity: 0;
+    transform: translateX(98px) translateY(-26px) scale(0.84) rotate(7deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  55% {
+    transform: translateX(34px) translateY(-12px) scale(0.95) rotate(2deg);
+  }
+  78% {
+    transform: translateX(5px) translateY(2px) scale(1.02) rotate(-0.6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+/*
+  ANIMAÇÃO: BATIDA DA ASA
+  - Para bater mais forte, aumente rotate(-4.2deg) para rotate(-7deg).
+  - Para bater mais suave, reduza para rotate(-2deg).
+*/
+@keyframes logoDoveWingBeat {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0) scaleY(1);
+  }
+  36% {
+    transform: rotate(-10deg) translateY(-15px) scaleY(0.82);
+  }
+  68% {
+    transform: rotate(5deg) translateY(8px) scaleY(1.08);
+  }
+}
+
+@keyframes logoDoveEyeBlink {
+  0%,
+  7%,
+  11%,
+  100% {
+    transform: scaleY(1);
+  }
+  8.5%,
+  9.5% {
+    transform: scaleY(0.08);
+  }
+}
+
+/*
+  ANIMAÇÃO: PEZINHOS APARECENDO NO POUSO
+  - Começa com opacity 0 e termina com opacity 1.
+  - translateY controla se os pés parecem recolhidos/subindo ou descendo no pouso.
+*/
+@keyframes logoDoveFeetLand {
+  0% {
+    opacity: 0;
+    transform: translateY(-7px) scaleY(0.5);
+  }
+  54% {
+    opacity: 0.18;
+    transform: translateY(-4px) scaleY(0.68);
+  }
+  78% {
+    opacity: 0.72;
+    transform: translateY(1px) scaleY(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+/*
+  ANIMAÇÃO: MICROFLUTUAÇÃO FINAL
+  - Mantém a pomba com vida depois do pouso.
+  - Para deixar parada, remova logoDoveFloat da classe .logoDoveGroup.
+*/
+@keyframes logoDoveFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-1px) rotate(-0.25deg);
   }
 }
 
@@ -826,16 +1380,16 @@
   }
 
   .logoStage {
-    width: min(238px, calc(100vw - 186px));
+    width: min(420px, calc(100vw - 186px));
     max-width: calc(100vw - 186px);
   }
 
   .logoNameTop {
-    font-size: 39px;
+    font-size: 47px;
   }
 
   .logoNameBottom {
-    font-size: 26px;
+    font-size: 54px;
   }
 }
 
@@ -847,7 +1401,7 @@
   }
 
   .logoStage {
-    width: min(212px, calc(100vw - 172px));
+    width: min(375px, calc(100vw - 172px));
     max-width: calc(100vw - 172px);
   }
 
@@ -858,11 +1412,11 @@
   }
 
   .logoNameTop {
-    font-size: 33px;
+    font-size: 75px;
   }
 
   .logoNameBottom {
-    font-size: 22px;
+    font-size: 64px;
   }
 }
 
@@ -887,7 +1441,7 @@
   }
 
   .logoStage {
-    width: min(186px, calc(100vw - 148px));
+    width: min(318px, calc(100vw - 148px));
     max-width: calc(100vw - 148px);
   }
 
@@ -929,15 +1483,15 @@
     height: 100%;
   }
 
-  .logoNameTop {
-    font-size: 23px;
+  /* .logoNameTop {
+    font-size: 47px;
     letter-spacing: 1px;
-  }
+  } */
 
-  .logoNameBottom {
-    font-size: 25px;
+  /* .logoNameBottom {
+    font-size: 54px;
     letter-spacing: 0.8px;
-  }
+  } */
 
   .menuIcon {
     transform: scale(0.76);
@@ -967,7 +1521,7 @@
   }
 
   .logoStage {
-    width: min(168px, calc(100vw - 124px));
+    width: min(285px, calc(100vw - 124px));
     max-width: calc(100vw - 124px);
     height: calc(var(--nav-height) - 9px);
   }
@@ -1008,15 +1562,15 @@
     height: 100%;
   }
 
-  .logoNameTop {
-    font-size: 19px;
+  /* .logoNameTop {
+    font-size: 47px;
     letter-spacing: 0.6px;
-  }
+  } */
 
-  .logoNameBottom {
-    font-size: 12px;
+  /* .logoNameBottom {
+    font-size: 54px;
     letter-spacing: 0.5px;
-  }
+  } */
 
   .menuIcon {
     transform: scale(0.66);
@@ -1031,7 +1585,7 @@
   }
 
   .logoStage {
-    width: min(154px, calc(100vw - 112px));
+    width: min(252px, calc(100vw - 112px));
     max-width: calc(100vw - 112px);
     height: calc(var(--nav-height) - 10px);
   }
@@ -1056,10 +1610,10 @@
   }
 
   .logoNameTop {
-    font-size: 16px;
+    font-size: 47px;
   }
 
   .logoNameBottom {
-    font-size: 11px;
+    font-size: 54px;
   }
 }
