@@ -355,26 +355,80 @@ export default function Navbar() {
       return token ? { Authorization: `Bearer ${token}` } : {};
     };
 
-    const fetchUserData = async () => {
+    const fetchUserData = async (retryCount = 0) => {
       const userId = localStorage.getItem("userId");
-      if (userId) {
-        try {
-          const res = await fetch(
-            `${API_BASE}/api/usuario/${userId}`,
-            {
-              headers: getAuthHeaders(),
-            }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            setUser({
-              id: userId,
-              foto_usuario: data.usuario.foto_usuario,
-              tipo_usuario: data.usuario.tipo_usuario,
-            });
+      if (!userId) return;
+
+      const maxRetries = 3;
+      const retryDelay = 1000 * (retryCount + 1); // Exponential backoff
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+        const res = await fetch(
+          `${API_BASE}/api/usuario/${userId}`,
+          {
+            headers: getAuthHeaders(),
+            signal: controller.signal,
           }
-        } catch (error) {
-          console.error("Erro ao buscar dados do usuário:", error);
+        );
+
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          const userData = {
+            id: userId,
+            foto_usuario: data.usuario?.foto_usuario,
+            tipo_usuario: data.usuario?.tipo_usuario,
+          };
+          setUser(userData);
+          // Cache os dados para uso offline
+          localStorage.setItem("cachedUser", JSON.stringify(userData));
+        } else if (res.status === 401 || res.status === 403) {
+          // Token inválido, não tentar novamente
+          console.warn("Token inválido ou expirado");
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
+        } else if (retryCount < maxRetries) {
+          // Retry em caso de erro 5xx
+          console.warn(`[Retry ${retryCount + 1}/${maxRetries}] Tentando novamente em ${retryDelay}ms...`);
+          setTimeout(() => fetchUserData(retryCount + 1), retryDelay);
+        }
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        
+        // Erros de certificado SSL ou connection refused
+        if (
+          errorMsg.includes("ERR_CERT") ||
+          errorMsg.includes("Failed to fetch") ||
+          errorMsg.includes("AbortError")
+        ) {
+          if (retryCount < maxRetries) {
+            console.warn(
+              `[Erro de conexão] ${errorMsg}. Tentando novamente (${retryCount + 1}/${maxRetries}) em ${retryDelay}ms...`
+            );
+            setTimeout(() => fetchUserData(retryCount + 1), retryDelay);
+          } else {
+            console.error(
+              "Erro ao buscar dados do usuário após múltiplas tentativas:",
+              errorMsg
+            );
+            // Usar dados do cache se disponível
+            const cachedUser = localStorage.getItem("cachedUser");
+            if (cachedUser) {
+              try {
+                const user = JSON.parse(cachedUser);
+                setUser(user);
+                console.log("Usando dados em cache (modo offline)");
+              } catch {
+                // Cache inválido
+              }
+            }
+          }
+        } else {
+          console.error("Erro ao buscar dados do usuário:", errorMsg);
         }
       }
     };

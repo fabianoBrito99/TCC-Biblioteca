@@ -109,3 +109,34 @@
   height: 100px;}
 
 }
+
+.buttonSection {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0 30px 0;
+  gap: 12px;
+}
+
+.editButton {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #625bec 0%, #a9a8ca 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(98, 91, 236, 0.3);
+}
+
+.editButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(98, 91, 236, 0.4);
+}
+
+.editButton:active {
+  transform: translateY(0);
+}

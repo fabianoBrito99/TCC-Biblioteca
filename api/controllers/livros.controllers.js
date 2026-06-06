@@ -1,4 +1,4 @@
-const connection = require("../config/mysql.config");
+﻿const connection = require("../config/mysql.config");
 const fs = require("fs");
 
 const path = require("path");
@@ -10,7 +10,7 @@ const IMAGES_BASE_URL =
   process.env.IMAGES_BASE_URL || "https://img.helenaramazzotte.online";
 
 async function salvarImagemNoDisco(file, tipo = "capas") {
-  if (!file || !file.buffer) throw new Error("Arquivo inválido");
+  if (!file || !file.buffer) throw new Error("Arquivo invÃ¡lido");
   if (!file.mimetype || !file.mimetype.startsWith("image/"))
     throw new Error("Apenas imagens");
 
@@ -28,7 +28,7 @@ async function salvarImagemNoDisco(file, tipo = "capas") {
 
 function garantirCategoriaComCor(categoriaPrincipal, corCima, corBaixo, cb) {
   const nome = String(categoriaPrincipal || "").trim();
-  if (!nome) return cb(new Error("Categoria principal não informada"));
+  if (!nome) return cb(new Error("Categoria principal nÃ£o informada"));
 
   connection.query(
     `SELECT id_categoria
@@ -91,7 +91,7 @@ function garantirCategoriaComCor(categoriaPrincipal, corCima, corBaixo, cb) {
 function show(request, response) {
   const codigo = request.params.codigo;
   if (!codigo) {
-    return response.status(400).json({ erro: "Código do livro não fornecido" });
+    return response.status(400).json({ erro: "CÃ³digo do livro nÃ£o fornecido" });
   }
 
   connection.query(
@@ -122,7 +122,7 @@ function show(request, response) {
         return response.status(500).json({ erro: "Erro ao buscar o livro" });
       }
       if (resultado.length === 0) {
-        return response.status(404).json({ erro: `Livro com código #${codigo} não encontrado` });
+        return response.status(404).json({ erro: `Livro com cÃ³digo #${codigo} nÃ£o encontrado` });
       }
 
       const row = resultado[0];
@@ -139,6 +139,14 @@ function show(request, response) {
         categorias: categoriasArr,
         subcategorias: [],
         autores: autoresArr,
+
+        // Descrição e preço
+        descricao: descricao,
+        preco: preco,
+        descricao_sem_preco: descricaoSemPreco,
+
+        // Avaliação média
+        media_avaliacoes: row.media_avaliacoes || 0,
       };
 
       return response.json(livro);
@@ -300,7 +308,7 @@ function list(request, response) {
 
         connection.query(sqlCategoriasOpcoes, (errOpcoes, categoriasOpcoesRows) => {
           if (errOpcoes) {
-            console.error("Erro ao buscar opções de categorias:", errOpcoes);
+            console.error("Erro ao buscar opÃ§Ãµes de categorias:", errOpcoes);
             return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errOpcoes.message });
           }
 
@@ -325,6 +333,14 @@ function list(request, response) {
                 categorias: categoriasArr,
                 subcategorias: [],
                 autores: autoresArr,
+
+        // Descrição e preço
+        descricao: descricao,
+        preco: preco,
+        descricao_sem_preco: descricaoSemPreco,
+
+        // Avaliação média
+        media_avaliacoes: row.media_avaliacoes || 0,
               };
             });
 
@@ -396,14 +412,14 @@ async function create(request, response) {
           .map((k) => request.body[k])
           .filter(Boolean);
 
-    // Imagem da capa -> URL pública
+    // Imagem da capa -> URL pÃºblica
     let foto_capa_url = null;
     if (request.file) {
       try {
         foto_capa_url = await salvarImagemNoDisco(request.file, "capas");
       } catch (e) {
         console.error("Falha ao salvar imagem:", e);
-        return response.status(400).json({ erro: "Imagem inválida ou falha no upload" });
+        return response.status(400).json({ erro: "Imagem invÃ¡lida ou falha no upload" });
       }
     }
 
@@ -417,7 +433,7 @@ async function create(request, response) {
         if (err) return response.status(500).json({ erro: "Erro ao criar estoque" });
         const fk_id_estoque = estoqueResult.insertId;
 
-        // 2) Garante Editora (apenas por nome, sem endereço)
+        // 2) Garante Editora (apenas por nome, sem endereÃ§o)
         const nomeEditora = (editora || "").trim();
         const ensureEditora = (cb) => {
           if (!nomeEditora) return cb(null, null); // opcional: livro sem editora
@@ -621,7 +637,7 @@ function createEditora(request, response) {
   ) {
     return response
       .status(400)
-      .json({ erro: "Todos os campos são obrigatórios" });
+      .json({ erro: "Todos os campos sÃ£o obrigatÃ³rios" });
   }
 
   connection.query(
@@ -660,7 +676,7 @@ function listEditora(request, response) {
 function showEditora(request, response) {
   const codigo = request.params.codigo;
   if (!codigo) {
-    return response.status(400).json({ erro: "Código do livro não fornecido" });
+    return response.status(400).json({ erro: "CÃ³digo do livro nÃ£o fornecido" });
   }
 
   connection.query(
@@ -676,7 +692,7 @@ function showEditora(request, response) {
       if (resultado.length === 0) {
         return response
           .status(404)
-          .json({ erro: `Livro com código #${codigo} não encontrado` });
+          .json({ erro: `Livro com cÃ³digo #${codigo} nÃ£o encontrado` });
       }
       return response.json(resultado[0]);
     }
@@ -720,6 +736,8 @@ function sugestoesLivro(request, response) {
       L.id_livro,
       L.nome_livro,
       L.foto_capa_url,
+      L.descricao,
+      L.media_avaliacoes,
       GROUP_CONCAT(DISTINCT A.nome ORDER BY A.nome SEPARATOR '||') AS autores
     FROM Livro L
     LEFT JOIN Livro_Categoria LC ON L.id_livro = LC.fk_id_livros
@@ -737,9 +755,9 @@ function sugestoesLivro(request, response) {
 
   // Evita duplicidade por conta dos JOINs
   query += `
-    GROUP BY L.id_livro, L.nome_livro, L.foto_capa_url
+    GROUP BY L.id_livro, L.nome_livro, L.foto_capa_url, L.descricao, L.media_avaliacoes
     ORDER BY L.id_livro DESC
-    LIMIT 12
+    LIMIT 100
   `;
 
   connection.query(query, params, (err, resultado) => {
@@ -751,6 +769,10 @@ function sugestoesLivro(request, response) {
     const livros = resultado.map((row) => {
       const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
       const capaUrl    = row.foto_capa_url || null;
+      const descricao  = row.descricao || "";
+      const precoMatch = descricao.match(/^([^\s]*\s+[\d.,]+(?:,\d{2})?)\s*\.\.\.\s*(.*)$/);
+      const preco = precoMatch ? precoMatch[1].trim() : null;
+      const descricaoSemPreco = precoMatch ? precoMatch[2].trim() : descricao;
 
       return {
         id_livro: row.id_livro,
@@ -763,9 +785,17 @@ function sugestoesLivro(request, response) {
         foto_capa: capaUrl,
         capa: capaUrl,
 
-        // autor “principal” + lista completa
+        // autor â€œprincipalâ€ + lista completa
         autor: autoresArr[0] || null,
         autores: autoresArr,
+
+        // Descrição e preço
+        descricao: descricao,
+        preco: preco,
+        descricao_sem_preco: descricaoSemPreco,
+
+        // Avaliação média
+        media_avaliacoes: row.media_avaliacoes || 0,
       };
     });
 
@@ -792,17 +822,17 @@ function removerImagemDoDiscoPorURL(url) {
     const filePath = path.join("/srv/images/public", pathname); // /srv/images/public/capas/arquivo.jpg
     fs.unlink(filePath, (err) => {
       if (err && err.code !== "ENOENT") {
-        console.warn("Não foi possível remover a imagem:", filePath, err.message);
+        console.warn("NÃ£o foi possÃ­vel remover a imagem:", filePath, err.message);
       }
     });
   } catch (e) {
-    console.warn("Falha ao processar remoção de imagem:", e.message);
+    console.warn("Falha ao processar remoÃ§Ã£o de imagem:", e.message);
   }
 }
 
 function destroy(request, response) {
   const { id } = request.params;
-  if (!id) return response.status(400).json({ erro: "ID do livro não fornecido" });
+  if (!id) return response.status(400).json({ erro: "ID do livro nÃ£o fornecido" });
 
   // 1) Buscar dados do livro (fk_estoque e foto_capa_url)
   connection.query(
@@ -816,7 +846,7 @@ function destroy(request, response) {
         return response.status(500).json({ erro: "Erro ao buscar livro" });
       }
       if (!rows || rows.length === 0) {
-        return response.status(404).json({ erro: `Livro #${id} não encontrado` });
+        return response.status(404).json({ erro: `Livro #${id} nÃ£o encontrado` });
       }
 
       const { fk_id_estoque, foto_capa_url } = rows[0];
@@ -829,7 +859,7 @@ function destroy(request, response) {
 
       (async () => {
         try {
-          // 2) Apagar vínculos dependentes (ordem não crítica sem FK restritivas)
+          // 2) Apagar vÃ­nculos dependentes (ordem nÃ£o crÃ­tica sem FK restritivas)
           await del(`DELETE FROM Autor_Livros WHERE fk_id_livros = ?`, [id]);
           await del(`DELETE FROM Livro_Categoria WHERE fk_id_livros = ?`, [id]);
           await del(`DELETE FROM Avaliacoes_livro WHERE fk_id_livro = ?`, [id]);
@@ -837,7 +867,7 @@ function destroy(request, response) {
           // 3) Apagar o livro
           await del(`DELETE FROM Livro WHERE id_livro = ?`, [id]);
 
-          // 4) Apagar estoque se ficar órfão
+          // 4) Apagar estoque se ficar Ã³rfÃ£o
           if (fk_id_estoque) {
             const checkSql = `SELECT COUNT(*) AS cnt FROM Livro WHERE fk_id_estoque = ?`;
             connection.query(checkSql, [fk_id_estoque], (errCnt, cntRows) => {
@@ -849,7 +879,7 @@ function destroy(request, response) {
                     [fk_id_estoque],
                     (errDelEst) => {
                       if (errDelEst) {
-                        console.warn("Falha ao remover estoque órfão:", errDelEst.message);
+                        console.warn("Falha ao remover estoque Ã³rfÃ£o:", errDelEst.message);
                       }
                     }
                   );
@@ -861,7 +891,7 @@ function destroy(request, response) {
           // 5) Remover imagem do disco (best-effort, fora da query chain)
           removerImagemDoDiscoPorURL(foto_capa_url);
 
-          return response.json({ mensagem: "Livro excluído com sucesso" });
+          return response.json({ mensagem: "Livro excluÃ­do com sucesso" });
         } catch (e) {
           console.error("Erro ao excluir livro:", e);
           return response.status(500).json({ erro: "Erro interno ao excluir o livro" });
@@ -881,7 +911,7 @@ function destroy(request, response) {
 async function update(request, response) {
   try {
     const { id } = request.params;
-    if (!id) return response.status(400).json({ erro: "ID do livro não fornecido" });
+    if (!id) return response.status(400).json({ erro: "ID do livro nÃ£o fornecido" });
 
     const {
       nomeLivro,
@@ -917,7 +947,7 @@ async function update(request, response) {
           return response.status(500).json({ erro: "Erro ao buscar livro" });
         }
         if (!rows || rows.length === 0) {
-          return response.status(404).json({ erro: `Livro #${id} não encontrado` });
+          return response.status(404).json({ erro: `Livro #${id} nÃ£o encontrado` });
         }
 
         const { fk_id_estoque, foto_capa_url: fotoAtual } = rows[0];
@@ -931,7 +961,7 @@ async function update(request, response) {
             try { removerImagemDoDiscoPorURL && removerImagemDoDiscoPorURL(fotoAtual); } catch (_) {}
           } catch (e) {
             console.error("Falha ao salvar imagem:", e);
-            return response.status(400).json({ erro: "Imagem inválida ou falha no upload" });
+            return response.status(400).json({ erro: "Imagem invÃ¡lida ou falha no upload" });
           }
         }
 
@@ -955,7 +985,7 @@ async function update(request, response) {
             );
           });
 
-        // 4) Utilitários de query (prometizados)
+        // 4) UtilitÃ¡rios de query (prometizados)
         const q = (sql, params=[]) =>
           new Promise((resolve, reject) =>
             connection.query(sql, params, (e, r) => (e ? reject(e) : resolve(r)))
@@ -996,14 +1026,14 @@ async function update(request, response) {
             );
           }
 
-          // 7) Vincula categoria principal (substitui vínculos antigos)
+          // 7) Vincula categoria principal (substitui vÃ­nculos antigos)
           await q(`DELETE FROM Livro_Categoria WHERE fk_id_livros = ?`, [id]);
           await q(
             `INSERT INTO Livro_Categoria (fk_id_livros, fk_id_categoria) VALUES (?, ?)`,
             [id, fk_id_categoria]
           );
 
-          // 8) Atualiza autores (recria vínculos)
+          // 8) Atualiza autores (recria vÃ­nculos)
           await q(`DELETE FROM Autor_Livros WHERE fk_id_livros = ?`, [id]);
           for (const autorNome of autoresArray) {
             const nome = (autorNome || "").trim();
@@ -1054,3 +1084,5 @@ module.exports = {
   showEditora,
   sugestoesLivro,
 };
+
+

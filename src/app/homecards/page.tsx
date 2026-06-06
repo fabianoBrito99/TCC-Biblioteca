@@ -4,10 +4,11 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import { fetchCategorias, fetchLivrosPorCategoria } from "@/actions/categorias";
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
+import LivrariaSectionComponent from "@/componentes/cardLivros/livraria-section";
+import PWAInitializer from "@/componentes/pwa/PWAInitializer";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
 
-/** Tipos */
 interface Livro {
   id_livro: string;
   nome_livro: string;
@@ -16,7 +17,7 @@ interface Livro {
   autor?: string | null;
   categoria_principal?: string | null;
   media_avaliacoes: number;
-  categorias?: string[]; // << usamos no filtro
+  categorias?: string[];
 }
 
 interface APILivroRaw {
@@ -34,6 +35,7 @@ interface APILivroRaw {
 interface FetchCategoriasResp {
   categorias?: string[];
 }
+
 interface FetchLivrosResp {
   livros?: APILivroRaw[];
 }
@@ -42,8 +44,17 @@ type LivrosPorCategoria = Record<string, Livro[]>;
 
 const Home: React.FC = () => {
   const [categorias, setCategorias] = useState<string[]>([]);
-  const [livrosPorCategoria, setLivrosPorCategoria] = useState<LivrosPorCategoria>({});
+  const [livrosPorCategoria, setLivrosPorCategoria] =
+    useState<LivrosPorCategoria>({});
+  const [livrosLivraria, setLivrosLivraria] = useState<Livro[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUserId(localStorage.getItem("userId"));
+    setToken(localStorage.getItem("token"));
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,28 +65,13 @@ const Home: React.FC = () => {
 
         const respostas = await Promise.all(
           listaCategorias.map(async (categoria) => {
-            const livrosData = (await fetchLivrosPorCategoria(categoria, 15)) as FetchLivrosResp;
-            const normalizados: Livro[] = (livrosData?.livros ?? []).map(
-              (l: APILivroRaw): Livro => {
-                const src = l.capa ?? l.foto_capa_url ?? "/placeholder-cover.png";
-                const categoriaPrincipal =
-                  l.categoria_principal ??
-                  (Array.isArray(l.categorias) ? l.categorias[0] ?? null : null);
-                const autorSingular =
-                  l.autor ??
-                  (Array.isArray(l.autores) ? l.autores[0] ?? null : null);
+            const livrosData = (await fetchLivrosPorCategoria(
+              categoria,
+              15
+            )) as FetchLivrosResp;
 
-                return {
-                  id_livro: String(l.id_livro),
-                  nome_livro: l.nome_livro,
-                  foto_capa_url: src,
-                  capa: src,
-                  categoria_principal: categoriaPrincipal,
-                  autor: autorSingular,
-                  media_avaliacoes: l.media_avaliacoes ?? 0,
-                  categorias: Array.isArray(l.categorias) ? l.categorias : [],
-                };
-              }
+            const normalizados: Livro[] = (livrosData?.livros ?? []).map(
+              (livro): Livro => normalizarLivro(livro)
             );
 
             return [categoria, normalizados] as const;
@@ -83,6 +79,21 @@ const Home: React.FC = () => {
         );
 
         setLivrosPorCategoria(Object.fromEntries(respostas));
+
+        try {
+          const livrariaData = (await fetchLivrosPorCategoria(
+            "livraria",
+            20
+          )) as FetchLivrosResp;
+
+          const normalizadosLivraria: Livro[] = (
+            livrariaData?.livros ?? []
+          ).map((livro): Livro => normalizarLivro(livro, "livraria"));
+
+          setLivrosLivraria(normalizadosLivraria);
+        } catch (err) {
+          console.warn("Erro ao carregar livros da livraria:", err);
+        }
       } catch (error) {
         console.error("Erro ao carregar os dados:", error);
       } finally {
@@ -102,12 +113,14 @@ const Home: React.FC = () => {
         <link rel="icon" href="/icones/home-.png" />
       </Head>
 
+      <PWAInitializer userId={userId || undefined} token={token || undefined} />
+
       <div className={styles.indicacoes}>
         <IndicacoesDisplay />
       </div>
 
       <div id="categorias-section" className={styles.categoriasSection}>
-        {categorias.map((categoria) => {
+        {categorias.map((categoria, index) => {
           const livrosFiltrados = livrosPorCategoria[categoria] ?? [];
 
           return (
@@ -116,6 +129,10 @@ const Home: React.FC = () => {
                 categoria_principal={categoria}
                 livros={livrosFiltrados}
               />
+
+              {index === 0 && livrosLivraria.length > 0 && (
+                <LivrariaSectionComponent livros={livrosLivraria} />
+              )}
             </div>
           );
         })}
@@ -123,5 +140,27 @@ const Home: React.FC = () => {
     </div>
   );
 };
+
+function normalizarLivro(livro: APILivroRaw, categoria?: string): Livro {
+  const src = livro.capa ?? livro.foto_capa_url ?? "/placeholder-cover.png";
+  const categoriaPrincipal =
+    categoria ??
+    livro.categoria_principal ??
+    (Array.isArray(livro.categorias) ? livro.categorias[0] ?? null : null);
+  const autorSingular =
+    livro.autor ??
+    (Array.isArray(livro.autores) ? livro.autores[0] ?? null : null);
+
+  return {
+    id_livro: String(livro.id_livro),
+    nome_livro: livro.nome_livro,
+    foto_capa_url: src,
+    capa: src,
+    categoria_principal: categoriaPrincipal,
+    autor: autorSingular,
+    media_avaliacoes: livro.media_avaliacoes ?? 0,
+    categorias: Array.isArray(livro.categorias) ? livro.categorias : [],
+  };
+}
 
 export default Home;

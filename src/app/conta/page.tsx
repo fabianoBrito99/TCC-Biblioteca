@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import Link from "next/link";
 import styles from "./[id]/conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
@@ -63,16 +63,32 @@ export default function ContaPageSemId() {
     setForbidden(false);
     setLoading(true);
 
-    const fetchUserData = async (): Promise<void> => {
+    const fetchUserData = async (retryCount = 0): Promise<void> => {
+      const maxRetries = 3;
+      const retryDelay = 1000 * (retryCount + 1);
+
       try {
         const token = localStorage.getItem("token");
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const res = await fetch(`${API_BASE}/api/usuario/${userId}`, {
           cache: "no-store",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (res.status === 401 || res.status === 403) {
           if (isMounted) setForbidden(true);
+          return;
+        }
+
+        if (!res.ok && retryCount < maxRetries) {
+          console.warn(`[Retry ${retryCount + 1}/${maxRetries}] Tentando novamente em ${retryDelay}ms...`);
+          setTimeout(() => fetchUserData(retryCount + 1), retryDelay);
           return;
         }
 
@@ -86,8 +102,27 @@ export default function ContaPageSemId() {
         setUser(data.usuario);
         setEndereco(data.endereco);
         setFotoBase64(data.usuario?.foto_usuario || null);
-      } catch {
-        if (isMounted) setForbidden(true);
+      } catch (error: unknown) {
+        if (!isMounted) return;
+
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        
+        if (
+          errorMsg.includes("ERR_CERT") ||
+          errorMsg.includes("Failed to fetch") ||
+          errorMsg.includes("AbortError")
+        ) {
+          if (retryCount < maxRetries) {
+            console.warn(`[Erro de conexão] Tentando novamente (${retryCount + 1}/${maxRetries})...`);
+            setTimeout(() => fetchUserData(retryCount + 1), retryDelay);
+          } else {
+            console.error("Erro ao buscar usuário após múltiplas tentativas:", errorMsg);
+            setForbidden(true);
+          }
+        } else {
+          console.error("Erro ao buscar usuário:", errorMsg);
+          setForbidden(true);
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -112,7 +147,11 @@ export default function ContaPageSemId() {
       <div className={styles.grid}>
         <div className={styles.grid1}>
           {fotoBase64 ? (
-            <Image src={`data:image/png;base64,${fotoBase64}`} alt="Foto de perfil" width={120} height={120} />
+            <img 
+              src={`data:image/png;base64,${fotoBase64}`} 
+              alt="Foto de perfil" 
+              style={{ width: "120px", height: "120px", borderRadius: "8px", objectFit: "cover" }}
+            />
           ) : (
             <div>Sem foto de perfil</div>
           )}
@@ -140,6 +179,12 @@ export default function ContaPageSemId() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className={styles.buttonSection}>
+        <Link href="/editar-dados" className={styles.editButton}>
+          ✏️ Editar Dados Pessoais
+        </Link>
       </div>
 
       <h2 className={styles.historico}>Histórico</h2>
