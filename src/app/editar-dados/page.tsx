@@ -38,8 +38,6 @@ export default function EditarDadosPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [userIdReady, setUserIdReady] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [endereco, setEndereco] = useState<Endereco | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [forbidden, setForbidden] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
@@ -116,9 +114,6 @@ export default function EditarDadosPage() {
 
         const data: ApiResponse = (await res.json()) as ApiResponse;
         if (!isMounted) return;
-
-        setUser(data.usuario);
-        setEndereco(data.endereco);
 
         // Formatar data para input type="date"
         const dataNasc = new Date(data.usuario.data_nascimento);

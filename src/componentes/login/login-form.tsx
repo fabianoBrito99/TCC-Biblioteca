@@ -51,10 +51,11 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
         const userId = response.data.id_usuario;
         const token = response.data.token;
         const next = new URLSearchParams(window.location.search).get("next");
+        const redirectTo = next?.startsWith("/") ? next : "/homecards";
 
         localStorage.setItem("userId", userId); // Salva o ID do usuário no localStorage
         localStorage.setItem("token", token); // Salva o token para chamadas autenticadas na API
-        router.push(`/homecards`); // Redireciona para a conta do usuário
+        router.push(redirectTo);
       } else {
 
         setError(response.error);
