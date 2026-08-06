@@ -26,7 +26,8 @@ export default async function login(
       throw new Error("Os campos não podem ser vazios");
     }
 
-    const response = await fetch("https://api.helenaramazzotte.online/api/login", {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.helenaramazzotte.online";
+    const response = await fetch(`${apiBaseUrl}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, senha: password }),

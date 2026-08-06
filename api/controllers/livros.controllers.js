@@ -129,6 +129,7 @@ function show(request, response) {
       const categoriasArr    = row.categorias    ? row.categorias.split("||").filter(Boolean)    : [];
       const autoresArr       = row.autores       ? row.autores.split("||").filter(Boolean)       : [];
       const capaUrl          = row.foto_capa_url || null;
+      const descricao        = row.descricao || "";
 
       const livro = {
         ...row,
@@ -141,9 +142,9 @@ function show(request, response) {
         autores: autoresArr,
 
         // Descrição e preço
-        descricao: descricao,
-        preco: preco,
-        descricao_sem_preco: descricaoSemPreco,
+        descricao,
+        preco: null,
+        descricao_sem_preco: descricao,
 
         // Avaliação média
         media_avaliacoes: row.media_avaliacoes || 0,
@@ -323,6 +324,7 @@ function list(request, response) {
               const categoriasArr = row.categorias ? row.categorias.split("||").filter(Boolean) : [];
               const autoresArr = row.autores ? row.autores.split("||").filter(Boolean) : [];
               const capaUrl = row.foto_capa_url || null;
+              const descricao = row.descricao || "";
 
               return {
                 ...row,
@@ -334,10 +336,10 @@ function list(request, response) {
                 subcategorias: [],
                 autores: autoresArr,
 
-        // Descrição e preço
-        descricao: descricao,
-        preco: preco,
-        descricao_sem_preco: descricaoSemPreco,
+                // Descrição e preço
+                descricao,
+                preco: null,
+                descricao_sem_preco: descricao,
 
         // Avaliação média
         media_avaliacoes: row.media_avaliacoes || 0,

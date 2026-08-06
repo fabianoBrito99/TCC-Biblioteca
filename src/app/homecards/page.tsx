@@ -2,7 +2,12 @@
 
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { fetchCategorias, fetchLivrosPorCategoria } from "@/actions/categorias";
+import {
+  fetchCategorias,
+  fetchCategoriasPorQuantidade,
+  fetchLivrosPorCategoria,
+  type CategoriaContagem,
+} from "@/actions/categorias";
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import LivrariaSectionComponent from "@/componentes/cardLivros/livraria-section";
 import PWAInitializer from "@/componentes/pwa/PWAInitializer";
@@ -36,6 +41,10 @@ interface FetchCategoriasResp {
   categorias?: string[];
 }
 
+interface FetchCategoriasOrdenadasResp {
+  categorias?: CategoriaContagem[];
+}
+
 interface FetchLivrosResp {
   livros?: APILivroRaw[];
 }
@@ -59,12 +68,30 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const categoriasData = (await fetchCategorias()) as FetchCategoriasResp;
-        const listaCategorias = categoriasData?.categorias ?? [];
-        setCategorias(listaCategorias);
+        const categoriasOrdenadasData =
+          (await fetchCategoriasPorQuantidade()) as FetchCategoriasOrdenadasResp;
+        let listaCategorias = (categoriasOrdenadasData?.categorias ?? [])
+          .filter((categoria) => Boolean(categoria.categoria_principal))
+          .sort((a, b) => Number(b.quantidade || 0) - Number(a.quantidade || 0))
+          .map((categoria) => categoria.categoria_principal);
+
+        if (!listaCategorias.length) {
+          const categoriasData = (await fetchCategorias()) as FetchCategoriasResp;
+          listaCategorias = categoriasData?.categorias ?? [];
+        }
+
+        const livrariaCategoria =
+          listaCategorias.find(
+            (categoria) => normalizarCategoria(categoria) === "livraria"
+          ) ?? "Livraria";
+        const categoriasExibidas = listaCategorias.filter(
+          (categoria) => normalizarCategoria(categoria) !== "livraria"
+        );
+
+        setCategorias(categoriasExibidas);
 
         const respostas = await Promise.all(
-          listaCategorias.map(async (categoria) => {
+          categoriasExibidas.map(async (categoria) => {
             const livrosData = (await fetchLivrosPorCategoria(
               categoria,
               15
@@ -82,13 +109,13 @@ const Home: React.FC = () => {
 
         try {
           const livrariaData = (await fetchLivrosPorCategoria(
-            "livraria",
+            livrariaCategoria,
             20
           )) as FetchLivrosResp;
 
           const normalizadosLivraria: Livro[] = (
             livrariaData?.livros ?? []
-          ).map((livro): Livro => normalizarLivro(livro, "livraria"));
+          ).map((livro): Livro => normalizarLivro(livro, livrariaCategoria));
 
           setLivrosLivraria(normalizadosLivraria);
         } catch (err) {
@@ -136,10 +163,22 @@ const Home: React.FC = () => {
             </div>
           );
         })}
+
+        {!categorias.length && livrosLivraria.length > 0 && (
+          <LivrariaSectionComponent livros={livrosLivraria} />
+        )}
       </div>
     </div>
   );
 };
+
+function normalizarCategoria(categoria: string) {
+  return categoria
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 function normalizarLivro(livro: APILivroRaw, categoria?: string): Livro {
   const src = livro.capa ?? livro.foto_capa_url ?? "/placeholder-cover.png";

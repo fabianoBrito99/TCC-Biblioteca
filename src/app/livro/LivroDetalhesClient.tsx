@@ -34,6 +34,8 @@ interface Livro {
   id_livro: number;
   nome_livro: string;
   nome_autor: string;
+  autor?: string | null;
+  autores?: string[] | null;
   categoria_principal: string;
   descricao: string;
   nome_editora: string;
@@ -42,6 +44,9 @@ interface Livro {
   quantidade_paginas: number;
   cor_cima: string;
   cor_baixo: string;
+  media_avaliacoes?: number | null;
+  preco?: string | null;
+  descricao_sem_preco?: string | null;
 }
 
 interface Avaliacao {
@@ -269,6 +274,23 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
 
   if (erro) return <p>{erro}</p>;
 
+  const venda = extrairDadosVenda(livro);
+  const categoriaNormalizada = normalizarTexto(livro?.categoria_principal ?? "");
+  const livroLivraria = categoriaNormalizada === "livraria";
+  const descricaoExibida = venda.descricao || livro?.descricao || "";
+  const mediaAvaliacoes = Number(livro?.media_avaliacoes || 0);
+  const autorExibido =
+    livro?.nome_autor ||
+    livro?.autor ||
+    (Array.isArray(livro?.autores) ? livro?.autores[0] : null) ||
+    "Autor nao informado";
+  const whatsappMensagem = encodeURIComponent(
+    `Olá! Tenho interesse em comprar o livro "${livro?.nome_livro ?? ""}"${
+      venda.preco ? ` no valor de ${venda.preco}` : ""
+    }.`
+  );
+  const whatsappHref = `https://api.whatsapp.com/send?text=${whatsappMensagem}`;
+
   return (
     <div
       className={styles.containerConsLiv}
@@ -303,17 +325,32 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
           <div className={styles.livroInfo}>
             <h2 className={styles.categoria}>{livro?.categoria_principal}</h2>
             <h1>{livro?.nome_livro}</h1>
-            <h2>Autor: {livro?.nome_autor}</h2>
+            <h2>Autor: {autorExibido}</h2>
             <h2>Quantidade de páginas: {livro?.quantidade_paginas}</h2>
+            <div className={styles.mediaLivro} aria-label={`Avaliação ${mediaAvaliacoes.toFixed(1)}`}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  className={
+                    mediaAvaliacoes >= star
+                      ? styles.estrelaAtiva
+                      : styles.estrelaInativa
+                  }
+                >
+                  ★
+                </span>
+              ))}
+              <strong>{mediaAvaliacoes.toFixed(1)}</strong>
+            </div>
 
             <div
               className={`${styles.descricaoLivro} ${
                 descricaoExpandida ? styles.descricaoExpandida : ""
               }`}
             >
-              <p>{livro?.descricao}</p>
+              <p>{descricaoExibida}</p>
             </div>
-            {livro?.descricao && livro.descricao.length > 180 && (
+            {descricaoExibida.length > 180 && (
               <button
                 type="button"
                 className={styles.verDescricao}
@@ -323,7 +360,21 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
               </button>
             )}
             <div className={styles.botaoReservarPos}>
-              {livro?.quantidade_estoque ? (
+              {livroLivraria ? (
+                <div className={styles.vendaLivro}>
+                  {venda.preco && (
+                    <strong className={styles.precoLivro}>{venda.preco}</strong>
+                  )}
+                  <a
+                    className={styles.whatsappLink}
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Comprar pelo WhatsApp
+                  </a>
+                </div>
+              ) : livro?.quantidade_estoque ? (
                 <button
                   className={styles.botaoReservar}
                   onClick={handleReservar}
@@ -336,6 +387,19 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
                 </button>
               )}
             </div>
+            {livroLivraria && (
+              <div className={styles.livrariaCompraBox}>
+                <p>
+                  <strong>Para comprar um livro:</strong>
+                  <br />
+                  Basta ir na lateral da igreja perto do bebedouro ou{" "}
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                    entrar em contato conosco
+                  </a>{" "}
+                  para mais informações.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -576,4 +640,27 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
       </div>
     </div>
   );
+}
+
+function normalizarTexto(texto: string) {
+  return texto
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function extrairDadosVenda(livro: Livro | null) {
+  const descricao = livro?.descricao ?? "";
+  const descricaoApi = livro?.descricao_sem_preco?.trim();
+  const precoApi = livro?.preco?.trim();
+  const match = descricao.match(/^\s*(R\$ ?\d+(?:[.,]\d{2})?)\s*(?:\.{3}|…)\s*(.*)$/i);
+  const descricaoApiSemPreco = descricaoApi && !descricaoApi.match(/^\s*R\$ ?\d+/i)
+    ? descricaoApi
+    : null;
+
+  return {
+    preco: precoApi || match?.[1]?.trim() || null,
+    descricao: descricaoApiSemPreco || match?.[2]?.trim() || descricao,
+  };
 }

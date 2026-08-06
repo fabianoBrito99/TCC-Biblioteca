@@ -10,6 +10,7 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
 /** Página de cadastro/edição */
 const CADASTRAR_PATH = "/cadastrarLivro";
+const EDITAR_PATH = "/editar";
 const LIMITE_POR_PAGINA = 24;
 
 type Livro = {
@@ -187,7 +188,7 @@ export default function ListarLivrosPage() {
   };
 
   const editar = (id: number | string) => {
-    router.push(`${CADASTRAR_PATH}/${id}`);
+    router.push(`${EDITAR_PATH}/${id}`);
   };
 
   const abrirLivroPublico = (livro: Livro) => {

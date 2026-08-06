@@ -19,10 +19,14 @@ const noticacoesRoutes = require('./routes/notificacoes.routes');
 const relatorioRoutes = require('./routes/relatorios.routes'); 
 const indicacoesRoutes = require('./routes/indicacoes.routes'); 
 const ocrRoutes = require('./routes/ocr.routes');
+const { createRateLimit } = require("./middlewares/rateLimit");
 const app = express();
 
 
-const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = Array.from(new Set([
+  "https://app.helenaramazzotte.online",
+  ...(process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean),
+]));
 const isLocalOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || "");
 
 
@@ -37,6 +41,13 @@ app.use(cors({
   methods: ['GET','POST','PATCH','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization'],
   credentials: false,
+}));
+
+app.use(createRateLimit({
+  windowMs: 60_000,
+  maxRequests: 300,
+  maxConcurrent: 30,
+  keyPrefix: "api",
 }));
 
 app.use(express.json({ limit: "10mb" }));

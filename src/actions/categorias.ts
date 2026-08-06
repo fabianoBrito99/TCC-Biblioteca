@@ -27,6 +27,47 @@ export const fetchLivros = async () => {
   }
 };
 
+export interface CategoriaContagem {
+  categoria_principal: string;
+  quantidade: number;
+}
+
+export const fetchCategoriasPorQuantidade = async () => {
+  try {
+    const qs = new URLSearchParams({
+      limite: "1",
+      pagina: "1",
+    });
+    const response = await fetch(`${API_BASE}/livro?${qs.toString()}`);
+    if (!response.ok) {
+      throw new Error("Erro na requisição de contagem por categoria");
+    }
+
+    const data = await response.json();
+    const categoriasContagem = Array.isArray(data?.categorias_contagem)
+      ? data.categorias_contagem
+      : [];
+
+    return {
+      categorias: categoriasContagem
+        .filter((categoria: Partial<CategoriaContagem>) =>
+          Boolean(categoria.categoria_principal)
+        )
+        .map((categoria: CategoriaContagem) => ({
+          categoria_principal: categoria.categoria_principal,
+          quantidade: Number(categoria.quantidade || 0),
+        }))
+        .sort(
+          (a: CategoriaContagem, b: CategoriaContagem) =>
+            b.quantidade - a.quantidade
+        ),
+    };
+  } catch (error) {
+    console.error("Erro ao carregar contagem por categoria:", error);
+    return { categorias: [] };
+  }
+};
+
 export const fetchLivrosPorCategoria = async (categoria: string, limite = 15) => {
   try {
     const qs = new URLSearchParams({

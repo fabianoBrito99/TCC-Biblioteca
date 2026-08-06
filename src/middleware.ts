@@ -4,6 +4,7 @@ const permissoes = {
   administrador: [
     "/livros",
     "/cadastrarLivro",
+    "/editar",
     "/emprestimos",
     "/usuario",
     "/homecards",
@@ -104,6 +105,7 @@ export const config = {
   matcher: [
     "/livros/:path*",
     "/cadastrarLivro",
+    "/editar/:path*",
     "/emprestimos/:path*",
     "/usuario/:path*",
     "/homecards",

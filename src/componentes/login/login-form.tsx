@@ -6,7 +6,6 @@ import { useState, FormEvent } from "react";
 import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
 import ErrorMessage from "../helper/error-message";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./login-form.module.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -26,7 +25,6 @@ type LoginFormProps = {
 };
 
 export default function LoginForm({ onToggle }: LoginFormProps) {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -55,7 +53,7 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
 
         localStorage.setItem("userId", userId); // Salva o ID do usuário no localStorage
         localStorage.setItem("token", token); // Salva o token para chamadas autenticadas na API
-        router.push(redirectTo);
+        window.location.assign(redirectTo);
       } else {
 
         setError(response.error);

@@ -59,6 +59,7 @@ const CategoriaSwiper: React.FC<{
     };
 
     const swiper = new Swiper(containerRef.current, {
+      init: false,
       slidesPerView: "auto",
       spaceBetween: 12,
       freeMode: true,
@@ -67,7 +68,6 @@ const CategoriaSwiper: React.FC<{
         prevEl: `.${prevCls}`,
       },
       on: {
-        init: atualizarControles,
         slideChange: atualizarControles,
         reachBeginning: atualizarControles,
         reachEnd: atualizarControles,
@@ -85,6 +85,7 @@ const CategoriaSwiper: React.FC<{
     });
 
     swiperRef.current = swiper;
+    swiper.init();
     atualizarControles(swiper);
 
     return () => {

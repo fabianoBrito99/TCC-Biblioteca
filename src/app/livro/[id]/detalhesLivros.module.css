@@ -326,6 +326,76 @@
   color: lightgray; /* Cor para estrelas inativas */
 }
 
+.mediaLivro {
+  display:flex;
+  align-items:center;
+  gap:3px;
+  color:#f59e0b;
+  font-size:1rem;
+  font-weight:700;
+}
+
+.mediaLivro strong {
+  color:#333;
+  margin-left:5px;
+  font-size:.95rem;
+}
+
+.vendaLivro {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  width:100%;
+  flex-wrap:wrap;
+}
+
+.precoLivro {
+  color:#0f172a;
+  font-size:1.05rem;
+  white-space:nowrap;
+}
+
+.whatsappLink {
+  min-height:38px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 14px;
+  border-radius:5px;
+  background:#16a34a;
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+}
+
+.whatsappLink:hover {
+  background:#15803d;
+}
+
+.livrariaCompraBox {
+  margin-top:8px;
+  padding:12px;
+  border-left:4px solid #16a34a;
+  border-radius:6px;
+  background:#fff;
+  color:#374151;
+  font-size:.95rem;
+  line-height:1.45;
+}
+
+.livrariaCompraBox p {
+  margin:0;
+  font-size:inherit;
+  line-height:inherit;
+}
+
+.livrariaCompraBox a {
+  color:#0f22ce;
+  font-weight:800;
+  text-decoration:none;
+}
+
 .formAvaliacao {
   position: fixed;
   bottom: 1px;
@@ -718,9 +788,24 @@
   }
 
   .botaoReservar,
-  .botaoReservado {
+  .botaoReservado,
+  .whatsappLink {
     min-height:38px;
     padding:8px 14px;
+  }
+
+  .vendaLivro {
+    justify-content:flex-start;
+  }
+
+  .precoLivro {
+    font-size:1rem;
+  }
+
+  .livrariaCompraBox {
+    grid-column:1 / -1;
+    margin-top:2px;
+    font-size:.88rem;
   }
 
   .conatinerLateral {

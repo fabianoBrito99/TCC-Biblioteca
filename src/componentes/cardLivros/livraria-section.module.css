@@ -147,6 +147,13 @@
   margin: 0;
 }
 
+.rating {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin: auto 0 0;
+}
+
 .navButton {
   position: absolute;
   top: 50%;
@@ -204,6 +211,16 @@
   margin-bottom: 8px;
 }
 
+.ctaBox a {
+  color: #0f22ce;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ctaBox a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .livrariSection {
     padding: 30px 15px;
@@ -244,11 +261,46 @@
 
 @media (max-width: 480px) {
   .livrariSection {
-    padding: 20px 10px;
+    padding: 18px 8px;
   }
 
   .title {
     font-size: 20px;
+  }
+
+  .header {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .containerSwiper {
+    margin: 16px 0;
+  }
+
+  .slide {
+    padding: 6px 0;
+  }
+
+  .card {
+    border-radius: 8px;
+  }
+
+  .content {
+    padding: 8px;
+    min-height: 78px;
+  }
+
+  .bookTitle {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .price {
+    font-size: 12px;
+  }
+
+  .rating {
+    font-size: 11px;
   }
 
   .navButton {

@@ -1,9 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: "api",
-      cwd: "/srv/apps/biblioteca/api",
-      script: "main.js",
+      name: "biblioteca-api",
+      cwd: "/srv/apps/biblioteca",
+      script: "api/main.js",
       instances: 1,
       autorestart: true,
       env: {
@@ -19,10 +19,10 @@ module.exports = {
       }
     },
     {
-      name: "web",
+      name: "biblioteca-web",
       cwd: "/srv/apps/biblioteca",
       script: "npm",
-      args: "start -- -p 3001",
+      args: "run start -- -p 3000 -H 127.0.0.1",
       instances: 1,
       autorestart: true,
       env: { NODE_ENV: "production" }

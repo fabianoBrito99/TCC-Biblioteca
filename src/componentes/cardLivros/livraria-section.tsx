@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Swiper, { type Swiper as SwiperInstance } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -14,6 +14,9 @@ interface LivroBiblioteca {
   capa?: string | null;
   foto_capa_url?: string | null;
   descricao?: string | null;
+  media_avaliacoes?: number | null;
+  preco?: string | null;
+  descricao_sem_preco?: string | null;
 }
 
 interface LivroLivraria extends LivroBiblioteca {
@@ -28,37 +31,52 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
   const [podeVoltar, setPodeVoltar] = useState(false);
   const [podeAvancar, setPodeAvancar] = useState(true);
 
-  const livrosComPreco = livros.map((livro) => {
-    const descricao = livro.descricao || "";
-    
-    // Extrair preço: "R$ 50.00 ... descrição"
-    const match = descricao.match(/^([^\s]*\s+[\d.,]+(?:,\d{2})?)\s*\.\.\.\s*(.*)$/);
-    
-    if (match) {
-      return {
-        ...livro,
-        preco: match[1].trim(),
-        descricao_sem_preco: match[2].trim(),
-      };
-    }
-    
-    return {
-      ...livro,
-      preco: null,
-      descricao_sem_preco: descricao,
-    };
-  }) as LivroLivraria[];
+  const livrosComPreco = useMemo(
+    () =>
+      livros.map((livro) => {
+        const descricao = livro.descricao || "";
+        const match = descricao.match(
+          /^\s*(R\$ ?\d+(?:[.,]\d{2})?)\s*(?:\.{3}|…)\s*(.*)$/i
+        );
+        const descricaoApi = livro.descricao_sem_preco?.trim();
+        const descricaoApiSemPreco = descricaoApi && !descricaoApi.match(/^\s*R\$ ?\d+/i)
+          ? descricaoApi
+          : null;
+
+        if (match) {
+          return {
+            ...livro,
+            preco: livro.preco?.trim() || match[1].trim(),
+            descricao_sem_preco: descricaoApiSemPreco || match[2].trim(),
+          };
+        }
+
+        return {
+          ...livro,
+          preco: livro.preco?.trim() || null,
+          descricao_sem_preco: descricaoApiSemPreco || descricao,
+        };
+      }) as LivroLivraria[],
+    [livros]
+  );
 
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const updateNavigationState = (swiper: SwiperInstance) => {
+      setPodeVoltar(!swiper.isBeginning);
+      setPodeAvancar(!swiper.isEnd);
+    };
+
     const swiperInstance = new Swiper(containerRef.current, {
+      init: false,
       slidesPerView: 1,
       spaceBetween: 16,
       breakpoints: {
-        480: { slidesPerView: 2 },
-        768: { slidesPerView: 3 },
-        1024: { slidesPerView: 4 },
+        0: { slidesPerView: 2, spaceBetween: 12 },
+        480: { slidesPerView: 3, spaceBetween: 12 },
+        768: { slidesPerView: 4 },
+        1024: { slidesPerView: 5 },
         1280: { slidesPerView: 6 },
       },
       navigation: {
@@ -66,22 +84,23 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
         prevEl: `.prev-livraria`,
       },
       on: {
-        init: updateNavigationState,
         slideChange: updateNavigationState,
+        reachBeginning: updateNavigationState,
+        reachEnd: updateNavigationState,
+        fromEdge: updateNavigationState,
+        resize: updateNavigationState,
       },
     });
 
     swiperRef.current = swiperInstance;
-
-    function updateNavigationState() {
-      setPodeVoltar(!swiperInstance.isBeginning);
-      setPodeAvancar(!swiperInstance.isEnd);
-    }
+    swiperInstance.init();
+    updateNavigationState(swiperInstance);
 
     return () => {
-      swiperInstance.destroy();
+      swiperRef.current = null;
+      swiperInstance.destroy(true, true);
     };
-  }, []);
+  }, [livrosComPreco.length]);
 
   return (
     <section className={styles.livrariSection}>
@@ -124,6 +143,9 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
                     {livro.preco && (
                       <p className={styles.price}>{livro.preco}</p>
                     )}
+                    <p className={styles.rating}>
+                      ★ {Number(livro.media_avaliacoes || 0).toFixed(1)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -147,7 +169,15 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
       <div className={styles.ctaBox}>
         <p>
           <strong>Para comprar um livro:</strong><br />
-          Basta ir na lateral da igreja perto do bebedouro ou entrar em contato conosco para mais informações.
+          Basta ir na lateral da igreja perto do bebedouro ou{" "}
+          <a
+            href="https://api.whatsapp.com/send?text=Ol%C3%A1!%20Tenho%20interesse%20em%20comprar%20um%20livro%20da%20livraria."
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            entrar em contato conosco pelo WhatsApp
+          </a>{" "}
+          para mais informações.
         </p>
       </div>
     </section>

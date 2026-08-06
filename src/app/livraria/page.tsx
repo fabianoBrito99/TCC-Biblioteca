@@ -34,12 +34,10 @@ export default function Livraria() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = (await fetchLivrosPorCategoria("livraria", 100)) as FetchLivrosResp;
+        const data = (await fetchLivrosPorCategoria("Livraria", 100)) as FetchLivrosResp;
         const livrosData = (data?.livros ?? []).map((livro: APILivroRaw): LivroLivraria => {
           const descricao = livro.descricao || "";
-          
-          // Extrair preço: "R$ 50.00 ... descrição"
-          const match = descricao.match(/^([^\s]*\s+[\d.,]+(?:,\d{2})?)\s*\.\.\.\s*(.*)$/);
+          const match = descricao.match(/^\s*(R\$ ?\d+(?:[.,]\d{2})?)\s*(?:\.{3}|…)\s*(.*)$/i);
           
           return {
             ...livro,

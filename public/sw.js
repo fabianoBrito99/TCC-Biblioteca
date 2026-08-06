@@ -1,7 +1,7 @@
 // Public service worker para PWA
 // Este arquivo fica em /public/sw.js
 
-const CACHE_NAME = "biblioteca-v1";
+const CACHE_NAME = "biblioteca-v2";
 const urlsToCache = [
   "/",
   "/homecards",
@@ -47,6 +47,7 @@ self.addEventListener("fetch", (event) => {
   if (
     event.request.method !== "GET" ||
     event.request.url.includes("/api/") ||
+    event.request.url.includes("api.helenaramazzotte.online") ||
     event.request.url.includes(".wasm")
   ) {
     return;
@@ -67,7 +68,9 @@ self.addEventListener("fetch", (event) => {
       })
       .catch(() => {
         // Se fetch falhar, tenta pegar do cache
-        return caches.match(event.request);
+        return caches.match(event.request).then((cachedResponse) => {
+          return cachedResponse || new Response("", { status: 504, statusText: "Offline" });
+        });
       })
   );
 });
