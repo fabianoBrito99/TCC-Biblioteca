@@ -38,6 +38,16 @@ interface IndicacaoView {
   media_avaliacoes: number;
 }
 
+function obterMediaExibida(media?: number | null) {
+  const valor = Number(media);
+  return Number.isFinite(valor) && valor > 0 ? valor : 5;
+}
+
+function formatarMedia(media?: number | null) {
+  const valor = obterMediaExibida(media);
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace(".", ",");
+}
+
 function bytesToDataUrlJPEG(bytes: number[]): string {
   // Converte array de números (0-255) em base64 de forma segura (em chunks)
   let binary = "";
@@ -111,6 +121,7 @@ const IndicacoesDisplay = () => {
   if (indicacoes.length === 0) return <p>Carregando indicações...</p>;
 
   const atual = indicacoes[index];
+  const mediaExibida = obterMediaExibida(atual.media_avaliacoes);
   const abrirIndicacao = () => {
     sessionStorage.setItem("livroSelecionadoId", String(atual.id_livro));
     sessionStorage.setItem("livroSelecionadoNome", atual.nome_livro);
@@ -152,12 +163,12 @@ const IndicacoesDisplay = () => {
             {[1, 2, 3, 4, 5].map((star) => (
               <span
                 key={star}
-                className={atual.media_avaliacoes >= star ? styles.starAtiva : styles.starInativa}
+                className={mediaExibida >= star ? styles.starAtiva : styles.starInativa}
               >
                 ★
               </span>
             ))}
-            <strong>{atual.media_avaliacoes.toFixed(1)}</strong>
+            <strong>{formatarMedia(atual.media_avaliacoes)}</strong>
            </div>
         </div>
         <div className={styles.grid2}>

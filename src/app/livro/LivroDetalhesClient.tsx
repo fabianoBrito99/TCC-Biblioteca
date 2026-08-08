@@ -59,6 +59,16 @@ interface Avaliacao {
   foto_usuario: string | null;
 }
 
+function obterMediaExibida(media?: number | null) {
+  const valor = Number(media);
+  return Number.isFinite(valor) && valor > 0 ? valor : 5;
+}
+
+function formatarMedia(media?: number | null) {
+  const valor = obterMediaExibida(media);
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace(".", ",");
+}
+
 export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverride?: string } = {}) {
   const [livro, setLivro] = useState<Livro | null>(null);
   const [erro, setErro] = useState("");
@@ -278,7 +288,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
   const categoriaNormalizada = normalizarTexto(livro?.categoria_principal ?? "");
   const livroLivraria = categoriaNormalizada === "livraria";
   const descricaoExibida = venda.descricao || livro?.descricao || "";
-  const mediaAvaliacoes = Number(livro?.media_avaliacoes || 0);
+  const mediaAvaliacoes = obterMediaExibida(livro?.media_avaliacoes);
   const autorExibido =
     livro?.nome_autor ||
     livro?.autor ||
@@ -327,7 +337,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
             <h1>{livro?.nome_livro}</h1>
             <h2>Autor: {autorExibido}</h2>
             <h2>Quantidade de páginas: {livro?.quantidade_paginas}</h2>
-            <div className={styles.mediaLivro} aria-label={`Avaliação ${mediaAvaliacoes.toFixed(1)}`}>
+            <div className={styles.mediaLivro} aria-label={`Avaliação ${formatarMedia(livro?.media_avaliacoes)}`}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <span
                   key={star}
@@ -340,7 +350,7 @@ export default function LivroDetalhesClient({ livroIdOverride }: { livroIdOverri
                   ★
                 </span>
               ))}
-              <strong>{mediaAvaliacoes.toFixed(1)}</strong>
+              <strong> className={styles.cor}{formatarMedia(livro?.media_avaliacoes)}</strong>
             </div>
 
             <div

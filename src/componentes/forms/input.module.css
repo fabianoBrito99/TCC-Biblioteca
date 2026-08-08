@@ -51,9 +51,9 @@
 /* Animação do label */
 .input:focus + .label,
 .input:not(:placeholder-shown) + .label {
-  transform: translateY(-28px);
+  transform: translateY(-38px);
   border-radius: 3px;
-  font-size: 1rem;
+  font-size: 0.5rem;
   color: #fff;
   background: linear-gradient(to right, rgb(68, 70, 194), rgb(0, 81, 255));
   padding: 0 5px; /* Para evitar sobreposição */
@@ -70,7 +70,7 @@
 
 @media (max-width: 480px) {
  .wrapper input{
-  margin-bottom: 10px;
+  margin-bottom: 1px;
   font-size: 0.5rem;
  }
  .label{

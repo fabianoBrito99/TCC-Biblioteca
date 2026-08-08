@@ -36,6 +36,16 @@ function aplicarHifenOpcional(texto?: string | null) {
     .join(" ");
 }
 
+function obterMediaExibida(media?: number | null) {
+  const valor = Number(media);
+  return Number.isFinite(valor) && valor > 0 ? valor : 5;
+}
+
+function formatarMedia(media?: number | null) {
+  const valor = obterMediaExibida(media);
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace(".", ",");
+}
+
 const CategoriaSwiper: React.FC<{
   categoria_principal: string;
   livros: Livro[];
@@ -131,6 +141,10 @@ const CategoriaSwiper: React.FC<{
               className={`swiper-slide ${styles.bookSlide}`}
               onClick={() => handleCardClick(livro)}
             >
+              {(() => {
+                const mediaExibida = obterMediaExibida(livro.media_avaliacoes);
+
+                return (
               <div className={styles.cardLivro}>
                 <Image
                   src={livro.foto_capa_url || livro.capa || "/placeholder-cover.png"}
@@ -153,7 +167,7 @@ const CategoriaSwiper: React.FC<{
                     <span
                       key={star}
                       className={
-                        Number(livro.media_avaliacoes || 0) >= star
+                        mediaExibida >= star
                           ? styles.starAtiva
                           : styles.starInativa
                       }
@@ -162,9 +176,11 @@ const CategoriaSwiper: React.FC<{
                     </span>
                   ))}
 
-                  <strong>{Number(livro.media_avaliacoes || 0).toFixed(1)}</strong>
+                  <strong>{formatarMedia(livro.media_avaliacoes)}</strong>
                 </div>
               </div>
+                );
+              })()}
             </div>
           ))}
 

@@ -1,9 +1,13 @@
 .livrariSection {
   width: 100%;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, rgba(98, 91, 236, 0.05) 0%, rgba(169, 168, 202, 0.05) 100%);
+  padding: 34px 20px 28px;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(245, 158, 11, 0.24), transparent 28%),
+    linear-gradient(135deg, #fff8dc 0%, #fffaf0 48%, #f1efff 100%);
   margin: 30px 0;
   border-radius: 12px;
+  border: 1px solid rgba(98, 91, 236, 0.16);
+  box-shadow: 0 14px 34px rgba(77, 65, 35, 0.18);
 }
 
 .header {
@@ -40,7 +44,7 @@
 }
 
 .seeMoreLink {
-  display: inline-block;
+  display: block;
   padding: 12px 20px;
   background: linear-gradient(135deg, #625bec 0%, #a9a8ca 100%);
   color: white;
@@ -51,6 +55,9 @@
   transition: all 0.3s ease;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(98, 91, 236, 0.2);
+  text-align: center;
+  margin: 12px auto 0;
+  max-width: 420px;
 }
 
 .seeMoreLink:hover {
@@ -60,7 +67,7 @@
 
 .containerSwiper {
   position: relative;
-  margin: 30px 0;
+  margin: 24px 0 14px;
 }
 
 .swiper {
@@ -79,9 +86,10 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(77, 65, 35, 0.08);
+  box-shadow: 0 10px 22px rgba(77, 65, 35, 0.16);
   height: 100%;
 }
 
@@ -110,10 +118,10 @@
 }
 
 .priceBadge {
-  position: absolute;
-  top: 10px;
+  position: fixed;
+  bottom: 20px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(135deg, #f59e0b 0%, #c2410c 100%);
   color: white;
   padding: 6px 12px;
   border-radius: 6px;
@@ -141,17 +149,32 @@
 }
 
 .price {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #625bec;
+  color: #4d4123;
   margin: 0;
 }
 
 .rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-size: 12px;
   font-weight: 700;
   color: #f59e0b;
   margin: auto 0 0;
+}
+
+.rating strong {
+  margin-left: 4px;
+}
+
+.starAtiva {
+  color: #f59e0b;
+}
+
+.starInativa {
+  color: #d7cfc1;
 }
 
 .navButton {
@@ -242,6 +265,7 @@
   .seeMoreLink {
     width: 100%;
     text-align: center;
+    max-width: none;
   }
 
   .navButton {

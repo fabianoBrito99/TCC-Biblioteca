@@ -22,6 +22,9 @@ interface Livro {
   autor?: string | null;
   categoria_principal?: string | null;
   media_avaliacoes: number;
+  preco?: string | null;
+  descricao?: string | null;
+  descricao_sem_preco?: string | null;
   categorias?: string[];
 }
 
@@ -35,6 +38,9 @@ interface APILivroRaw {
   categoria_principal?: string | null;
   categorias?: string[] | null;
   media_avaliacoes?: number | null;
+  preco?: string | null;
+  descricao?: string | null;
+  descricao_sem_preco?: string | null;
 }
 
 interface FetchCategoriasResp {
@@ -198,6 +204,9 @@ function normalizarLivro(livro: APILivroRaw, categoria?: string): Livro {
     categoria_principal: categoriaPrincipal,
     autor: autorSingular,
     media_avaliacoes: livro.media_avaliacoes ?? 0,
+    preco: livro.preco ?? null,
+    descricao: livro.descricao ?? null,
+    descricao_sem_preco: livro.descricao_sem_preco ?? null,
     categorias: Array.isArray(livro.categorias) ? livro.categorias : [],
   };
 }

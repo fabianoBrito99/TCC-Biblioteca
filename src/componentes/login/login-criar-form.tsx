@@ -481,7 +481,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                     </div>
                     <div className={styles.dataNasc}>
                       <Input
-                        label="Data Nascimento"
+                        label="Data Nasc"
                         name="data_nascimento"
                         type="date"
                         value={data_nascimento}

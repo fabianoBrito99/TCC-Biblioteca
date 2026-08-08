@@ -150,10 +150,25 @@
 }
 
 .rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   font-size: 12px;
   color: #f59e0b;
   margin: 0;
   margin-top: auto;
+}
+
+.rating strong {
+  margin-left: 4px;
+}
+
+.starAtiva {
+  color: #f59e0b;
+}
+
+.starInativa {
+  color: #d7cfc1;
 }
 
 .loadingMessage,

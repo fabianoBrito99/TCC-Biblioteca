@@ -2,11 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Swiper, { type Swiper as SwiperInstance } from "swiper";
-import "swiper/css";
-import "swiper/css/navigation";
 import { useRouter } from "next/navigation";
-import styles from "./livraria-section.module.css";
 import Link from "next/link";
+import styles from "./livraria-section.module.css";
 
 interface LivroBiblioteca {
   id_livro: string;
@@ -24,6 +22,16 @@ interface LivroLivraria extends LivroBiblioteca {
   descricao_sem_preco?: string | null;
 }
 
+function obterMediaExibida(media?: number | null) {
+  const valor = Number(media);
+  return Number.isFinite(valor) && valor > 0 ? valor : 5;
+}
+
+function formatarMedia(media?: number | null) {
+  const valor = obterMediaExibida(media);
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace(".", ",");
+}
+
 const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ livros }) => {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -36,12 +44,11 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
       livros.map((livro) => {
         const descricao = livro.descricao || "";
         const match = descricao.match(
-          /^\s*(R\$ ?\d+(?:[.,]\d{2})?)\s*(?:\.{3}|…)\s*(.*)$/i
+          /^\s*(R\$ ?\d+(?:[.,]\d{2})?)\s*(?:\.{3}|\u2026)\s*(.*)$/i
         );
         const descricaoApi = livro.descricao_sem_preco?.trim();
-        const descricaoApiSemPreco = descricaoApi && !descricaoApi.match(/^\s*R\$ ?\d+/i)
-          ? descricaoApi
-          : null;
+        const descricaoApiSemPreco =
+          descricaoApi && !descricaoApi.match(/^\s*R\$ ?\d+/i) ? descricaoApi : null;
 
         if (match) {
           return {
@@ -80,8 +87,8 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
         1280: { slidesPerView: 6 },
       },
       navigation: {
-        nextEl: `.next-livraria`,
-        prevEl: `.prev-livraria`,
+        nextEl: ".next-livraria",
+        prevEl: ".prev-livraria",
       },
       on: {
         slideChange: updateNavigationState,
@@ -106,69 +113,72 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
     <section className={styles.livrariSection}>
       <div className={styles.header}>
         <div className={styles.titleArea}>
-          <h2 className={styles.title}>🛍️ Conheça Nossa Livraria</h2>
+          <h2 className={styles.title}>Conhe&ccedil;a Nossa Livraria</h2>
           <p className={styles.description}>
-            Comprando um livro, além de estar edificando você, você também estará edificando nossa biblioteca.
-            Com esse dinheiro poderemos comprar novos livros para a biblioteca.
+            Comprando um livro, al&eacute;m de estar edificando voc&ecirc;, voc&ecirc; tamb&eacute;m
+            estar&aacute; edificando nossa biblioteca. Com esse dinheiro poderemos comprar novos
+            livros para a biblioteca.
           </p>
         </div>
-        <Link href="/livraria" className={styles.seeMoreLink}>
-          Conheça mais livros da livraria →
-        </Link>
       </div>
 
       <div className={styles.containerSwiper}>
         <div ref={containerRef} className={`swiper ${styles.swiper}`}>
           <div className="swiper-wrapper">
-            {livrosComPreco.slice(0, 6).map((livro) => (
-              <div key={livro.id_livro} className={`swiper-slide ${styles.slide}`}>
-                <div 
-                  className={styles.card}
-                  onClick={() => router.push(`/livro/${livro.id_livro}`)}
-                >
-                  <div className={styles.imageContainer}>
-                    <img
-                      src={livro.capa || livro.foto_capa_url || "/placeholder-cover.png"}
-                      alt={livro.nome_livro}
-                      className={styles.image}
-                    />
-                    {livro.preco && (
-                      <div className={styles.priceBadge}>
-                        {livro.preco}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.content}>
-                    <h3 className={styles.bookTitle}>{livro.nome_livro}</h3>
-                    {livro.preco && (
-                      <p className={styles.price}>{livro.preco}</p>
-                    )}
-                    <p className={styles.rating}>
-                      ★ {Number(livro.media_avaliacoes || 0).toFixed(1)}
-                    </p>
+            {livrosComPreco.slice(0, 6).map((livro) => {
+              const mediaExibida = obterMediaExibida(livro.media_avaliacoes);
+
+              return (
+                <div key={livro.id_livro} className={`swiper-slide ${styles.slide}`}>
+                  <div
+                    className={styles.card}
+                    onClick={() => router.push(`/livro/${livro.id_livro}`)}
+                    aria-label={`${livro.nome_livro}, avaliacao ${formatarMedia(
+                      livro.media_avaliacoes
+                    )}`}
+                  >
+                    <div className={styles.imageContainer}>
+                      <img
+                        src={livro.capa || livro.foto_capa_url || "/placeholder-cover.png"}
+                        alt={livro.nome_livro}
+                        className={styles.image}
+                      />
+                      
+                    </div>
+                    <div className={styles.content}>
+                      <h3 className={styles.bookTitle}>{livro.nome_livro}</h3>
+                      {livro.preco && <div className={styles.priceBadge}>{livro.preco}</div>}
+                      <p className={styles.rating}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span
+                            key={star}
+                            className={mediaExibida >= star ? styles.starAtiva : styles.starInativa}
+                          >
+                            &#9733;
+                          </span>
+                        ))}
+                        <strong>{formatarMedia(livro.media_avaliacoes)}</strong>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {podeVoltar && (
-          <button className={`prev-livraria ${styles.navButton} ${styles.prev}`}>
-            ←
-          </button>
-        )}
-
-        {podeAvancar && (
-          <button className={`next-livraria ${styles.navButton} ${styles.next}`}>
-            →
-          </button>
-        )}
+        {podeVoltar && <button className={`prev-livraria ${styles.navButton} ${styles.prev}`}>{"<"}</button>}
+        {podeAvancar && <button className={`next-livraria ${styles.navButton} ${styles.next}`}>{">"}</button>}
       </div>
+
+      <Link href="/livraria" className={styles.seeMoreLink}>
+        Conhe&ccedil;a mais livros da livraria -&gt;
+      </Link>
 
       <div className={styles.ctaBox}>
         <p>
-          <strong>Para comprar um livro:</strong><br />
+          <strong>Para comprar um livro:</strong>
+          <br />
           Basta ir na lateral da igreja perto do bebedouro ou{" "}
           <a
             href="https://api.whatsapp.com/send?text=Ol%C3%A1!%20Tenho%20interesse%20em%20comprar%20um%20livro%20da%20livraria."
@@ -177,7 +187,7 @@ const LivrariaSectionComponent: React.FC<{ livros: LivroBiblioteca[] }> = ({ liv
           >
             entrar em contato conosco pelo WhatsApp
           </a>{" "}
-          para mais informações.
+          para mais informa&ccedil;&otilde;es.
         </p>
       </div>
     </section>

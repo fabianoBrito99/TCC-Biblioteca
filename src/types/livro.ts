@@ -6,6 +6,9 @@ export type Livro = {
   autor?: string | null;
   categoria_principal?: string | null;
   media_avaliacoes: number;
+  preco?: string | null;
+  descricao?: string | null;
+  descricao_sem_preco?: string | null;
   categorias?: string[]; // se sua API já manda
   autores?: string[];
 };
