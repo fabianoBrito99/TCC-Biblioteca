@@ -5,6 +5,8 @@ import Button from "@/componentes/forms/button";
 import styles from "./doelivro.module.css";
 import Image from "next/image";
 
+const PIX_KEY = "11092052000151";
+
 type Sugestao = {
   id_sugestao: number;
   nome_livro?: string; 
@@ -24,6 +26,7 @@ export default function SuggestionPage() {
   const [isAuthorSuggestion, setIsAuthorSuggestion] = useState(false); 
   const [sugestoes, setSugestoes] = useState<Sugestao[]>([]);
   const [usuarioId, setUsuarioId] = useState<string | null>(null);
+  const [pixCopiado, setPixCopiado] = useState(false);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -78,6 +81,16 @@ export default function SuggestionPage() {
       alert("Erro ao enviar sugestão.");
     }
   };
+
+  const copiarPix = async () => {
+    try {
+      await navigator.clipboard.writeText(PIX_KEY);
+      setPixCopiado(true);
+      window.setTimeout(() => setPixCopiado(false), 2000);
+    } catch {
+      alert("Nao foi possivel copiar a chave Pix.");
+    }
+  };
   
 
   return (
@@ -91,7 +104,17 @@ export default function SuggestionPage() {
             nos abençoe com uma contribuição via Pix — basta colocar o título do
             livro desejado na descrição. Cada livro conta, e juntos podemos
             enriquecer a jornada de quem ama ler!
-            <span className={styles.pix}>Pix:doeumlivro@gmail.com</span>
+            <span className={styles.pix}>
+              Chave Pix: <strong>{PIX_KEY}</strong>
+              <button
+                type="button"
+                className={styles.copyPixButton}
+                onClick={copiarPix}
+                aria-label="Copiar chave Pix"
+              >
+                {pixCopiado ? "Copiado!" : "Copiar"}
+              </button>
+            </span>
             <span className={styles.qrcode}>QrCode👇</span>
           </p>
 

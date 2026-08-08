@@ -18,7 +18,13 @@ interface ProgressoObjetivoProps {
 const velocidadeCenario = 2;
 const gravidade = 0.4;
 const forcaPulo = -10;
-const cores = ["#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3"];
+const INTERVALO_ATUALIZACAO_MS = 3000;
+const CANVAS_LARGURA = 900;
+const CANVAS_ALTURA = 320;
+const CHAO_Y = 225;
+const BASE_PERSONAGEM_Y = 190;
+const MAX_FAIXAS_NOME = 8;
+
 const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   idObjetivo,
   tipoMeta,
@@ -27,21 +33,289 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   usuarioAtual,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const progressoAnteriorRef = useRef<Map<string, number>>(new Map());
+  const primeiraCargaRef = useRef(true);
+  const animacaoAtivaRef = useRef(false);
   const [usuarios, setUsuarios] = useState<UsuarioProgresso[]>([]);
   const [animacaoAtiva, setAnimacaoAtiva] = useState(false);
   const [usuarioAnimando, setUsuarioAnimando] = useState<string>("");
+  const [paginasAnimacao, setPaginasAnimacao] = useState(0);
   const unidade = tipoMeta === "capitulos" ? "capítulos" : "páginas";
 
  
 
   const corDoUsuario = useCallback((nome: string) => {
-    const hash = Array.from(nome).reduce(
-      (acc, char) => acc + char.charCodeAt(0),
-      0
-    );
+    const hash = Array.from(nome).reduce((acc, char, index) => {
+      return acc + char.charCodeAt(0) * (index + 7);
+    }, 0);
+    const hue = hash % 360;
 
-    return cores[hash % cores.length];
+    return `hsl(${hue}, 82%, 58%)`;
   }, []);
+
+  const primeiroNome = useCallback((nome: string) => {
+    const [primeiro] = nome.trim().split(/\s+/);
+    if (!primeiro) return "Leitor";
+    return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
+  }, []);
+
+  const obterFaixaNome = useCallback(
+    (x: number, largura: number, faixas: Array<Array<[number, number]>>) => {
+      const inicio = x - largura / 2 - 6;
+      const fim = x + largura / 2 + 6;
+
+      for (let faixa = 0; faixa < MAX_FAIXAS_NOME; faixa += 1) {
+        const ocupada = faixas[faixa] || [];
+        const colide = ocupada.some(([a, b]) => inicio < b && fim > a);
+        if (!colide) {
+          faixas[faixa] = [...ocupada, [inicio, fim]];
+          return faixa;
+        }
+      }
+
+      const ultima = MAX_FAIXAS_NOME - 1;
+      faixas[ultima] = [...(faixas[ultima] || []), [inicio, fim]];
+      return ultima;
+    },
+    []
+  );
+
+  const desenharCenario = useCallback(
+    (ctx: CanvasRenderingContext2D, tempo = performance.now()) => {
+      const { width, height } = ctx.canvas;
+      const ceu = ctx.createLinearGradient(0, 0, 0, CHAO_Y);
+      ceu.addColorStop(0, "#4e8fc3");
+      ceu.addColorStop(0.55, "#9fd2f0");
+      ceu.addColorStop(1, "#ffe0a0");
+      ctx.fillStyle = ceu;
+      ctx.fillRect(0, 0, width, height);
+
+      const solX = width * 0.82;
+      const solY = 54;
+      const brilho = ctx.createRadialGradient(solX, solY, 8, solX, solY, 92);
+      brilho.addColorStop(0, "rgba(255, 248, 204, 0.95)");
+      brilho.addColorStop(0.35, "rgba(255, 197, 83, 0.55)");
+      brilho.addColorStop(1, "rgba(255, 197, 83, 0)");
+      ctx.fillStyle = brilho;
+      ctx.beginPath();
+      ctx.arc(solX, solY, 92, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff4bd";
+      ctx.beginPath();
+      ctx.arc(solX, solY, 22, 0, Math.PI * 2);
+      ctx.fill();
+
+      const desenharNuvem = (x: number, y: number, escala: number) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(escala, escala);
+        ctx.fillStyle = "rgba(255,255,255,0.78)";
+        ctx.beginPath();
+        ctx.ellipse(0, 8, 28, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(22, 5, 22, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(-20, 7, 18, 9, 0, 0, Math.PI * 2);
+        ctx.ellipse(5, -2, 20, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const deslocamento = (tempo / 80) % (width + 220);
+      desenharNuvem(width - deslocamento, 46, 0.9);
+      desenharNuvem((width * 0.45 - deslocamento * 0.55 + width + 160) % (width + 160) - 80, 74, 0.62);
+      desenharNuvem((width * 0.18 - deslocamento * 0.35 + width + 220) % (width + 220) - 90, 34, 0.5);
+      desenharNuvem((width * 0.72 - deslocamento * 0.42 + width + 180) % (width + 180) - 90, 96, 0.48);
+      desenharNuvem((width * 0.05 - deslocamento * 0.28 + width + 220) % (width + 220) - 80, 84, 0.38);
+
+      ctx.fillStyle = "#b98055";
+      ctx.beginPath();
+      ctx.moveTo(0, CHAO_Y - 52);
+      ctx.lineTo(width * 0.14, CHAO_Y - 92);
+      ctx.lineTo(width * 0.28, CHAO_Y - 46);
+      ctx.lineTo(width * 0.45, CHAO_Y - 108);
+      ctx.lineTo(width * 0.63, CHAO_Y - 43);
+      ctx.lineTo(width * 0.78, CHAO_Y - 88);
+      ctx.lineTo(width, CHAO_Y - 50);
+      ctx.lineTo(width, CHAO_Y + 18);
+      ctx.lineTo(0, CHAO_Y + 18);
+      ctx.closePath();
+      ctx.fill();
+
+      const areia = ctx.createLinearGradient(0, CHAO_Y - 36, 0, height);
+      areia.addColorStop(0, "#f0c66a");
+      areia.addColorStop(0.36, "#df9b34");
+      areia.addColorStop(0.72, "#b96d22");
+      areia.addColorStop(1, "#814414");
+      ctx.fillStyle = areia;
+      ctx.beginPath();
+      ctx.moveTo(0, CHAO_Y - 28);
+      ctx.bezierCurveTo(width * 0.18, CHAO_Y - 58, width * 0.36, CHAO_Y - 4, width * 0.54, CHAO_Y - 34);
+      ctx.bezierCurveTo(width * 0.72, CHAO_Y - 68, width * 0.88, CHAO_Y - 20, width, CHAO_Y - 42);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath();
+      ctx.fill();
+
+      const dunaClara = ctx.createLinearGradient(0, CHAO_Y - 60, 0, CHAO_Y + 80);
+      dunaClara.addColorStop(0, "rgba(255, 222, 137, 0.78)");
+      dunaClara.addColorStop(1, "rgba(255, 222, 137, 0)");
+      ctx.fillStyle = dunaClara;
+      ctx.beginPath();
+      ctx.moveTo(0, CHAO_Y - 22);
+      ctx.bezierCurveTo(width * 0.22, CHAO_Y - 52, width * 0.4, CHAO_Y - 26, width * 0.58, CHAO_Y - 46);
+      ctx.bezierCurveTo(width * 0.77, CHAO_Y - 66, width * 0.9, CHAO_Y - 44, width, CHAO_Y - 56);
+      ctx.lineTo(width, CHAO_Y + 28);
+      ctx.bezierCurveTo(width * 0.7, CHAO_Y + 4, width * 0.35, CHAO_Y + 22, 0, CHAO_Y + 2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 230, 166, 0.48)";
+      ctx.lineWidth = 1;
+      for (let y = CHAO_Y - 4; y < height; y += 11) {
+        ctx.beginPath();
+        ctx.moveTo(0, y + Math.sin(y * 0.08) * 4);
+        ctx.bezierCurveTo(
+          width * 0.22,
+          y - 14,
+          width * 0.5,
+          y + 9,
+          width,
+          y - 11
+        );
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "rgba(117, 78, 35, 0.22)";
+      for (let x = -20; x < width; x += 48) {
+        ctx.beginPath();
+        ctx.moveTo(x, height);
+        ctx.bezierCurveTo(x + 24, CHAO_Y + 62, x + 58, CHAO_Y + 32, x + 96, CHAO_Y - 5);
+        ctx.stroke();
+      }
+
+      const desenharArvoreSeca = (x: number, y: number, escala: number) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(escala, escala);
+        ctx.strokeStyle = "#4e3523";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -48);
+        ctx.moveTo(0, -25);
+        ctx.lineTo(-22, -48);
+        ctx.moveTo(-10, -38);
+        ctx.lineTo(-34, -60);
+        ctx.moveTo(0, -32);
+        ctx.lineTo(22, -54);
+        ctx.moveTo(12, -44);
+        ctx.lineTo(38, -64);
+        ctx.moveTo(0, -17);
+        ctx.lineTo(-30, -28);
+        ctx.moveTo(0, -15);
+        ctx.lineTo(30, -27);
+        ctx.moveTo(-15, -22);
+        ctx.lineTo(-42, -35);
+        ctx.moveTo(16, -24);
+        ctx.lineTo(46, -38);
+        ctx.stroke();
+        ctx.strokeStyle = "#684525";
+        ctx.lineWidth = 2;
+        for (let i = -38; i <= 38; i += 10) {
+          ctx.beginPath();
+          ctx.moveTo(0, -10);
+          ctx.lineTo(i, -18 - Math.abs(i) * 0.8);
+          ctx.stroke();
+        }
+        ctx.restore();
+      };
+
+      desenharArvoreSeca(width * 0.18, CHAO_Y + 46, 1.05);
+      desenharArvoreSeca(width * 0.84, CHAO_Y + 58, 0.95);
+
+      const desenharMontePedras = (x: number, y: number, escala: number) => {
+        const pedras = [
+          [0, 0, 3],
+          [7, 1, 2.4],
+          [-6, 2, 2.2],
+          [3, -4, 2],
+          [-2, -5, 1.8],
+          [10, -3, 1.6],
+          [-10, -2, 1.6],
+        ];
+
+        pedras.forEach(([dx, dy, r], index) => {
+          ctx.fillStyle = index % 2 === 0 ? "#8d6a4c" : "#a18462";
+          ctx.beginPath();
+          ctx.ellipse(
+            x + dx * escala,
+            y + dy * escala,
+            (r + 1.5) * escala,
+            r * escala,
+            -0.2,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        });
+      };
+
+      desenharMontePedras(width * 0.14, CHAO_Y + 76, 0.78);
+      desenharMontePedras(width * 0.32, CHAO_Y + 58, 0.9);
+      desenharMontePedras(width * 0.58, CHAO_Y + 74, 0.7);
+      desenharMontePedras(width * 0.73, CHAO_Y + 48, 0.75);
+      desenharMontePedras(width * 0.79, CHAO_Y + 86, 0.62);
+
+      const pilhaX = width - 62;
+      const pilhaY = CHAO_Y + 12;
+      const pedrasPilha = [
+        [0, 54, 34, 11, "#76614c"],
+        [-5, 40, 30, 10, "#9a856b"],
+        [6, 27, 25, 9, "#b0a083"],
+        [-3, 15, 19, 7, "#88745b"],
+        [4, 5, 14, 6, "#c2b59a"],
+        [0, -3, 9, 4, "#d0c4aa"],
+      ];
+
+      pedrasPilha.forEach(([dx, dy, rx, ry, cor]) => {
+        ctx.fillStyle = String(cor);
+        ctx.strokeStyle = "rgba(68, 45, 30, 0.32)";
+        ctx.beginPath();
+        ctx.ellipse(
+          pilhaX + Number(dx),
+          pilhaY + Number(dy),
+          Number(rx),
+          Number(ry),
+          -0.08,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = "rgba(82, 42, 18, 0.22)";
+      ctx.fillRect(0, height - 18, width, 18);
+    },
+    []
+  );
+
+  const memorizarProgresso = useCallback((lista: UsuarioProgresso[]) => {
+    progressoAnteriorRef.current = new Map(
+      lista.map((u) => [u.nome_login, Number(u.paginas_lidas) || 0])
+    );
+  }, []);
+
+  const iniciarAnimacao = useCallback((nome: string, paginas: number) => {
+    if (!nome || paginas <= 0 || animacaoAtivaRef.current) return;
+    setPaginasAnimacao(Math.max(1, paginas));
+    setUsuarioAnimando(nome);
+    setAnimacaoAtiva(true);
+  }, []);
+
+  useEffect(() => {
+    animacaoAtivaRef.current = animacaoAtiva;
+  }, [animacaoAtiva]);
 
   const desenharParte = useCallback(
     (ctx: CanvasRenderingContext2D, fn: () => void) => {
@@ -63,18 +337,24 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       nome: string,
       deslocamentoY: number
     ) => {
-      const larguraNome = Math.max(60, nome.length * 7 + 10);
-      const tagX = Math.max(4, Math.min(x - larguraNome / 2, 800 - larguraNome - 4));
+      const nomeCurto = primeiroNome(nome);
+      const larguraNome = Math.max(46, nomeCurto.length * 7 + 14);
+      const tagX = Math.max(
+        4,
+        Math.min(x - larguraNome / 2, ctx.canvas.width - larguraNome - 4)
+      );
       const tagY = y - 56 - deslocamentoY;
-      ctx.fillStyle = corDoUsuario(nome);
+      ctx.fillStyle = corDoUsuario(nomeCurto);
       ctx.beginPath();
       ctx.roundRect(tagX, tagY, larguraNome, 18, 6);
       ctx.fill();
-      ctx.fillStyle = "black";
-      ctx.font = "10px Arial";
-      ctx.fillText(nome, tagX + 6, tagY + 12);
+      ctx.strokeStyle = "rgba(62, 40, 22, 0.28)";
+      ctx.stroke();
+      ctx.fillStyle = "#2d1a10";
+      ctx.font = "bold 10px Arial";
+      ctx.fillText(nomeCurto, tagX + 7, tagY + 12);
     },
-    [corDoUsuario]
+    [corDoUsuario, primeiroNome]
   );
 
   const desenharJesusParado = useCallback(
@@ -160,13 +440,15 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         );
         const data: UsuarioProgresso[] = await res.json();
         setUsuarios(data);
+        memorizarProgresso(data);
+        primeiraCargaRef.current = false;
       } catch (err) {
         console.error("Erro ao carregar progresso inicial:", err);
       }
     };
 
     carregarProgressoInicial();
-  }, [idObjetivo]);
+  }, [idObjetivo, memorizarProgresso]);
 
   // Recarrega quando houver atualização e dispara animação
   useEffect(() => {
@@ -179,10 +461,10 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         );
         const data: UsuarioProgresso[] = await res.json();
         setUsuarios(data);
+        memorizarProgresso(data);
 
         if (paginasInseridas > 0) {
-          setAnimacaoAtiva(true);
-          setUsuarioAnimando(usuarioAtual);
+          iniciarAnimacao(usuarioAtual, paginasInseridas);
         }
       } catch (err) {
         console.error("Erro ao buscar progresso:", err);
@@ -190,7 +472,69 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     };
 
     fetchProgresso();
-  }, [progressoAtualizado, paginasInseridas, usuarioAtual, idObjetivo]);
+  }, [
+    progressoAtualizado,
+    paginasInseridas,
+    usuarioAtual,
+    idObjetivo,
+    iniciarAnimacao,
+    memorizarProgresso,
+  ]);
+
+  useEffect(() => {
+    if (!idObjetivo) return;
+
+    let cancelado = false;
+
+    const buscarAtualizacoes = async () => {
+      try {
+        const res = await fetch(
+          `https://api.helenaramazzotte.online/api/comunidade/objetivo/${idObjetivo}/progresso`
+        );
+        if (!res.ok) return;
+
+        const data: UsuarioProgresso[] = await res.json();
+        if (cancelado) return;
+
+        const atual = data.map((u) => ({
+          ...u,
+          paginas_lidas: Number(u.paginas_lidas) || 0,
+          total_paginas: Number(u.total_paginas) || 1,
+        }));
+        const anterior = progressoAnteriorRef.current;
+        const alterado = atual.find((u) => {
+          const antes = anterior.get(u.nome_login);
+          return typeof antes === "number" && u.paginas_lidas > antes;
+        });
+
+        setUsuarios(atual);
+        memorizarProgresso(atual);
+
+        if (primeiraCargaRef.current) {
+          primeiraCargaRef.current = false;
+          return;
+        }
+
+        if (alterado) {
+          const paginasNovas =
+            alterado.paginas_lidas - (anterior.get(alterado.nome_login) || 0);
+          iniciarAnimacao(alterado.nome_login, paginasNovas);
+        }
+      } catch (err) {
+        console.error("Erro ao atualizar progresso em tempo real:", err);
+      }
+    };
+
+    const intervalo = window.setInterval(
+      buscarAtualizacoes,
+      INTERVALO_ATUALIZACAO_MS
+    );
+
+    return () => {
+      cancelado = true;
+      window.clearInterval(intervalo);
+    };
+  }, [idObjetivo, iniciarAnimacao, memorizarProgresso]);
 
   // Desenha estado estático (sem animação) sempre que usuários mudam
   useEffect(() => {
@@ -198,27 +542,34 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     if (!canvas || animacaoAtiva) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    let frameId = 0;
 
     const desenhar = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#f7f7f7";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#b5651d";
-      ctx.fillRect(0, 150, canvas.width, 50);
-
-      const ocupacaoX: number[] = [];
+      desenharCenario(ctx);
+      const faixasNome: Array<Array<[number, number]>> = [];
       usuarios.forEach((u) => {
         const posX = (u.paginas_lidas / u.total_paginas) * canvas.width;
-        desenharJesusParado(ctx, posX, 130);
-
-        const conflitos = ocupacaoX.filter((x) => Math.abs(x - posX) < 45).length;
-        ocupacaoX.push(posX);
-        desenharTagNome(ctx, posX + 8, 130, u.nome_login, conflitos * 18);
+        desenharJesusParado(ctx, posX, BASE_PERSONAGEM_Y);
+        const nomeCurto = primeiroNome(u.nome_login);
+        const larguraNome = Math.max(46, nomeCurto.length * 7 + 14);
+        const faixa = obterFaixaNome(posX + 8, larguraNome, faixasNome);
+        desenharTagNome(ctx, posX + 8, BASE_PERSONAGEM_Y, u.nome_login, faixa * 20);
       });
+
+      frameId = requestAnimationFrame(desenhar);
     };
 
     desenhar();
-  }, [usuarios, animacaoAtiva, desenharJesusParado, desenharTagNome]);
+    return () => cancelAnimationFrame(frameId);
+  }, [
+    usuarios,
+    animacaoAtiva,
+    desenharJesusParado,
+    desenharTagNome,
+    desenharCenario,
+    obterFaixaNome,
+    primeiroNome,
+  ]);
 
   // Loop da animação
   useEffect(() => {
@@ -230,7 +581,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     if (!ctx) return;
 
     let personagemX = 0;
-    let personagemY = 130;
+    let personagemY = BASE_PERSONAGEM_Y;
     let velocidadeY = 0;
 
     const usuario = usuarios.find((u) => u.nome_login === usuarioAnimando);
@@ -238,7 +589,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ? (usuario.paginas_lidas / usuario.total_paginas) * canvas.width
       : 50;
 
-    const fimDosCactos = 300 + (paginasInseridas - 1) * 100;
+    const fimDosCactos = 300 + (paginasAnimacao - 1) * 100;
 
     const existeOutroNoMesmoPonto = usuarios.some(
       (u) =>
@@ -249,56 +600,57 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       destinoX += 20;
     }
 
-    const posicaoInicial = usuario ? destinoX - paginasInseridas * 10 : 50;
+    const posicaoInicial = usuario ? destinoX - paginasAnimacao * 10 : 50;
     personagemX = posicaoInicial;
     const posicaoInicialJesus = personagemX;
 
-    const cactos = Array.from({ length: paginasInseridas }, (_, i) => ({
+    const cactos = Array.from({ length: paginasAnimacao }, (_, i) => ({
       x: 300 + i * 100,
     }));
 
     const desenharCacto = (x: number) => {
-      ctx.fillStyle = "green";
+      const baseY = CHAO_Y - 12;
+      ctx.fillStyle = "#2f8a3c";
       ctx.strokeStyle = "#5a3825";
-      ctx.fillRect(x + 10, 100, 20, 70);
-      ctx.strokeRect(x + 10, 100, 20, 70);
+      ctx.fillRect(x + 10, baseY - 62, 18, 62);
+      ctx.strokeRect(x + 10, baseY - 62, 18, 62);
       ctx.beginPath();
-      ctx.arc(x + 20, 100, 10, Math.PI, 2 * Math.PI);
+      ctx.arc(x + 19, baseY - 62, 9, Math.PI, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
-      ctx.fillRect(x, 120, 8, 30);
-      ctx.strokeRect(x, 120, 8, 30);
+      ctx.fillRect(x, baseY - 42, 8, 28);
+      ctx.strokeRect(x, baseY - 42, 8, 28);
       ctx.beginPath();
-      ctx.arc(x + 4, 120, 4, Math.PI, 2 * Math.PI);
+      ctx.arc(x + 4, baseY - 42, 4, Math.PI, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
-      ctx.fillRect(x + 32, 120, 8, 30);
-      ctx.strokeRect(x + 32, 120, 8, 30);
+      ctx.fillRect(x + 32, baseY - 42, 8, 28);
+      ctx.strokeRect(x + 32, baseY - 42, 8, 28);
       ctx.beginPath();
-      ctx.arc(x + 36, 120, 4, Math.PI, 2 * Math.PI);
+      ctx.arc(x + 36, baseY - 42, 4, Math.PI, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
     };
 
     const loop = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#f7f7f7";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#b5651d";
-      ctx.fillRect(0, 150, canvas.width, 50);
+      desenharCenario(ctx);
 
       // cactos
       cactos.forEach((c) => {
         c.x -= velocidadeCenario;
         desenharCacto(c.x);
 
-        if (c.x > personagemX && c.x < personagemX + 50 && personagemY === 130) {
+        if (
+          c.x > personagemX &&
+          c.x < personagemX + 50 &&
+          personagemY === BASE_PERSONAGEM_Y
+        ) {
           velocidadeY = forcaPulo;
         }
       });
 
       // outros usuários
-      const ocupacaoX: number[] = [];
+      const faixasNome: Array<Array<[number, number]>> = [];
       usuarios.forEach((u) => {
         if (u.nome_login === usuarioAnimando) return;
         const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
@@ -306,7 +658,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         const estaNoCaminho =
           personagemX + 16 >= pos - 10 &&
           personagemX <= pos + 10 &&
-          personagemY === 130;
+          personagemY === BASE_PERSONAGEM_Y;
 
         if (estaNoCaminho) {
           velocidadeY = forcaPulo;
@@ -320,17 +672,18 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
           posX = fimDosCactos + 100;
         }
 
-        desenharJesusParado(ctx, posX, 130);
-        const conflitos = ocupacaoX.filter((x) => Math.abs(x - posX) < 45).length;
-        ocupacaoX.push(posX);
-        desenharTagNome(ctx, posX + 8, 130, u.nome_login, conflitos * 18);
+        desenharJesusParado(ctx, posX, BASE_PERSONAGEM_Y);
+        const nomeCurto = primeiroNome(u.nome_login);
+        const larguraNome = Math.max(46, nomeCurto.length * 7 + 14);
+        const faixa = obterFaixaNome(posX + 8, larguraNome, faixasNome);
+        desenharTagNome(ctx, posX + 8, BASE_PERSONAGEM_Y, u.nome_login, faixa * 20);
       });
 
       // física
       velocidadeY += gravidade;
       personagemY += velocidadeY;
-      if (personagemY >= 130) {
-        personagemY = 130;
+      if (personagemY >= BASE_PERSONAGEM_Y) {
+        personagemY = BASE_PERSONAGEM_Y;
         velocidadeY = 0;
       }
 
@@ -340,12 +693,30 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       }
 
       desenharJesusCorrendo(ctx, personagemX, personagemY);
-      desenharTagNome(ctx, personagemX + 8, personagemY, usuarioAnimando, 0);
+      const nomeAnimando = primeiroNome(usuarioAnimando);
+      const larguraNomeAnimando = Math.max(46, nomeAnimando.length * 7 + 14);
+      const faixaAnimando = obterFaixaNome(
+        personagemX + 8,
+        larguraNomeAnimando,
+        faixasNome
+      );
+      desenharTagNome(
+        ctx,
+        personagemX + 8,
+        personagemY,
+        usuarioAnimando,
+        faixaAnimando * 20
+      );
 
       const passouTodosOsCactos = cactos.every((c) => c.x + 10 < personagemX);
-      if (personagemX >= destinoX && personagemY === 130 && passouTodosOsCactos) {
+      if (
+        personagemX >= destinoX &&
+        personagemY === BASE_PERSONAGEM_Y &&
+        passouTodosOsCactos
+      ) {
         setAnimacaoAtiva(false);
         setUsuarioAnimando("");
+        setPaginasAnimacao(0);
         return;
       }
 
@@ -357,10 +728,13 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     animacaoAtiva,
     usuarios,
     usuarioAnimando,
-    paginasInseridas,
+    paginasAnimacao,
+    desenharCenario,
     desenharJesusParado,
     desenharJesusCorrendo,
     desenharTagNome,
+    obterFaixaNome,
+    primeiroNome,
   ]);
 
   return (
@@ -371,8 +745,8 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       <canvas
         ref={canvasRef}
         className={styles["game-canvas"]}
-        width={800}
-        height={220}
+        width={CANVAS_LARGURA}
+        height={CANVAS_ALTURA}
       />
       <div className={styles.progressoLista}>
         {usuarios
@@ -391,7 +765,13 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
                   </span>
                 </div>
                 <div className={styles.barraBg}>
-                  <div className={styles.barraFill} style={{ width: `${percentual}%` }} />
+                  <div
+                    className={styles.barraFill}
+                    style={{
+                      width: `${percentual}%`,
+                      background: corDoUsuario(u.nome_login),
+                    }}
+                  />
                 </div>
                 <div className={styles.percentual}>{percentual}%</div>
               </div>

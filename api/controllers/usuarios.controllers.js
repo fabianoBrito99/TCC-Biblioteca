@@ -162,8 +162,17 @@ async function create(request, response) {
                   return response.status(500).json({ erro: "Erro ao associar usuário ao endereço" });
                 }
 
-                const token = emitirToken({ id_usuario: resultadoUsuario.insertId, nome_login, tipo_usuario: tipo });
-                return response.status(201).json({ message: "Usuário criado com sucesso", token });
+                const usuarioCriado = {
+                  id_usuario: resultadoUsuario.insertId,
+                  nome_login,
+                  tipo_usuario: tipo,
+                };
+                const token = emitirToken(usuarioCriado);
+                return response.status(201).json({
+                  message: "Usuário criado com sucesso",
+                  token,
+                  usuario: usuarioCriado,
+                });
               }
             );
           }

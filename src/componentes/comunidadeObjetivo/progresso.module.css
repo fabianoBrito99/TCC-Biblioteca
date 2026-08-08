@@ -55,8 +55,10 @@
 
 .game-canvas {
   display: block;
-  background-color: #f7f7f7;
-  border: 2px solid black;
+  background-color: #f5c76b;
+  border: 1px solid #8c5a29;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(83, 49, 20, 0.18);
   margin: auto;
   max-width: 100%;
 }

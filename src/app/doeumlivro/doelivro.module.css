@@ -58,7 +58,10 @@
   );
 }
 
-
+.perfil{
+  border-radius: 15px;
+  border: 1px solid #2600ff;
+}
 .sugestoes1 h1 {
   font-family: var(--type-second);
   line-height: 1;
@@ -179,6 +182,29 @@
   position: relative;
   bottom: -60px;
   left: 490px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.copyPixButton {
+  border: 1px solid #2600ff;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2600ff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.copyPixButton:hover,
+.copyPixButton:focus {
+  background: #2600ff;
+  color: #ffffff;
 }
 .qrcode {
   position: relative;

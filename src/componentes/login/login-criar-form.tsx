@@ -5,15 +5,32 @@ import Button from "@/componentes/forms/button";
 import Input from "@/componentes/forms/input";
 import styles from "./login-form.module.css";
 import Image from "next/image";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-function FormButton({ disabled }: { disabled: boolean }) {
+function FormButton({
+  disabled,
+  label,
+  onContinue,
+  isContinue,
+}: {
+  disabled: boolean;
+  label: string;
+  onContinue: () => void;
+  isContinue: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <>
       {pending ? (
         <Button disabled>Cadastrando...</Button>
       ) : (
-        <Button disabled={disabled}>Cadastrar</Button>
+        <Button
+          type={isContinue ? "button" : "submit"}
+          disabled={disabled}
+          onClick={isContinue ? onContinue : undefined}
+        >
+          {label}
+        </Button>
       )}
     </>
   );
@@ -112,6 +129,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [telefone, setTelefone] = useState("");
   const [sexo, setSexo] = useState("");
@@ -134,6 +153,43 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const senhasBatem = useMemo(
     () => confirmPassword.length > 0 && confirmPassword === password,
     [password, confirmPassword]
+  );
+  const emailValido = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
+  const usuarioValido = useMemo(
+    () =>
+      username.trim().length > 0 &&
+      emailValido &&
+      forte &&
+      senhasBatem &&
+      sexo.trim().length > 0,
+    [emailValido, forte, senhasBatem, sexo, username]
+  );
+  const enderecoValido = useMemo(
+    () =>
+      cep.trim().length > 0 &&
+      rua.trim().length > 0 &&
+      bairro.trim().length > 0 &&
+      numero.trim().length > 0 &&
+      cidade.trim().length > 0 &&
+      estado.trim().length > 0 &&
+      data_nascimento.trim().length > 0 &&
+      telefone.trim().length > 0 &&
+      !!fotoBase64 &&
+      !processandoFoto &&
+      !erroFotoLimite,
+    [
+      bairro,
+      cep,
+      cidade,
+      data_nascimento,
+      erroFotoLimite,
+      estado,
+      fotoBase64,
+      numero,
+      processandoFoto,
+      rua,
+      telefone,
+    ]
   );
 
   useEffect(() => {
@@ -200,6 +256,11 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (activeTab === "usuario") {
+      if (usuarioValido) setActiveTab("endereco");
+      return;
+    }
+
     if (!forte) {
       alert("A senha ainda não é forte. Atenda a todos os requisitos.");
       return;
@@ -218,6 +279,10 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     }
     if (processandoFoto) {
       alert("Aguarde o processamento da foto terminar.");
+      return;
+    }
+    if (!enderecoValido) {
+      alert("Preencha todos os dados de endereco e demais informacoes.");
       return;
     }
 
@@ -251,13 +316,19 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
         if (data?.token) {
           // 1) guarda no localStorage (útil para fetch no client)
           localStorage.setItem("token", data.token);
+          if (data?.usuario?.id_usuario) {
+            localStorage.setItem("userId", String(data.usuario.id_usuario));
+          }
           // 2) grava cookie (para o middleware do Next.js conseguir ler)
           // max-age: 1 dia (ajuste se quiser, deve bater com JWT_EXPIRES)
           document.cookie = `token=${data.token}; path=/; max-age=86400; samesite=lax`;
+          if (data?.usuario?.tipo_usuario) {
+            document.cookie = `tipo_usuario=${data.usuario.tipo_usuario}; path=/; max-age=86400; samesite=lax`;
+          }
         }
         alert("Usuário cadastrado com sucesso!");
         // Opcional: já alternar para a aba de login
-        onToggle();
+        window.location.assign("/homecards");
       })
       .catch((error) => console.error("Erro ao cadastrar usuário:", error));
   };
@@ -269,7 +340,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     : "A senha deve ter 8–64 caracteres, com minúsculas, MAIÚSCULAS, números e caractere especial.";
 
   const botaoDesabilitado =
-    !forte || !senhasBatem || processandoFoto || !!erroFotoLimite;
+    activeTab === "usuario" ? !usuarioValido : !enderecoValido;
 
   return (
     <div className={styles.viewport}>
@@ -292,7 +363,10 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               className={`${styles.tabButton} ${
                 activeTab === "endereco" ? styles.activeTab : ""
               }`}
-              onClick={() => setActiveTab("endereco")}
+              onClick={() => {
+                if (usuarioValido) setActiveTab("endereco");
+              }}
+              disabled={!usuarioValido}
             >
               Endereço
             </button>
@@ -319,13 +393,37 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                   />
 
                   <div className={styles.senhas}>
-                    <Input
-                      label="Senha"
-                      name="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+                    <div className={styles.passwordContainer}>
+                      <Input
+                        label="Senha"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className={`${styles.eyeIcon} ${
+                          showPassword ? styles.highlight : ""
+                        }`}
+                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                      <div
+                        className={`${styles.markerIcon} ${
+                          showPassword ? styles.animateMarker : ""
+                        }`}
+                      >
+                        <Image src="/img/marcatexto.png" alt="" width={140} height={940} />
+                      </div>
+                      <div
+                        className={`${styles.highlightEffect} ${
+                          showPassword ? styles.visible : ""
+                        }`}
+                      ></div>
+                    </div>
                     <h6
                       className={styles.senhash6}
                       style={{
@@ -373,14 +471,40 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                     </ul>
                   </div>
 
-                  <div>
+                  <div className={styles.passwordContainer}>
                     <Input
                       label="Confirma a Senha"
                       name="confirm-password"
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className={`${styles.eyeIcon} ${
+                        showConfirmPassword ? styles.highlight : ""
+                      }`}
+                      aria-label={
+                        showConfirmPassword
+                          ? "Ocultar confirmacao da senha"
+                          : "Mostrar confirmacao da senha"
+                      }
+                    >
+                      {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                    <div
+                      className={`${styles.markerIcon} ${
+                        showConfirmPassword ? styles.animateMarker : ""
+                      }`}
+                    >
+                      <Image src="/img/marcatexto.png" alt="" width={140} height={940} />
+                    </div>
+                    <div
+                      className={`${styles.highlightEffect} ${
+                        showConfirmPassword ? styles.visible : ""
+                      }`}
+                    ></div>
                     {/* feedback da confirmação */}
                     {confirmPassword.length > 0 && (
                       <p
@@ -533,7 +657,12 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               )}
 
               <div className={styles.btCad}>
-                <FormButton disabled={botaoDesabilitado} />
+                <FormButton
+                  disabled={botaoDesabilitado}
+                  label={activeTab === "usuario" ? "Continuar" : "Cadastrar"}
+                  isContinue={activeTab === "usuario"}
+                  onContinue={() => setActiveTab("endereco")}
+                />
               </div>
             </form>
           </div>
