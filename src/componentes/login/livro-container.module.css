@@ -273,7 +273,7 @@
 /* Celulares pequenos */
 @media (max-width: 480px) {
   .bookContainer {
-    width: 90%;
+    width: 94%;
   }
   .bookContainer p {
     top: -60px;
@@ -312,7 +312,21 @@
   left: 90px;
 }
 .book{
-  height: 450px;
+  height: min(720px, calc(100dvh - 24px));
+}
+
+.staticSection,
+.rotatingSection {
+  padding: 0.75rem;
+}
+
+.showRegister .rotatingSection {
+  width: 58%;
+}
+
+.showRegister .staticSection {
+  width: 42%;
+  padding: 0.5rem;
 }
 .animeLeft1{
   font-size: 1.3rem;

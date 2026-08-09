@@ -1,0 +1,52 @@
+.page {
+  min-height: 100vh;
+  padding: 3rem 1rem;
+  background: linear-gradient(to bottom, #fdf8e2, #f7f4ed);
+  color: #24242c;
+}
+
+.content {
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 2rem;
+  border: 1px solid #ded8c6;
+  border-radius: 0.5rem;
+  background: #fffef8;
+  box-shadow: 0 18px 38px rgba(75, 70, 52, 0.12);
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: #0a38db;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.content h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  line-height: 1.1;
+}
+
+.content h2 {
+  margin: 1.5rem 0 0.45rem;
+  font-size: 1.15rem;
+  color: #151522;
+}
+
+.content p {
+  margin: 0.55rem 0;
+  line-height: 1.65;
+  color: #3f3f49;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .content {
+    padding: 1.2rem;
+  }
+}

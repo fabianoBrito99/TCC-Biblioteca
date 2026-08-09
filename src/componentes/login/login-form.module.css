@@ -771,3 +771,387 @@
     max-width: 120%;
   }
 }
+
+.cadastroWrapper {
+  width: min(100%, 460px);
+  max-height: 720px;
+  overflow-y: auto;
+  padding: 0.5rem 0.25rem 1rem;
+}
+
+.cadastroWrapper .h1Login {
+  margin: 0 0 1rem;
+  font-size: 1.45rem;
+  color: #282832;
+}
+
+.cadastroWrapper .tabNavigation {
+  gap: 0;
+  margin: 0 0 1rem;
+  border-bottom: 1px solid #d6d6e6;
+}
+
+.cadastroWrapper .tabButton {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.55rem 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.05;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.cadastroWrapper .tabButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.cadastroWrapper .activeTab {
+  color: #0a38db;
+  border-color: #19a8d8;
+}
+
+.cadastroWrapper .completedTab {
+  color: #187934;
+  border-color: #24a647;
+}
+
+.cadastroWrapper .completedTab::after {
+  content: "";
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-left: 0.25rem;
+  border-radius: 50%;
+  background: #24a647;
+  vertical-align: middle;
+}
+
+.cadastroWrapper .activeTab.completedTab {
+  color: #0a38db;
+  border-color: #19a8d8;
+}
+
+.cadastroWrapper .activeTab.completedTab::after {
+  background: #19a8d8;
+}
+
+.cadastroWrapper .form {
+  width: 100%;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.85rem;
+  align-items: start;
+}
+
+.formGrid > * {
+  min-width: 0;
+}
+
+.formGrid .passwordContainer,
+.formGrid .senhaFeedback,
+.formGrid .senhasp,
+.formGrid .termosField,
+.formGrid .fileField {
+  grid-column: 1 / -1;
+}
+
+.senhaFeedback {
+  margin-top: -0.4rem;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.senhaFeedback p {
+  margin: 0 0 0.2rem;
+  font-weight: 700;
+}
+
+.senhaFeedback .senhasul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.72rem;
+}
+
+.selectField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.selectField label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #3f3939;
+}
+
+.selectField select {
+  width: 100%;
+  min-height: 47px;
+  padding: 0.7rem;
+  border: 1px solid #7276af;
+  border-radius: 0.4rem;
+  background: #f0fffc;
+  color: #000;
+}
+
+.selectField select:focus {
+  outline: none;
+  border-color: rgba(4, 78, 175, 0.507);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(2, 67, 247);
+}
+
+.fileField p,
+.senhasp {
+  margin: -0.85rem 0 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.capaContainerLivro {
+  margin-top: 0.6rem;
+}
+
+.cadastroWrapper .capaPreview {
+  position: static;
+  width: 90px;
+  height: 90px;
+  margin: 0;
+  padding: 4px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #14b1ff;
+}
+
+.checkField {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+  color: #29292f;
+}
+
+.checkField input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  flex: 0 0 auto;
+}
+
+.termosField {
+  padding: 0.8rem;
+  border: 1px solid #d8d6c9;
+  border-radius: 0.45rem;
+  background: #fffdf3;
+}
+
+.termosField a {
+  color: #0a38db;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.cadastroActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.cadastroActions button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 42px;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
+.cadastroSubmit {
+  border: none;
+  border-radius: 0.4rem;
+  background: linear-gradient(
+    to left,
+    rgba(0, 110, 255, 0.7),
+    rgba(108, 105, 248, 0.9)
+  );
+  color: #fff;
+  font-family: var(--type-first);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cadastroSubmit:hover,
+.cadastroSubmit:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(170, 200, 255), 0 0 0 4px rgb(6, 18, 194);
+}
+
+.cadastroSubmit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.buttonBack {
+  min-width: 7rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid #b7b7cb;
+  border-radius: 0.4rem;
+  background: #fff;
+  color: #373747;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.buttonBack:hover,
+.buttonBack:focus {
+  background: #f0f3ff;
+  outline: none;
+}
+
+.cadastroWrapper .ptBaixo {
+  position: static;
+  margin-top: 1.3rem;
+}
+
+.cadastroWrapper .subtitle {
+  font-size: 1.25rem;
+}
+
+.cadastroWrapper .conta {
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 700px) {
+  .cadastroWrapper {
+    width: 100%;
+    max-height: 620px;
+    padding: 0.35rem 0.25rem 0.6rem;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .cadastroWrapper .h1Login {
+    font-size: 1rem;
+    line-height: 1.15;
+    justify-content: flex-start;
+    text-align: left;
+    margin-bottom: 0.55rem;
+  }
+
+  .cadastroWrapper .tabNavigation {
+    margin-bottom: 0.55rem;
+  }
+
+  .cadastroWrapper .tabButton {
+    min-height: 30px;
+    font-size: 0.54rem;
+    padding: 0.25rem 0.08rem;
+  }
+
+  .cadastroWrapper .completedTab::after {
+    width: 0.3rem;
+    height: 0.3rem;
+    margin-left: 0.12rem;
+  }
+
+  .cadastroWrapper .passwordContainer input {
+    padding-right: 1.7rem;
+  }
+
+  .cadastroWrapper input {
+    min-height: 35px;
+    padding: 0.55rem 0.45rem;
+    font-size: 0.76rem;
+  }
+
+  .cadastroWrapper .eyeIcon {
+    right: 0.35rem;
+    font-size: 0.85rem;
+  }
+
+  .senhaFeedback,
+  .senhaFeedback .senhasul,
+  .fileField p,
+  .senhasp,
+  .checkField {
+    font-size: 0.58rem;
+    line-height: 1.18;
+  }
+
+  .senhaFeedback {
+    max-height: 3.45rem;
+    overflow-y: auto;
+  }
+
+  .senhaFeedback .senhasul {
+    padding-left: 0.85rem;
+  }
+
+  .selectField label {
+    font-size: 0.62rem;
+  }
+
+  .selectField select {
+    min-height: 35px;
+    padding: 0.45rem;
+    font-size: 0.72rem;
+  }
+
+  .termosField {
+    padding: 0.45rem;
+  }
+
+  .checkField input {
+    width: 14px;
+    height: 14px;
+  }
+
+  .cadastroActions {
+    gap: 0.45rem;
+    margin-top: 0.6rem;
+  }
+
+  .cadastroActions button {
+    min-height: 34px;
+    padding: 0.4rem 0.35rem;
+    font-size: 0.68rem;
+  }
+
+  .buttonBack {
+    min-width: 0;
+    padding: 0.4rem 0.35rem;
+    font-size: 0.68rem;
+  }
+
+  .cadastroWrapper .ptBaixo {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .cadastroWrapper {
+    max-height: calc(100dvh - 120px);
+  }
+
+  .cadastroWrapper .h1Login {
+    font-size: 0.92rem;
+  }
+
+  .cadastroWrapper .tabButton {
+    font-size: 0.5rem;
+  }
+
+  .formGrid {
+    gap: 0.32rem;
+  }
+}
