@@ -24,6 +24,7 @@ const CANVAS_ALTURA = 320;
 const CHAO_Y = 225;
 const BASE_PERSONAGEM_Y = 190;
 const MAX_FAIXAS_NOME = 8;
+const ESPACO_ENTRE_CACTOS = 220;
 
 const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   idObjetivo,
@@ -36,6 +37,12 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
   const progressoAnteriorRef = useRef<Map<string, number>>(new Map());
   const primeiraCargaRef = useRef(true);
   const animacaoAtivaRef = useRef(false);
+  const usuariosRef = useRef<UsuarioProgresso[]>([]);
+  const dadosAnimacaoRef = useRef<{
+    nome: string;
+    paginas: number;
+    usuarios: UsuarioProgresso[];
+  } | null>(null);
   const [usuarios, setUsuarios] = useState<UsuarioProgresso[]>([]);
   const [animacaoAtiva, setAnimacaoAtiva] = useState(false);
   const [usuarioAnimando, setUsuarioAnimando] = useState<string>("");
@@ -129,11 +136,11 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fillStyle = "#b98055";
       ctx.beginPath();
       ctx.moveTo(0, CHAO_Y - 52);
-      ctx.lineTo(width * 0.14, CHAO_Y - 92);
+      ctx.lineTo(width * 0.1, CHAO_Y - 152);
       ctx.lineTo(width * 0.28, CHAO_Y - 46);
-      ctx.lineTo(width * 0.45, CHAO_Y - 108);
-      ctx.lineTo(width * 0.63, CHAO_Y - 43);
-      ctx.lineTo(width * 0.78, CHAO_Y - 88);
+      ctx.lineTo(width * 0.45, CHAO_Y - 138);
+      ctx.lineTo(width * 0.683, CHAO_Y - 53);
+      ctx.lineTo(width * 0.78, CHAO_Y - 78);
       ctx.lineTo(width, CHAO_Y - 50);
       ctx.lineTo(width, CHAO_Y + 18);
       ctx.lineTo(0, CHAO_Y + 18);
@@ -141,10 +148,10 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fill();
 
       const areia = ctx.createLinearGradient(0, CHAO_Y - 36, 0, height);
-      areia.addColorStop(0, "#f0c66a");
+      areia.addColorStop(0, "#be963f");
       areia.addColorStop(0.36, "#df9b34");
-      areia.addColorStop(0.72, "#b96d22");
-      areia.addColorStop(1, "#814414");
+      areia.addColorStop(0.72, "#bd7023");
+      areia.addColorStop(1, "#a77148");
       ctx.fillStyle = areia;
       ctx.beginPath();
       ctx.moveTo(0, CHAO_Y - 28);
@@ -156,8 +163,8 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.fill();
 
       const dunaClara = ctx.createLinearGradient(0, CHAO_Y - 60, 0, CHAO_Y + 80);
-      dunaClara.addColorStop(0, "rgba(255, 222, 137, 0.78)");
-      dunaClara.addColorStop(1, "rgba(255, 222, 137, 0)");
+      dunaClara.addColorStop(0, "rgba(224, 186, 89, 0.78)");
+      dunaClara.addColorStop(1, "rgba(255, 137, 137, 0)");
       ctx.fillStyle = dunaClara;
       ctx.beginPath();
       ctx.moveTo(0, CHAO_Y - 22);
@@ -168,27 +175,27 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255, 230, 166, 0.48)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(51, 49, 26, 0.04)";
+      ctx.lineWidth = 2;
       for (let y = CHAO_Y - 4; y < height; y += 11) {
         ctx.beginPath();
         ctx.moveTo(0, y + Math.sin(y * 0.08) * 4);
         ctx.bezierCurveTo(
-          width * 0.22,
-          y - 14,
-          width * 0.5,
-          y + 9,
+          width * 0.262,
+          y - 60 + Math.sin(y * 0.8) * 4,
+          width * 1.5,
+          y - 40,
           width,
           y - 11
         );
         ctx.stroke();
       }
 
-      ctx.strokeStyle = "rgba(117, 78, 35, 0.22)";
-      for (let x = -20; x < width; x += 48) {
+      ctx.strokeStyle = "rgba(112, 98, 67, 0.1)";
+      for (let x = -50; x < width; x += 38) {
         ctx.beginPath();
         ctx.moveTo(x, height);
-        ctx.bezierCurveTo(x + 24, CHAO_Y + 62, x + 58, CHAO_Y + 32, x + 96, CHAO_Y - 5);
+        ctx.bezierCurveTo(x - 124, CHAO_Y + 5, x + 198, CHAO_Y + 32, x + 86, CHAO_Y - 35);
         ctx.stroke();
       }
 
@@ -306,12 +313,25 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     );
   }, []);
 
-  const iniciarAnimacao = useCallback((nome: string, paginas: number) => {
-    if (!nome || paginas <= 0 || animacaoAtivaRef.current) return;
-    setPaginasAnimacao(Math.max(1, paginas));
-    setUsuarioAnimando(nome);
-    setAnimacaoAtiva(true);
-  }, []);
+  useEffect(() => {
+    usuariosRef.current = usuarios;
+  }, [usuarios]);
+
+  const iniciarAnimacao = useCallback(
+    (nome: string, paginas: number, lista = usuariosRef.current) => {
+      if (!nome || paginas <= 0 || animacaoAtivaRef.current) return;
+      const paginasNormalizadas = Math.max(1, paginas);
+      dadosAnimacaoRef.current = {
+        nome,
+        paginas: paginasNormalizadas,
+        usuarios: lista,
+      };
+      setPaginasAnimacao(paginasNormalizadas);
+      setUsuarioAnimando(nome);
+      setAnimacaoAtiva(true);
+    },
+    []
+  );
 
   useEffect(() => {
     animacaoAtivaRef.current = animacaoAtiva;
@@ -464,7 +484,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         memorizarProgresso(data);
 
         if (paginasInseridas > 0) {
-          iniciarAnimacao(usuarioAtual, paginasInseridas);
+          iniciarAnimacao(usuarioAtual, paginasInseridas, data);
         }
       } catch (err) {
         console.error("Erro ao buscar progresso:", err);
@@ -518,7 +538,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         if (alterado) {
           const paginasNovas =
             alterado.paginas_lidas - (anterior.get(alterado.nome_login) || 0);
-          iniciarAnimacao(alterado.nome_login, paginasNovas);
+          iniciarAnimacao(alterado.nome_login, paginasNovas, atual);
         }
       } catch (err) {
         console.error("Erro ao atualizar progresso em tempo real:", err);
@@ -583,29 +603,37 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     let personagemX = 0;
     let personagemY = BASE_PERSONAGEM_Y;
     let velocidadeY = 0;
+    let frameId = 0;
 
-    const usuario = usuarios.find((u) => u.nome_login === usuarioAnimando);
+    const dadosAnimacao = dadosAnimacaoRef.current;
+    const usuariosDaAnimacao = dadosAnimacao?.usuarios ?? usuariosRef.current;
+    const nomeAnimacao = dadosAnimacao?.nome ?? usuarioAnimando;
+    const paginasDaAnimacao = dadosAnimacao?.paginas ?? paginasAnimacao;
+    const usuario = usuariosDaAnimacao.find(
+      (u) => u.nome_login === nomeAnimacao
+    );
     let destinoX = usuario
       ? (usuario.paginas_lidas / usuario.total_paginas) * canvas.width
       : 50;
 
-    const fimDosCactos = 300 + (paginasAnimacao - 1) * 100;
-
-    const existeOutroNoMesmoPonto = usuarios.some(
+    const existeOutroNoMesmoPonto = usuariosDaAnimacao.some(
       (u) =>
-        u.nome_login !== usuarioAnimando &&
+        u.nome_login !== nomeAnimacao &&
         (u.paginas_lidas / u.total_paginas) * canvas.width === destinoX
     );
     if (existeOutroNoMesmoPonto) {
       destinoX += 20;
     }
 
-    const posicaoInicial = usuario ? destinoX - paginasAnimacao * 10 : 50;
-    personagemX = posicaoInicial;
+    const posicaoInicial = usuario ? destinoX - paginasDaAnimacao * 10 : 50;
+    personagemX = Math.max(0, posicaoInicial);
     const posicaoInicialJesus = personagemX;
+    const primeiroCactoX = Math.max(personagemX + 70, 220);
+    const fimDosCactos =
+      primeiroCactoX + (paginasDaAnimacao - 1) * ESPACO_ENTRE_CACTOS;
 
-    const cactos = Array.from({ length: paginasAnimacao }, (_, i) => ({
-      x: 300 + i * 100,
+    const cactos = Array.from({ length: paginasDaAnimacao }, (_, i) => ({
+      x: primeiroCactoX + i * ESPACO_ENTRE_CACTOS,
     }));
 
     const desenharCacto = (x: number) => {
@@ -651,8 +679,8 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
 
       // outros usuários
       const faixasNome: Array<Array<[number, number]>> = [];
-      usuarios.forEach((u) => {
-        if (u.nome_login === usuarioAnimando) return;
+      usuariosDaAnimacao.forEach((u) => {
+        if (u.nome_login === nomeAnimacao) return;
         const pos = (u.paginas_lidas / u.total_paginas) * canvas.width;
 
         const estaNoCaminho =
@@ -693,7 +721,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
       }
 
       desenharJesusCorrendo(ctx, personagemX, personagemY);
-      const nomeAnimando = primeiroNome(usuarioAnimando);
+      const nomeAnimando = primeiroNome(nomeAnimacao);
       const larguraNomeAnimando = Math.max(46, nomeAnimando.length * 7 + 14);
       const faixaAnimando = obterFaixaNome(
         personagemX + 8,
@@ -704,7 +732,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         ctx,
         personagemX + 8,
         personagemY,
-        usuarioAnimando,
+        nomeAnimacao,
         faixaAnimando * 20
       );
 
@@ -717,16 +745,17 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
         setAnimacaoAtiva(false);
         setUsuarioAnimando("");
         setPaginasAnimacao(0);
+        dadosAnimacaoRef.current = null;
         return;
       }
 
-      requestAnimationFrame(loop);
+      frameId = requestAnimationFrame(loop);
     };
 
-    requestAnimationFrame(loop);
+    frameId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frameId);
   }, [
     animacaoAtiva,
-    usuarios,
     usuarioAnimando,
     paginasAnimacao,
     desenharCenario,
