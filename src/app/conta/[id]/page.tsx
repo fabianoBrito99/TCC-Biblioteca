@@ -7,8 +7,7 @@ import styles from "./conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+const API_PROXY = "/api/a6b7e9c4f";
 
 interface User {
   id_usuario: string;
@@ -62,12 +61,6 @@ export default function ContaPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState<boolean>(false);
 
-  const getAuthHeaders = (): HeadersInit => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   useEffect(() => {
     if (!userId) return;
     const logadoId =
@@ -86,10 +79,9 @@ export default function ContaPage() {
 
       try {
         const res = await fetch(
-          `${API_BASE}/api/usuario/${userId}`,
+          `${API_PROXY}/usuario/${userId}`,
           {
             cache: "no-store",
-            headers: getAuthHeaders(),
           }
         );
         if (res.status === 401 || res.status === 403) {

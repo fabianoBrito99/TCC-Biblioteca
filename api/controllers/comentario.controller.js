@@ -1,7 +1,8 @@
 const connection = require("../config/mysql.config"); // Conexão com o banco de dados
 
 async function criarComentario(req, res) {
-  const { comentario, fk_id_usuario, fk_id_livro } = req.body;
+  const { comentario, fk_id_livro } = req.body;
+  const fk_id_usuario = req.user.id;
   const data_comentario = new Date();
 
   try {
@@ -176,7 +177,8 @@ async function listarComentariosPorLivro(req, res) {
 
 // Curtir ou descurtir um comentário
 async function curtirComentario(req, res) {
-  const { idComentario, fk_id_usuario } = req.body;
+  const { idComentario } = req.body;
+  const fk_id_usuario = req.user.id;
 
   try {
     const [existeCurtida] = await connection
@@ -222,7 +224,8 @@ async function curtirComentario(req, res) {
 
 // Responder a um comentário
 async function responderComentario(req, res) {
-  const { idComentario, fk_id_usuario, resposta } = req.body;
+  const { idComentario, resposta } = req.body;
+  const fk_id_usuario = req.user.id;
   const data_resposta = new Date();
 
   try {

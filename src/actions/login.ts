@@ -4,7 +4,7 @@ import apiError from "@/functions/api-error";
 import { cookies } from "next/headers";
 
 export interface LoginResponse {
-  data: { id_usuario: string; token: string; tipo_usuario?: string } | null;
+  data: { id_usuario: string; tipo_usuario?: string } | null;
   ok: boolean;
   error: string;
 }
@@ -49,20 +49,11 @@ export default async function login(
       path: "/",
     });
 
-    if (data.usuario.tipo_usuario) {
-      cookieStore.set("tipo_usuario", data.usuario.tipo_usuario, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24, // 1 dia
-        path: "/",
-      });
-    }
+    cookieStore.delete("tipo_usuario");
 
     return {
       data: {
         id_usuario: data.usuario.id_usuario,
-        token: data.token,
         tipo_usuario: data.usuario.tipo_usuario,
       },
       ok: true,

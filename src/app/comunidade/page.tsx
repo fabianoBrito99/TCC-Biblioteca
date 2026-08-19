@@ -6,7 +6,7 @@ import styles from "@/app/comunidade/comunidade.module.css";
 import Input from "@/componentes/forms/input";
 import Button from "@/componentes/forms/button";
 
-const API_BASE = "https://api.helenaramazzotte.online/api";
+const API_PROXY = "/api/a6b7e9c4f";
 
 interface Comunidade {
   id_comunidade: number;
@@ -28,23 +28,20 @@ export default function ComunidadeListPage() {
   const [objetivo, ] = useState("");
   const [tipo, setTipo] = useState("publica");
   const [userId, setUserId] = useState<number | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
   // Obtém o ID do usuário logado do localStorage
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
-    const storedToken = localStorage.getItem("token");
     if (storedUserId) {
       setUserId(parseInt(storedUserId));
     }
-    setToken(storedToken);
   }, []);
 
   // Função para carregar comunidades e status do usuário
   const fetchComunidades = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/comunidade`);
+      const response = await fetch(`${API_PROXY}/comunidade`);
       const data = await response.json();
 
       if (Array.isArray(data)) {
@@ -54,7 +51,7 @@ export default function ComunidadeListPage() {
           const statuses: StatusUsuario = {};
           for (const comunidade of data) {
             const statusResponse = await fetch(
-              `${API_BASE}/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
+              `${API_PROXY}/comunidade/${comunidade.id_comunidade}/usuario/${userId}/status`
             );
             const statusData = await statusResponse.json();
             statuses[comunidade.id_comunidade] = statusData.status;
@@ -90,12 +87,10 @@ export default function ComunidadeListPage() {
       tipo,
     };
 
-    const token = localStorage.getItem("token");
-    const response = await fetch(`${API_BASE}/comunidade`, {
+    const response = await fetch(`${API_PROXY}/comunidade`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(comunidadeData),
     });
@@ -137,12 +132,10 @@ export default function ComunidadeListPage() {
       return;
     }
 
-    const token = localStorage.getItem("token");
-    await fetch(`${API_BASE}/comunidade/${comunidadeId}/entrar`, {
+    await fetch(`${API_PROXY}/comunidade/${comunidadeId}/entrar`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ tipo }),
     });
@@ -166,13 +159,11 @@ export default function ComunidadeListPage() {
   };
 
   const handleSairDaComunidade = async (comunidadeId: number) => {
-    if (!token) return;
     const confirmou = window.confirm("Deseja sair desta comunidade?");
     if (!confirmou) return;
 
-    const resp = await fetch(`${API_BASE}/comunidade/${comunidadeId}/sair`, {
+    const resp = await fetch(`${API_PROXY}/comunidade/${comunidadeId}/sair`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
     });
     const data = await resp.json();
     if (!resp.ok) {

@@ -28,7 +28,7 @@ export default function ProgressoForm({
 
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/progresso`,
+        `/api/a6b7e9c4f/comunidade/${comunidadeId}/progresso`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

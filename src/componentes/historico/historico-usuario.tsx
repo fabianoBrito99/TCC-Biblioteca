@@ -21,10 +21,7 @@ const HistoricoUsuario: React.FC<{ userId: string }> = ({ userId }) => {
   useEffect(() => {
     const fetchHistorico = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`https://api.helenaramazzotte.online/api/historico/${userId}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const response = await fetch(`/api/a6b7e9c4f/historico/${userId}`);
         if (response.status === 404) {
           setHistorico([]);
           return;

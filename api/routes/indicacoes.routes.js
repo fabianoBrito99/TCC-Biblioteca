@@ -5,8 +5,8 @@ const { auth, authorize } = require('../middlewares/auth');
 
 router.get("/indicacoes", indicacoesController.listarIndicacoes);
 router.get("/livros/busca", indicacoesController.buscarLivros);
-router.post("/indicacoes", indicacoesController.adicionarIndicacao);
-router.delete("/indicacoes/:id_indicacao", indicacoesController.excluirIndicacao);
+router.post("/indicacoes", auth, authorize("admin"), indicacoesController.adicionarIndicacao);
+router.delete("/indicacoes/:id_indicacao", auth, authorize("admin"), indicacoesController.excluirIndicacao);
 
 
 module.exports = router;

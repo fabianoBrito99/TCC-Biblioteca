@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./comentarios.module.css";
 import Input from "../forms/input";
@@ -47,29 +47,17 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
   const [seenList, setSeenList] = useState<VistoItem[]>([]);
   const mensagensAreaRef = useRef<HTMLDivElement>(null);
 
-  const authHeaders = useMemo<Record<string, string>>(() => {
-    const token = localStorage.getItem("token");
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-    return headers;
-  }, []);
-
   const fetchComentarios = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/comentarios`,
-        {
-          headers: authHeaders,
-        }
+        `/api/a6b7e9c4f/comunidade/${comunidadeId}/comentarios`
       );
       const data: Comentario[] = await response.json();
       setComentarios(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Erro ao buscar comentários:", error);
     }
-  }, [authHeaders, comunidadeId]);
+  }, [comunidadeId]);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -95,10 +83,9 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
       await Promise.all(
         pendentes.map((c) =>
           fetch(
-            `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/comentarios/${c.id_comentario}/visto`,
+            `/api/a6b7e9c4f/comunidade/${comunidadeId}/comentarios/${c.id_comentario}/visto`,
             {
               method: "POST",
-              headers: authHeaders,
             }
           )
         )
@@ -107,7 +94,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
     };
 
     markSeen();
-  }, [authHeaders, comentarios, comunidadeId, fetchComentarios, usuarioId]);
+  }, [comentarios, comunidadeId, fetchComentarios, usuarioId]);
 
   useEffect(() => {
     if (!mensagensAreaRef.current) return;
@@ -121,12 +108,11 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
 
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/comentarios`,
+        `/api/a6b7e9c4f/comunidade/${comunidadeId}/comentarios`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...authHeaders,
           },
           body: JSON.stringify({
             comentario,
@@ -152,10 +138,7 @@ export default function Comentarios({ comunidadeId }: ComentariosProps) {
     setSeenModalCommentId(commentId);
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/comentarios/${commentId}/vistos`,
-        {
-          headers: authHeaders,
-        }
+        `/api/a6b7e9c4f/comunidade/${comunidadeId}/comentarios/${commentId}/vistos`
       );
       const data = await response.json();
       setSeenList(Array.isArray(data) ? data : []);

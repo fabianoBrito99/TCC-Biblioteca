@@ -250,8 +250,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     try {
       const compressed = await compressFotoPerfilToDataUrl(file);
       setFotoBase64(compressed);
-    } catch (error) {
-      console.error("Erro ao processar foto de perfil:", error);
+    } catch {
       setFotoBase64(null);
       alert("Nao foi possivel processar a foto. Tente outra imagem.");
     } finally {
@@ -317,7 +316,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("https://api.helenaramazzotte.online/api/usuario", {
+      const response = await fetch("/api/a6b7e9c4f/usuario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -345,21 +344,11 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
         return;
       }
 
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-        if (data?.usuario?.id_usuario) {
-          localStorage.setItem("userId", String(data.usuario.id_usuario));
-        }
-        document.cookie = `token=${data.token}; path=/; max-age=86400; samesite=lax`;
-        if (data?.usuario?.tipo_usuario) {
-          document.cookie = `tipo_usuario=${data.usuario.tipo_usuario}; path=/; max-age=86400; samesite=lax`;
-        }
-      }
+      localStorage.removeItem("token");
 
       alert("Usuario cadastrado com sucesso!");
-      window.location.assign("/homecards");
-    } catch (error) {
-      console.error("Erro ao cadastrar usuario:", error);
+      window.location.assign("/login");
+    } catch {
       alert("Erro ao cadastrar usuario. Tente novamente.");
     } finally {
       setIsSubmitting(false);

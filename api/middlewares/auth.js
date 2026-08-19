@@ -90,3 +90,17 @@ exports.authorizeSelfOr = (...roles) => async (req, res, next) => {
   if (isSelf || hasRole) return next();
   return res.status(403).json({ erro: "Sem permissão" });
 };
+
+exports.authorizeParamSelfOr = (paramName, ...roles) => async (req, res, next) => {
+  if (!req.user) return res.status(401).json({ erro: "Nao autenticado" });
+
+  const userIdToken = Number(req.user.id);
+  const userIdParam = Number(req.params[paramName]);
+  const isSelf = Number.isFinite(userIdToken) && Number.isFinite(userIdParam) && userIdToken === userIdParam;
+  const allowed = roles.map(normalizeRole);
+  const roleAtual = await carregarTipoUsuarioAtual(req);
+  const hasRole = allowed.includes(roleAtual);
+
+  if (isSelf || hasRole) return next();
+  return res.status(403).json({ erro: "Sem permissao" });
+};

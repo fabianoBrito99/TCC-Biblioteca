@@ -37,7 +37,9 @@ function listaAvaliacoes(request, response) {
 
 // Adiciona uma nova avaliação
 function adicionaAvaliacao(request, response) {
-  const { comentario, avaliacao, fk_id_livro, fk_id_usuario } = request.body;
+  const { comentario, avaliacao } = request.body;
+  const fk_id_livro = request.params.livroId;
+  const fk_id_usuario = request.user.id;
   const data_avaliacao = new Date();
 
   connection.query(

@@ -29,7 +29,7 @@ const LeituraDiaria: React.FC<Props> = ({ idUsuario, idComunidade }) => {
 
   useEffect(() => {
     fetch(
-      `https://api.helenaramazzotte.online/api/comunidade/${idComunidade}/usuario/${idUsuario}/leitura-diaria`
+      `/api/a6b7e9c4f/comunidade/${idComunidade}/usuario/${idUsuario}/leitura-diaria`
     )
       .then((res) => res.json())
       .then((data: APILeituraDia[]) => {

@@ -16,7 +16,6 @@ const config = {
 };
 
 // Log rápido só pra diagnosticar (remova depois se quiser)
-console.log('[DB] host=', config.host, 'user=', config.user);
 
 const pool = mysql.createPool(config);
 module.exports = pool;

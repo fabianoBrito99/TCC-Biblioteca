@@ -456,7 +456,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     const carregarProgressoInicial = async () => {
       try {
         const res = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/objetivo/${idObjetivo}/progresso`
+          `/api/a6b7e9c4f/comunidade/objetivo/${idObjetivo}/progresso`
         );
         const data: UsuarioProgresso[] = await res.json();
         setUsuarios(data);
@@ -477,7 +477,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     const fetchProgresso = async () => {
       try {
         const res = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/objetivo/${idObjetivo}/progresso`
+          `/api/a6b7e9c4f/comunidade/objetivo/${idObjetivo}/progresso`
         );
         const data: UsuarioProgresso[] = await res.json();
         setUsuarios(data);
@@ -509,7 +509,7 @@ const ProgressoObjetivo: React.FC<ProgressoObjetivoProps> = ({
     const buscarAtualizacoes = async () => {
       try {
         const res = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/objetivo/${idObjetivo}/progresso`
+          `/api/a6b7e9c4f/comunidade/objetivo/${idObjetivo}/progresso`
         );
         if (!res.ok) return;
 

@@ -38,12 +38,11 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
   const [participantes, setParticipantes] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const userIdLogado =
     typeof window !== "undefined" ? Number(localStorage.getItem("userId")) : 0;
 
   const fetchDados = useCallback(async () => {
-    if (!isAdmin || !token) {
+    if (!isAdmin) {
       setLoading(false);
       return;
     }
@@ -52,16 +51,10 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
     try {
       const [resSolicitacoes, resParticipantes] = await Promise.all([
         fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/solicitacoes`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `/api/a6b7e9c4f/comunidade/${comunidadeId}/solicitacoes`
         ),
         fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/usuarios`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `/api/a6b7e9c4f/comunidade/${comunidadeId}/usuarios`
         ),
       ]);
 
@@ -75,23 +68,20 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [comunidadeId, isAdmin, token]);
+  }, [comunidadeId, isAdmin]);
 
   useEffect(() => {
     fetchDados();
   }, [fetchDados]);
 
   const handleAtualizarStatus = async (idUsuario: number, novoStatus: string) => {
-    if (!token) return;
-
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/usuarios/${idUsuario}`,
+        `/api/a6b7e9c4f/comunidade/${comunidadeId}/usuarios/${idUsuario}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ status: novoStatus }),
         }
@@ -112,16 +102,13 @@ const GerenciarUsuarios: React.FC<GerenciarUsuariosProps> = ({
     idUsuario: number,
     novoNivel: "admin" | "auxiliar" | "membro"
   ) => {
-    if (!token) return;
-
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/usuarios/${idUsuario}/nivel`,
+        `/api/a6b7e9c4f/comunidade/${comunidadeId}/usuarios/${idUsuario}/nivel`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ nivel_acesso: novoNivel }),
         }

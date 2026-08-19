@@ -6,6 +6,6 @@ const { auth, authorize } = require('../middlewares/auth');
 router.get("/livro/:livroId/avaliacoes", avaliacaoController.listaAvaliacoes);
 
 // Rota para adicionar uma nova avaliação
-router.post("/livro/:livroId/avaliacao",  avaliacaoController.adicionaAvaliacao);
+router.post("/livro/:livroId/avaliacao", auth, avaliacaoController.adicionaAvaliacao);
 
 module.exports = router;

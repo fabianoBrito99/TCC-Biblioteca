@@ -12,7 +12,7 @@ import RegistrarProgresso from "@/componentes/comunidadeObjetivo/RegistrarProgre
 import LeituraDiaria from "@/componentes/comunidade/LeituraDiaria";
 import IndicadoresLeitura from "@/componentes/comunidade/IndicadoresLeitura";
 
-const API_BASE = "https://api.helenaramazzotte.online/api";
+const API_PROXY = "/api/a6b7e9c4f";
 
 interface Comunidade {
   id_comunidade: number;
@@ -112,7 +112,7 @@ export default function ComunidadeDetalhesPage() {
         return;
       }
       try {
-        const res = await fetch(`${API_BASE}/comunidade/slug/${routeCommunityKey}`);
+        const res = await fetch(`${API_PROXY}/comunidade/slug/${routeCommunityKey}`);
         if (!res.ok) throw new Error("Comunidade não encontrada");
         const data = await res.json();
         setComunidadeId(Number(data.id_comunidade));
@@ -131,7 +131,7 @@ export default function ComunidadeDetalhesPage() {
     if (!comunidadeId) return;
 
     try {
-      const res = await fetch(`${API_BASE}/comunidade/${comunidadeId}/objetivo-ativo2`);
+      const res = await fetch(`${API_PROXY}/comunidade/${comunidadeId}/objetivo-ativo2`);
       if (!res.ok) {
         setIdObjetivo(null);
         return;
@@ -173,11 +173,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchParticipantes = useCallback(async () => {
     if (!comunidadeId) return;
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}/participantes`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(`${API_PROXY}/comunidade/${comunidadeId}/participantes`);
       if (!response.ok) throw new Error("Erro ao buscar participantes");
       const data = await response.json();
       const lista = Array.isArray(data) ? data : [];
@@ -202,7 +198,7 @@ export default function ComunidadeDetalhesPage() {
 
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/objetivo/${idObjetivo}/progresso`
+        `${API_PROXY}/comunidade/objetivo/${idObjetivo}/progresso`
       );
 
       if (!response.ok) throw new Error("Erro ao buscar progresso");
@@ -214,7 +210,6 @@ export default function ComunidadeDetalhesPage() {
         paginas_lidas: Number(item.paginas_lidas),
       }));
 
-      console.log("Progresso atualizado:", progresso);
       setProgresso(progresso);
     } catch (error) {
       console.error("Erro ao buscar progresso:", error);
@@ -229,7 +224,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchEstatisticasIdade = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/estatisticas/idade`
+        `${API_PROXY}/comunidade/${comunidadeId}/estatisticas/idade`
       );
       if (!response.ok) throw new Error("Erro ao buscar estatísticas de idade");
       const data = await response.json();
@@ -242,7 +237,7 @@ export default function ComunidadeDetalhesPage() {
   const fetchComunidade = useCallback(async () => {
     try {
       if (!comunidadeId) return;
-      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}`);
+      const response = await fetch(`${API_PROXY}/comunidade/${comunidadeId}`);
       if (!response.ok) throw new Error("Erro ao buscar comunidade");
       const data = await response.json();
       setComunidade(data);
@@ -268,10 +263,8 @@ export default function ComunidadeDetalhesPage() {
     if (!confirmou) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/comunidade/objetivo/${idObjetivo}/finalizar`, {
+      const response = await fetch(`${API_PROXY}/comunidade/objetivo/${idObjetivo}/finalizar`, {
         method: "PATCH",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await response.json();
       if (!response.ok) {
@@ -290,12 +283,10 @@ export default function ComunidadeDetalhesPage() {
     if (!idObjetivo) return;
     try {
       setSalvandoObjetivo(true);
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/comunidade/objetivo/${idObjetivo}`, {
+      const response = await fetch(`${API_PROXY}/comunidade/objetivo/${idObjetivo}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           titulo: formObjetivo.titulo,
@@ -326,10 +317,8 @@ export default function ComunidadeDetalhesPage() {
     const ok = window.confirm("Deseja sair desta comunidade?");
     if (!ok) return;
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}/sair`, {
+      const response = await fetch(`${API_PROXY}/comunidade/${comunidadeId}/sair`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await response.json();
       if (!response.ok) {
@@ -347,10 +336,8 @@ export default function ComunidadeDetalhesPage() {
     const ok = window.confirm("Tem certeza que deseja excluir esta comunidade? Essa ação não pode ser desfeita.");
     if (!ok) return;
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/comunidade/${comunidadeId}`, {
+      const response = await fetch(`${API_PROXY}/comunidade/${comunidadeId}`, {
         method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await response.json();
       if (!response.ok) {

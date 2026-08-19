@@ -1,0 +1,85 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: #162033;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef4f2 100%);
+}
+
+.card {
+  width: min(720px, 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+}
+
+.kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: #6d28d9;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin-bottom: 18px;
+  color: #111827;
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+
+.card p {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.infoGrid div,
+.notes {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.infoGrid span,
+.notes span {
+  display: block;
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.infoGrid strong {
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
+.notes {
+  margin-top: 12px;
+}
+
+@media (max-width: 620px) {
+  .card {
+    padding: 18px;
+  }
+
+  .card h1 {
+    font-size: 1.55rem;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

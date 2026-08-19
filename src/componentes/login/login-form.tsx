@@ -47,20 +47,18 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
 
       if (response.ok && response.data) {
         const userId = response.data.id_usuario;
-        const token = response.data.token;
         const next = new URLSearchParams(window.location.search).get("next");
         const redirectTo = next?.startsWith("/") ? next : "/homecards";
 
         localStorage.setItem("userId", userId); // Salva o ID do usuário no localStorage
-        localStorage.setItem("token", token); // Salva o token para chamadas autenticadas na API
+        localStorage.removeItem("token");
         window.location.assign(redirectTo);
       } else {
 
         setError(response.error);
       }
-    } catch (error) {
+    } catch {
       setError("Erro ao fazer login");
-      console.error("Erro ao fazer login:", error);
     } finally {
       setIsSubmitting(false);
     }

@@ -101,16 +101,15 @@ export async function getPushSubscription(): Promise<PushSubscription | null> {
 export async function sendNotificationToServer(
   userId: string,
   subscription: PushSubscription,
-  token: string
+  token?: string
 ): Promise<boolean> {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+  void token;
 
   try {
-    const response = await fetch(`${API_BASE}/api/notificacoes/subscribe`, {
+    const response = await fetch("/api/a6b7e9c4f/notificacoes/subscribe", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         usuario_id: userId,
@@ -157,14 +156,12 @@ export async function showLocalNotification(
 
 export async function checkVencimentosProximos(
   userId: string,
-  token: string
+  token?: string
 ): Promise<void> {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+  void token;
 
   try {
-    const response = await fetch(`${API_BASE}/api/emprestimos/proximos-vencimentos/${userId}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const response = await fetch(`/api/a6b7e9c4f/emprestimos/proximos-vencimentos/${userId}`);
 
     if (!response.ok) {
       return;

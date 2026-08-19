@@ -16,14 +16,14 @@ import {
   FaSignInAlt,
   FaTable,
   FaClipboardList,
+  FaChild,
 } from "react-icons/fa"; // Importa ícones do react-icons
 import styles from "@/componentes/navbar/navbar.module.css";
 import Notificacoes from "../notificacoes/notificacoes";
 import ComunidadesUsuario from "../comunidade/listar-comunidade-do-usuario";
 import Image from "next/image";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+const API_PROXY = "/api/a6b7e9c4f";
 
 type User = {
   id: string;
@@ -316,6 +316,7 @@ export default function Navbar() {
     },
     { path: "/usuario", label: "Usuários", icon: <FaUsers /> },
     { path: "/homecards", label: "Home", icon: <FaHome /> },
+    { path: "/MyKids", label: "MyKids", icon: <FaChild /> },
     { path: "/doeumlivro", label: "Sugire/Doe um Livro", icon: <FaBible /> },
     { path: "/comunidade", label: "Comunidade", icon: <FaBookReader /> },
     { path: "/relatorios", label: "Relatorios", icon: <FaTable /> },
@@ -332,6 +333,7 @@ export default function Navbar() {
       "/usuario",
       "/usuario/[id]",
       "/homecards",
+      "/MyKids",
       "/doeumlivro",
       "/comunidade",
       "/relatorios",
@@ -352,11 +354,6 @@ export default function Navbar() {
 
   // Buscar o usuário logado
   useEffect(() => {
-    const getAuthHeaders = (): HeadersInit => {
-      const token = localStorage.getItem("token");
-      return token ? { Authorization: `Bearer ${token}` } : {};
-    };
-
     const fetchUserData = async (retryCount = 0) => {
       const userId = localStorage.getItem("userId");
       if (!userId) return;
@@ -369,9 +366,8 @@ export default function Navbar() {
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
         const res = await fetch(
-          `${API_BASE}/api/usuario/${userId}`,
+          `${API_PROXY}/usuario/${userId}`,
           {
-            headers: getAuthHeaders(),
             signal: controller.signal,
           }
         );
@@ -460,7 +456,7 @@ export default function Navbar() {
 
   const fecharMenu = () => setMenuOpen(false);
 
-  if (pathname === "/login") return null; // Não exibe a Navbar na página de login
+  if (pathname === "/login" || pathname.startsWith("/MyKids")) return null; // Nao exibe a Navbar na pagina de login
 
   return (
     <nav className={`${styles.navMenu} ${menuOpen ? styles.navOpen : ""}`}>

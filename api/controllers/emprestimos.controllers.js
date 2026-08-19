@@ -418,7 +418,7 @@ function show(request, response) {
 
 function reservar(request, response) {
   const livroId = request.params.id;
-  const usuarioId = request.body.usuarioId;
+  const usuarioId = request.user.id;
 
   connection.query(
     "SELECT quantidade_estoque FROM Estoque WHERE id_estoque = (SELECT fk_id_estoque FROM Livro WHERE id_livro = ?)",

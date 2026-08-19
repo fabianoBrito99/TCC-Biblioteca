@@ -292,32 +292,32 @@ function list(request, response) {
   connection.query(sqlTotais, (errTotais, totaisRows) => {
     if (errTotais) {
       console.error("Erro ao calcular totais de livros:", errTotais);
-      return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errTotais.message });
+      return response.status(500).json({ erro: "Erro ao buscar livros" });
     }
 
     connection.query(sqlContagemFiltrada, filtrosParams, (errCount, countRows) => {
       if (errCount) {
         console.error("Erro ao contar livros filtrados:", errCount);
-        return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errCount.message });
+        return response.status(500).json({ erro: "Erro ao buscar livros" });
       }
 
       connection.query(sqlContagemCategorias, filtrosCategoriasParams, (errCategorias, categoriasRows) => {
         if (errCategorias) {
           console.error("Erro ao contar livros por categoria:", errCategorias);
-          return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errCategorias.message });
+          return response.status(500).json({ erro: "Erro ao buscar livros" });
         }
 
         connection.query(sqlCategoriasOpcoes, (errOpcoes, categoriasOpcoesRows) => {
           if (errOpcoes) {
             console.error("Erro ao buscar opÃ§Ãµes de categorias:", errOpcoes);
-            return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errOpcoes.message });
+            return response.status(500).json({ erro: "Erro ao buscar livros" });
           }
 
           const paramsLista = [...filtrosParams, limite, offset];
           connection.query(sqlLista, paramsLista, (errLista, resultado) => {
             if (errLista) {
               console.error("Erro ao buscar livros:", errLista);
-              return response.status(500).json({ erro: "Erro ao buscar livros", detalhes: errLista.message });
+              return response.status(500).json({ erro: "Erro ao buscar livros" });
             }
 
             const livros = resultado.map((row) => {

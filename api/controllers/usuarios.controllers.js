@@ -47,7 +47,9 @@ async function show(request, response) {
 
   // Obter informações do usuário
   connection.query(
-    `SELECT * FROM Usuario WHERE id_usuario = ?`,
+    `SELECT id_usuario, nome_login, email, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario, sexo
+     FROM Usuario
+     WHERE id_usuario = ?`,
     [userId],
     function (err, usuario) {
       if (err) {
@@ -118,7 +120,7 @@ async function create(request, response) {
   try {
     const {
       nome_login, email, senha, telefone, igreja_local, data_nascimento,
-      foto_usuario, tipo_usuario, cep, rua, numero, bairro, cidade, estado, sexo
+      foto_usuario, cep, rua, numero, bairro, cidade, estado, sexo
     } = request.body;
 
     if (!senhaForte(senha)) {
@@ -132,7 +134,7 @@ async function create(request, response) {
 
     const fotoBuffer = foto_usuario ? Buffer.from(foto_usuario.split(",")[1], "base64") : null;
     const sexoNormalizado = sexo === "Masculino" ? "M" : sexo === "Feminino" ? "F" : null;
-    const tipo = tipo_usuario || "leitor";
+    const tipo = "leitor";
 
     connection.query(
       `INSERT INTO Usuario (nome_login, email, senha, telefone, data_nascimento, igreja_local, foto_usuario, tipo_usuario, sexo)
@@ -231,6 +233,11 @@ function login(request, response) {
 const atualizarTipoUsuario = (req, res) => {
   const { id } = req.params;
   const { tipo_usuario } = req.body;
+  const tiposPermitidos = new Set(["administrador", "admin", "voluntario", "leitor"]);
+
+  if (!tiposPermitidos.has(String(tipo_usuario || "").trim().toLowerCase())) {
+    return res.status(400).json({ error: "Tipo de usuario invalido" });
+  }
 
   connection.query(
     `

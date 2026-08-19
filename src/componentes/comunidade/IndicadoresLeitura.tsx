@@ -20,7 +20,7 @@ const IndicadoresLeitura: React.FC<Props> = ({ idUsuario, idComunidade }) => {
 
   useEffect(() => {
     fetch(
-      `https://api.helenaramazzotte.online/api/comunidade/${idComunidade}/usuario/${idUsuario}/indicadores-leitura`
+      `/api/a6b7e9c4f/comunidade/${idComunidade}/usuario/${idUsuario}/indicadores-leitura`
     )
       .then((res) => res.json())
       .then(setDados)

@@ -23,12 +23,8 @@ const ComunidadesUsuario: React.FC<ComunidadesUsuarioProps> = ({ usuarioId }) =>
   useEffect(() => {
     const fetchComunidadesUsuario = async () => {
       try {
-        const token = localStorage.getItem("token");
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/usuario/${usuarioId}`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
+          `/api/a6b7e9c4f/comunidade/usuario/${usuarioId}`
         );
         if (!response.ok) throw new Error("Erro ao buscar comunidades do usuário.");
         const data = await response.json();

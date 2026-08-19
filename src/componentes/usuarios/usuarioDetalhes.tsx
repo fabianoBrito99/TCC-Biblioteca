@@ -20,11 +20,6 @@ export default function UsuarioDetalhes({
 }: {
   params: { id: string };
 }) {
-  const getAuthHeaders = (): HeadersInit => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +31,7 @@ export default function UsuarioDetalhes({
     const fetchUsuario = async () => {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/usuario/${params.id}`,
-          {
-            headers: getAuthHeaders(),
-          }
+          `/api/a6b7e9c4f/usuario/${params.id}`
         );
         if (response.status === 401 || response.status === 403) {
           setForbidden(true);
@@ -65,12 +57,11 @@ export default function UsuarioDetalhes({
 
     try {
       const response = await fetch(
-        `https://api.helenaramazzotte.online/api/usuario/${usuario.id_usuario}/tipo`,
+        `/api/a6b7e9c4f/usuario/${usuario.id_usuario}/tipo`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            ...getAuthHeaders(),
           },
           body: JSON.stringify({ tipo_usuario: novoTipoUsuario }),
         }

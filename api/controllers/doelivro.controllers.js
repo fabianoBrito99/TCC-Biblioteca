@@ -29,7 +29,8 @@ function listarSugestoes(req, res) {
 
 // Adicionar uma nova sugestão
 function adicionarSugestao(req, res) {
-  const { nome_livro, autor, descricao_livro, motivo_sugestao, fk_id_usuario } = req.body;
+  const { nome_livro, autor, descricao_livro, motivo_sugestao } = req.body;
+  const fk_id_usuario = req.user.id;
 
   // Verificar se os campos obrigatórios estão presentes
   if (!motivo_sugestao || !fk_id_usuario) {

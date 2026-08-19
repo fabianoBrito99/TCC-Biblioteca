@@ -7,7 +7,7 @@ import Input from "@/componentes/forms/input";
 import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 import styles from "./editar-dados.module.css";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+const API_PROXY = "/api/a6b7e9c4f";
 
 interface User {
   id_usuario: string;
@@ -84,14 +84,11 @@ export default function EditarDadosPage() {
       const retryDelay = 1000 * (retryCount + 1);
 
       try {
-        const token = localStorage.getItem("token");
-        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const res = await fetch(`${API_BASE}/api/usuario/${userId}`, {
+        const res = await fetch(`${API_PROXY}/usuario/${userId}`, {
           cache: "no-store",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           signal: controller.signal,
         });
 
@@ -179,14 +176,11 @@ export default function EditarDadosPage() {
     setSuccess(null);
 
     try {
-      const token = localStorage.getItem("token");
-      
       // Atualizar usuário
-      const userRes = await fetch(`${API_BASE}/api/usuario/${userId}`, {
+      const userRes = await fetch(`${API_PROXY}/usuario/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           nome_login: formData.nome_login,
@@ -202,11 +196,10 @@ export default function EditarDadosPage() {
       }
 
       // Atualizar endereço
-      const enderecoRes = await fetch(`${API_BASE}/api/endereco/${userId}`, {
+      const enderecoRes = await fetch(`${API_PROXY}/endereco/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           cep: formData.cep,

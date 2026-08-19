@@ -29,7 +29,7 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({
     const verificarObjetivoAtivo = async () => {
       try {
         const response = await fetch(
-          `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo-ativo`
+          `/api/a6b7e9c4f/comunidade/${comunidadeId}/objetivo-ativo`
         );
         const data = await response.json();
         setObjetivoAtivo(data.ativo);
@@ -56,14 +56,12 @@ const CriarObjetivo: React.FC<CriarObjetivoProps> = ({
 
     setSalvando(true);
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(
-        "https://api.helenaramazzotte.online/api/comunidade/objetivo",
+        "/api/a6b7e9c4f/comunidade/objetivo",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             fk_id_comunidade: comunidadeId,

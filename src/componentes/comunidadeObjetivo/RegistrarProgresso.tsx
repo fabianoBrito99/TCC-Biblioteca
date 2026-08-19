@@ -29,10 +29,7 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
       if (!id) return;
 
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`https://api.helenaramazzotte.online/api/usuario/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetch(`/api/a6b7e9c4f/usuario/${id}`);
         if (res.ok) {
           const data = await res.json();
           setNomeUsuario(data.usuario.nome_login); // 👈 aqui pega o nome corretamente
@@ -65,14 +62,11 @@ const RegistrarProgresso: React.FC<RegistrarProgressoProps> = ({
     console.log("📨 Enviando progresso:", dados);
 
     const response = await fetch(
-      `https://api.helenaramazzotte.online/api/comunidade/${comunidadeId}/objetivo/progresso`,
+      `/api/a6b7e9c4f/comunidade/${comunidadeId}/objetivo/progresso`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(localStorage.getItem("token")
-            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            : {}),
         },
         body: JSON.stringify(dados),
       }

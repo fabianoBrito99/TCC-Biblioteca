@@ -21,17 +21,10 @@ const UsuariosList: React.FC = () => {
   const [forbidden, setForbidden] = useState<boolean>(false);
   const router = useRouter();
 
-  const getAuthHeaders = (): HeadersInit => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await fetch("https://api.helenaramazzotte.online/api/usuario", {
-          headers: getAuthHeaders(),
-        });
+        const response = await fetch("/api/a6b7e9c4f/usuario");
         if (response.status === 401 || response.status === 403) {
           setForbidden(true);
           return;

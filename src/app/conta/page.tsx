@@ -6,8 +6,7 @@ import styles from "./[id]/conta.module.css";
 import HistoricoUsuario from "@/componentes/historico/historico-usuario";
 import AcessoNegado from "@/componentes/acesso-negado/AcessoNegado";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+const API_PROXY = "/api/a6b7e9c4f";
 
 interface User {
   id_usuario: string;
@@ -68,14 +67,11 @@ export default function ContaPageSemId() {
       const retryDelay = 1000 * (retryCount + 1);
 
       try {
-        const token = localStorage.getItem("token");
-        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const res = await fetch(`${API_BASE}/api/usuario/${userId}`, {
+        const res = await fetch(`${API_PROXY}/usuario/${userId}`, {
           cache: "no-store",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
           signal: controller.signal,
         });
 

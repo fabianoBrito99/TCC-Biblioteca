@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { FaBell } from "react-icons/fa";
 import styles from "./notificacoes.module.css";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "https://api.helenaramazzotte.online";
+const API_PROXY = "/api/a6b7e9c4f";
 
 interface Notificacao {
   id_notificacao: number;
@@ -39,13 +38,12 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
     const gerarNotificacoes = async () => {
       try {
         const response = await fetch(
-          `${API_BASE}/api/notificacoes/gerar/${usuarioId}`,
+          `${API_PROXY}/notificacoes/gerar/${usuarioId}`,
           { method: "POST" }
         );
-        if (!response.ok) throw new Error("Erro ao gerar notificações");
-        console.log("Notificações geradas com sucesso");
-      } catch (error) {
-        console.error("Erro ao gerar notificações:", error);
+        if (!response.ok) return;
+      } catch {
+        return;
       }
     };
 
@@ -55,20 +53,19 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
   // Buscar notificações
   useEffect(() => {
     if (!usuarioId) {
-      console.warn("Usuário não identificado. Nenhuma notificação será carregada.");
       return;
     }
 
     const fetchNotificacoes = async () => {
       try {
         const response = await fetch(
-          `${API_BASE}/api/notificacoes/${usuarioId}`
+          `${API_PROXY}/notificacoes/${usuarioId}`
         );
-        if (!response.ok) throw new Error("Erro ao buscar notificações");
+        if (!response.ok) return;
         const data = await response.json();
         setNotificacoes(data);
-      } catch (error) {
-        console.error("Erro ao buscar notificações:", error);
+      } catch {
+        return;
       }
     };
 
@@ -79,11 +76,11 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
   const handleMarcarLida = async (idNotificacao: number) => {
     try {
       const response = await fetch(
-        `${API_BASE}/api/notificacoes/${idNotificacao}/lida`,
+        `${API_PROXY}/notificacoes/${idNotificacao}/lida`,
         { method: "PATCH" }
       );
 
-      if (!response.ok) throw new Error("Erro ao marcar notificação como lida.");
+      if (!response.ok) return;
 
       // Atualizar o estado local para refletir a mudança
       setNotificacoes((prev) =>
@@ -93,8 +90,8 @@ const Notificacoes: React.FC<NotificacoesProps> = ({ usuarioId: propUsuarioId })
             : notificacao
         )
       );
-    } catch (error) {
-      console.error("Erro ao marcar notificação como lida:", error);
+    } catch {
+      return;
     }
   };
 

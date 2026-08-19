@@ -32,6 +32,32 @@ const isPathAllowed = (pathname: string, allowed: readonly string[]) =>
 
 const normalizePath = (p: string) => (p !== "/" && p.endsWith("/") ? p.slice(0, -1) : p);
 
+function base64UrlDecode(value: string): string {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+  return atob(padded);
+}
+
+function getRoleFromToken(token: string): string {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return "";
+    const parsed = JSON.parse(base64UrlDecode(payload)) as {
+      tipo_usuario?: string;
+      tipoUsuario?: string;
+      tipo?: string;
+      role?: string;
+    };
+    return String(
+      parsed.tipo_usuario ?? parsed.tipoUsuario ?? parsed.tipo ?? parsed.role ?? ""
+    )
+      .trim()
+      .toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
 // Constrói a origem correta para redirecionar (usa headers do proxy)
 // Se ainda vier localhost, usa APP_BASE_URL ou NEXT_PUBLIC_SITE_URL como fallback.
 function getOrigin(req: NextRequest): string {
@@ -71,15 +97,13 @@ export function middleware(req: NextRequest) {
     to.searchParams.set("next", pathname + search);
     to.searchParams.set("from", "mw");
     to.searchParams.set("error", "auth");
-    return NextResponse.redirect(to);
+    const response = NextResponse.redirect(to);
+    response.cookies.delete("tipo_usuario");
+    return response;
   }
 
   // 2) Autorização (se houver papel)
-  const rawRole = (req.cookies.get("tipo_usuario")?.value ??
-    req.headers.get("tipo-usuario") ??
-    "")
-    .trim()
-    .toLowerCase();
+  const rawRole = getRoleFromToken(token);
 
   const role: Role | undefined = roleAlias[rawRole];
 
@@ -94,11 +118,15 @@ export function middleware(req: NextRequest) {
       to.searchParams.set("next", pathname + search);
       to.searchParams.set("from", "mw");
       to.searchParams.set("error", "permissao");
-      return NextResponse.redirect(to);
+      const response = NextResponse.redirect(to);
+      response.cookies.delete("tipo_usuario");
+      return response;
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.cookies.delete("tipo_usuario");
+  return response;
 }
 
 // Só nas rotas protegidas
