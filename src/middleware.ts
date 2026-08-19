@@ -10,6 +10,7 @@ const permissoes = {
     "/homecards",
     "/doeumlivro",
     "/comunidade",
+    "/MyKids",
   ],
   voluntario: ["/homecards", "/doeumlivro", "/comunidade"],
   leitor: ["/homecards", "/doeumlivro", "/comunidade"],
@@ -111,5 +112,6 @@ export const config = {
     "/homecards",
     "/doeumlivro",
     "/comunidade/:path*",
+    "/MyKids/:path*",
   ],
 };

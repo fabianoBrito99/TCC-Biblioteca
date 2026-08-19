@@ -319,6 +319,7 @@ export default function Navbar() {
     { path: "/doeumlivro", label: "Sugire/Doe um Livro", icon: <FaBible /> },
     { path: "/comunidade", label: "Comunidade", icon: <FaBookReader /> },
     { path: "/relatorios", label: "Relatorios", icon: <FaTable /> },
+    { path: "/MyKids", label: "MyKids", icon: <FaUsers /> },
     { path: "/login", label: "Sair", icon: <FaSignInAlt /> },
   ];
 
@@ -336,6 +337,7 @@ export default function Navbar() {
       "/relatorios",
       "/login",
       "/indicacoes",
+      "/MyKids",
     ],
     voluntario: [
       "/homecards",

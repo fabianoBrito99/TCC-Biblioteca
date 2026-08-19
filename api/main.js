@@ -19,6 +19,7 @@ const noticacoesRoutes = require('./routes/notificacoes.routes');
 const relatorioRoutes = require('./routes/relatorios.routes'); 
 const indicacoesRoutes = require('./routes/indicacoes.routes'); 
 const ocrRoutes = require('./routes/ocr.routes');
+const mykidsRoutes = require('./routes/mykids.routes');
 const { createRateLimit } = require("./middlewares/rateLimit");
 const app = express();
 
@@ -67,6 +68,7 @@ app.use("/api", noticacoesRoutes);
 app.use("/api", relatorioRoutes); 
 app.use("/api", indicacoesRoutes); 
 app.use("/api", ocrRoutes);
+app.use("/api", mykidsRoutes);
 
 
 const PORT = process.env.PORT || 4000;
