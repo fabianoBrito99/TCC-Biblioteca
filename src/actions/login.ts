@@ -20,6 +20,7 @@ export default async function login(
 ): Promise<LoginResponse> {
   const email = formData.get("username");
   const password = formData.get("password");
+  const cookieStore = await cookies();
 
   try {
     if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
@@ -27,9 +28,13 @@ export default async function login(
     }
 
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.helenaramazzotte.online";
+    const appOrigin = process.env.APP_ORIGIN || "https://app.helenaramazzotte.online";
     const response = await fetch(`${apiBaseUrl}/api/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Origin: appOrigin,
+      },
       body: JSON.stringify({ email, senha: password }),
       // credenciais não são necessárias aqui porque o cookie será setado no servidor via cookies()
     });
@@ -40,7 +45,6 @@ export default async function login(
 
     const data: ApiLoginResponse = (await response.json()) as ApiLoginResponse;
 
-    const cookieStore = await cookies(); // <<-- Next 15: cookies() é async
     cookieStore.set("token", data.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -60,6 +64,8 @@ export default async function login(
       error: "",
     };
   } catch (error: unknown) {
+    cookieStore.delete("token");
+    cookieStore.delete("tipo_usuario");
     return apiError(error);
   }
 }

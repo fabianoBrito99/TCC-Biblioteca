@@ -58,6 +58,17 @@ function getRoleFromToken(token: string): string {
   }
 }
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const [, payload] = token.split(".");
+    if (!payload) return true;
+    const parsed = JSON.parse(base64UrlDecode(payload)) as { exp?: number };
+    return typeof parsed.exp !== "number" || parsed.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
 // Constrói a origem correta para redirecionar (usa headers do proxy)
 // Se ainda vier localhost, usa APP_BASE_URL ou NEXT_PUBLIC_SITE_URL como fallback.
 function getOrigin(req: NextRequest): string {
@@ -98,6 +109,18 @@ export function middleware(req: NextRequest) {
     to.searchParams.set("from", "mw");
     to.searchParams.set("error", "auth");
     const response = NextResponse.redirect(to);
+    response.cookies.delete("tipo_usuario");
+    return response;
+  }
+
+  if (isTokenExpired(token)) {
+    const origin = getOrigin(req);
+    const to = new URL("/login", origin);
+    to.searchParams.set("next", pathname + search);
+    to.searchParams.set("from", "mw");
+    to.searchParams.set("error", "auth");
+    const response = NextResponse.redirect(to);
+    response.cookies.delete("token");
     response.cookies.delete("tipo_usuario");
     return response;
   }

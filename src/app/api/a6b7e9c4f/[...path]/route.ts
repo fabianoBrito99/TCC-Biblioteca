@@ -7,6 +7,9 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
   "https://api.helenaramazzotte.online";
 
+const APP_ORIGIN =
+  process.env.APP_ORIGIN || "https://app.helenaramazzotte.online";
+
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
   "content-length",
@@ -39,6 +42,9 @@ async function proxy(req: NextRequest, context: RouteContext) {
 
   headers.delete("cookie");
   headers.delete("authorization");
+  // Same-origin GET requests usually do not include Origin. The API deliberately
+  // rejects originless production requests, so identify this trusted proxy.
+  headers.set("origin", APP_ORIGIN);
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -61,11 +67,18 @@ async function proxy(req: NextRequest, context: RouteContext) {
   responseHeaders.delete("x-powered-by");
   responseHeaders.set("Cache-Control", "no-store");
 
-  return new NextResponse(response.body, {
+  const proxyResponse = new NextResponse(response.body, {
     status: response.status,
     statusText: response.statusText,
     headers: responseHeaders,
   });
+
+  if (response.status === 401) {
+    proxyResponse.cookies.delete("token");
+    proxyResponse.cookies.delete("tipo_usuario");
+  }
+
+  return proxyResponse;
 }
 
 export const GET = proxy;
