@@ -103,8 +103,7 @@ export default function MyKidsPage() {
   const [printerStatus, setPrinterStatus] = useState("Zebra aguardando check-in");
   const [showNewRoomForm, setShowNewRoomForm] = useState(false);
   const [showPersonForm, setShowPersonForm] = useState(false);
-  const [showPrinterSettings, setShowPrinterSettings] = useState(false);
-  const [pendingPrint, setPendingPrint] = useState<Checkin | null>(null);
+  const [expandedRoom, setExpandedRoom] = useState<number | null>(null);
   const [expandedGuardian, setExpandedGuardian] = useState<number | null>(null);
   const [checkinSearch, setCheckinSearch] = useState("");
   const [peopleSearch, setPeopleSearch] = useState("");
@@ -170,7 +169,8 @@ export default function MyKidsPage() {
 
   const roomTotals = rooms.map((room) => ({
     ...room,
-    total: today.filter((checkin) => checkin.room_name_snapshot === room.name).length,
+    total: today.filter((checkin) => checkin.room_id === room.id || checkin.room_name_snapshot === room.name).length,
+    checkins: today.filter((checkin) => checkin.room_id === room.id || checkin.room_name_snapshot === room.name),
   }));
 
   function updateChildDraft(index: number, updates: Partial<ChildDraft>) {
@@ -200,6 +200,7 @@ export default function MyKidsPage() {
   async function toggleRoom(room: Room) {
     try {
       await myKidsApi.updateRoom(room.id, { is_open: !Boolean(room.is_open) });
+      if (Boolean(room.is_open)) setExpandedRoom(null);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao atualizar sala");
@@ -244,8 +245,8 @@ export default function MyKidsPage() {
         child_id: childId,
         room_id: selectedRoom.id,
       });
-      setPendingPrint(checkin);
       setMessage("Check-in realizado.");
+      await printLabel(checkin, "completo");
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no check-in");
@@ -259,40 +260,30 @@ export default function MyKidsPage() {
       const response = await fetch(settings.bridge_url || fallbackPrinter.bridge_url || "", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zpl, printerName: settings.printer_name || fallbackPrinter.printer_name }),
+        body: JSON.stringify({ zpl, printerName: settings.printer_name || undefined }),
       });
       if (!response.ok) throw new Error("Falha na ponte Zebra");
       setPrinterStatus(mode === "completo" ? "2 etiquetas enviadas para a Zebra" : "Etiqueta enviada para a Zebra");
     } catch {
       setPrinterStatus(`Confira se a ponte Zebra esta rodando em ${settings.bridge_url || fallbackPrinter.bridge_url}`);
-      const popup = window.open("", "_blank", "width=420,height=360");
-      popup?.document.write(
-        `<pre style="font:14px monospace;white-space:pre-wrap">${zpl.replace(/</g, "&lt;")}</pre>`
-      );
-      popup?.document.close();
     }
-    setPendingPrint(null);
   }
 
-  async function submitPrinter(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!printer) return;
+  async function detectPrinterBridge() {
+    const healthUrl = (printer?.bridge_url || fallbackPrinter.bridge_url || "").replace(/\/print\/?$/, "/health");
     setError("");
     try {
-      setPrinter(await myKidsApi.updatePrinter(printer));
-      setShowPrinterSettings(false);
-      setPrinterStatus("Configuracao Zebra salva");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao salvar impressora");
-    }
-  }
-
-  async function testPrinterBridge() {
-    const healthUrl = (printer?.bridge_url || fallbackPrinter.bridge_url || "").replace(/\/print\/?$/, "/health");
-    try {
-      const response = await fetch(healthUrl);
+      const response = await fetch(healthUrl, { cache: "no-store" });
       if (!response.ok) throw new Error("Ponte respondeu com erro");
-      setPrinterStatus("Ponte Zebra conectada");
+      const data = await response.json().catch(() => ({}));
+      const detectedPrinter = typeof data.printerName === "string" && data.printerName ? data.printerName : null;
+      setPrinter({
+        ...(printer || fallbackPrinter),
+        bridge_url: (typeof data.printUrl === "string" && data.printUrl) || printer?.bridge_url || fallbackPrinter.bridge_url,
+        printer_name: detectedPrinter,
+        is_active: true,
+      });
+      setPrinterStatus(detectedPrinter ? `Zebra conectada: ${detectedPrinter}` : "Ponte Zebra conectada");
     } catch {
       setPrinterStatus(`Nao consegui conectar em ${healthUrl}`);
     }
@@ -300,68 +291,12 @@ export default function MyKidsPage() {
 
   return (
     <main className={styles.page}>
-      {pendingPrint && (
-        <div className={styles.modalBackdrop}>
-          <section className={styles.modal}>
-            <h2>Deseja imprimir?</h2>
-            <p>Imprima o kit completo com etiqueta para pai e crianca, ou apenas a etiqueta da crianca.</p>
-            <div className={styles.printOptions}>
-              <button className={styles.primaryButton} onClick={() => printLabel(pendingPrint, "completo")}>
-                <FaPrint />
-                Completo: 2 adesivos
-              </button>
-              <button className={styles.secondaryButton} onClick={() => printLabel(pendingPrint, "crianca")}>
-                Apenas crianca
-              </button>
-              <button className={styles.linkButton} onClick={() => setPendingPrint(null)}>
-                Nao imprimir agora
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {showPrinterSettings && printer && (
-        <div className={styles.modalBackdrop}>
-          <form className={styles.modal} onSubmit={submitPrinter}>
-            <h2>Configurar Zebra</h2>
-            <p>Use a URL da ponte Python do notebook conectado na impressora.</p>
-            <div className={styles.modalForm}>
-              <label>
-                URL da ponte
-                <input
-                  value={printer.bridge_url || ""}
-                  onChange={(event) => setPrinter({ ...printer, bridge_url: event.target.value })}
-                  placeholder="http://192.168.0.10:9123/print"
-                />
-              </label>
-              <label>
-                Nome da impressora no Windows
-                <input
-                  value={printer.printer_name || ""}
-                  onChange={(event) => setPrinter({ ...printer, printer_name: event.target.value })}
-                  placeholder="ZD220-203dpi ZPL"
-                />
-              </label>
-            </div>
-            <div className={styles.modalActions}>
-              <button type="button" className={styles.secondaryButton} onClick={testPrinterBridge}>
-                Testar
-              </button>
-              <button type="submit" className={styles.primaryButton}>
-                Salvar
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
       <header className={styles.header}>
         <div>
           <span className={styles.kicker}>Ministerio infantil</span>
           <h1>MyKids</h1>
         </div>
-        <button className={styles.printButton} onClick={() => setShowPrinterSettings(true)}>
+        <button className={styles.printButton} onClick={detectPrinterBridge}>
           <FaPrint />
           Zebra
         </button>
@@ -438,11 +373,40 @@ export default function MyKidsPage() {
 
               <div className={styles.roomList}>
                 {rooms.map((room) => (
-                  <article key={room.id} className={styles.roomCard}>
-                    <div>
-                      <h3>{room.name}</h3>
-                      <p>{room.age_range}</p>
-                    </div>
+                  <article key={room.id} className={styles.roomCardExpanded}>
+                    <button
+                      type="button"
+                      className={styles.roomSummary}
+                      onClick={() => setExpandedRoom((current) => (current === room.id ? null : room.id))}
+                    >
+                      <div>
+                        <h3>{room.name}</h3>
+                        <p>{room.age_range}</p>
+                      </div>
+                      <div className={styles.roomSummaryMeta}>
+                        <strong>{roomTotals.find((item) => item.id === room.id)?.total || 0}</strong>
+                        <span>crianca(s)</span>
+                        <FaChevronDown className={expandedRoom === room.id ? styles.chevronOpen : ""} />
+                      </div>
+                    </button>
+
+                    {expandedRoom === room.id && (
+                      <div className={styles.roomChildren}>
+                        {(roomTotals.find((item) => item.id === room.id)?.checkins || []).length ? (
+                          roomTotals
+                            .find((item) => item.id === room.id)
+                            ?.checkins.map((checkin) => (
+                              <div key={checkin.public_code}>
+                                <strong>{checkin.child_name_snapshot}</strong>
+                                <span>{checkin.guardian_name_snapshot}</span>
+                              </div>
+                            ))
+                        ) : (
+                          <p>Nenhuma crianca dentro agora.</p>
+                        )}
+                      </div>
+                    )}
+
                     <button
                       className={Boolean(room.is_open) ? styles.openToggle : styles.closedToggle}
                       onClick={() => toggleRoom(room)}

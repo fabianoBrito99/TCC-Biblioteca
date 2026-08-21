@@ -55,8 +55,15 @@ exports.updateRoom = async (req, res) => {
   if (req.body.is_open !== undefined) { fields.push("is_open = ?"); values.push(bool(req.body.is_open)); }
   if (!fields.length) return res.status(400).json({ erro: "Nenhum campo para atualizar" });
   try {
+    const closingRoom = req.body.is_open !== undefined && !bool(req.body.is_open);
     const result = await query(pool, `UPDATE mykids_rooms SET ${fields.join(", ")} WHERE id = ?`, [...values, id]);
     if (!result.affectedRows) return res.status(404).json({ erro: "Sala não encontrada" });
+    if (closingRoom) {
+      await query(pool,
+        "DELETE FROM mykids_checkins WHERE room_id = ? AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY",
+        [id]);
+      await query(pool, "UPDATE mykids_children SET room_id = NULL WHERE room_id = ?", [id]);
+    }
     const [room] = await query(pool, "SELECT * FROM mykids_rooms WHERE id = ?", [id]);
     res.json(room);
   } catch (error) { fail(res, error); }
@@ -133,6 +140,16 @@ exports.createCheckin = async (req, res) => {
     if (!roomId) { const error = new Error("Selecione uma sala"); error.status = 400; throw error; }
     const [room] = await query(connection, "SELECT * FROM mykids_rooms WHERE id = ? AND is_open = 1 FOR UPDATE", [roomId]);
     if (!room) { const error = new Error("Check-in permitido somente em sala aberta"); error.status = 409; throw error; }
+    const [activeCheckin] = await query(connection,
+      `SELECT id, room_name_snapshot FROM mykids_checkins
+       WHERE child_id = ? AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY
+       LIMIT 1 FOR UPDATE`,
+      [childId]);
+    if (activeCheckin) {
+      const error = new Error(`Esta criança já fez check-in hoje em ${activeCheckin.room_name_snapshot}`);
+      error.status = 409;
+      throw error;
+    }
     const publicCode = crypto.randomUUID().replace(/-/g, "");
     const result = await query(connection,
       `INSERT INTO mykids_checkins
@@ -203,3 +220,4 @@ exports.updatePrinterSettings = async (req, res) => {
     res.json(settings);
   } catch (error) { fail(res, error); }
 };
+

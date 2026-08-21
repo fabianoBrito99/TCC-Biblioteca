@@ -230,6 +230,67 @@
   background: #f8fafc;
 }
 
+.roomCardExpanded {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.roomSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  border: 0;
+  padding: 4px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.roomSummaryMeta {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+}
+
+.roomSummaryMeta strong {
+  color: #0f766e;
+  font-size: 1.4rem;
+}
+
+.roomChildren {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #e5e7eb;
+  padding: 10px 4px 2px;
+}
+
+.roomChildren div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-left: 3px solid #6d28d9;
+  padding: 9px 10px;
+  background: #fff;
+}
+
+.roomChildren strong {
+  color: #111827;
+}
+
+.roomChildren span,
+.roomChildren p {
+  color: #64748b;
+}
+
 .roomCard h3,
 .personRow strong,
 .guardianHeader strong {
