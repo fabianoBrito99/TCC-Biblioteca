@@ -43,7 +43,25 @@ const fallbackPrinter: PrinterSettings = {
 };
 
 function cleanZplText(value: string | null | undefined) {
-  return String(value || "").replace(/\^|~/g, "").slice(0, 42);
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\^|~/g, "")
+    .trim();
+}
+
+function zplLine(value: string | null | undefined, max = 34) {
+  return cleanZplText(value).slice(0, max);
+}
+
+function formatLabelDate(value: string) {
+  const date = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+
+function arrivalCode(checkin: Checkin) {
+  return String(checkin.arrival_number || 0).padStart(3, "0");
 }
 
 function publicLabelUrl(checkin: Checkin) {
@@ -53,42 +71,48 @@ function publicLabelUrl(checkin: Checkin) {
 
 function childZpl(checkin: Checkin, qrContent: string) {
   const code = checkin.public_code.slice(-6).toUpperCase();
+  const date = formatLabelDate(checkin.created_at);
+  const number = arrivalCode(checkin);
   return `^XA
+^CI28
 ^PW480
 ^LL320
-^FO28,24^A0N,32,32^FD${cleanZplText(checkin.child_name_snapshot)}^FS
-^FO28,66^A0N,22,22^FD${cleanZplText(checkin.room_name_snapshot)}^FS
-^FO28,96^A0N,22,22^FDResp: ${cleanZplText(checkin.guardian_name_snapshot)}^FS
-^FO28,126^A0N,20,20^FD${new Date(checkin.created_at.replace(" ", "T")).toLocaleString("pt-BR")}^FS
-^FO28,158^BQN,2,5^FDLA,${qrContent}^FS
-^FO190,176^A0N,24,24^FDCodigo^FS
-^FO190,208^A0N,36,36^FD${code}^FS
+^FO16,30^BQN,2,5^FDLA,${qrContent}^FS
+^FO215,24^A0N,36,36^FD${zplLine(checkin.child_name_snapshot, 13).toUpperCase()}^FS
+^FO215,70^A0N,21,21^FDResp: ${zplLine(checkin.guardian_name_snapshot, 16)}^FS
+^FO215,98^A0N,21,21^FDSala: ${zplLine(checkin.room_name_snapshot, 17)}^FS
+^FO215,132^A0N,22,22^FDNumero^FS
+^FO215,154^A0N,58,58^FD${number}^FS
+^FO360,190^A0N,22,22^FD${date}^FS
+^FO20,244^A0N,22,22^FD${code}^FS
 ^XZ`;
 }
 
 function guardianZpl(checkin: Checkin, qrContent: string) {
   const code = checkin.public_code.slice(-6).toUpperCase();
+  const date = formatLabelDate(checkin.created_at);
+  const number = arrivalCode(checkin);
   return `^XA
+^CI28
 ^PW480
 ^LL320
-^FO28,24^A0N,30,30^FDResponsavel^FS
-^FO28,62^A0N,28,28^FD${cleanZplText(checkin.guardian_name_snapshot)}^FS
-^FO28,98^A0N,22,22^FDCrianca: ${cleanZplText(checkin.child_name_snapshot)}^FS
-^FO28,128^A0N,22,22^FDSala: ${cleanZplText(checkin.room_name_snapshot)}^FS
-^FO28,158^BQN,2,5^FDLA,${qrContent}^FS
-^FO190,176^A0N,24,24^FDCodigo^FS
-^FO190,208^A0N,36,36^FD${code}^FS
+^FO16,30^BQN,2,5^FDLA,${qrContent}^FS
+^FO215,20^A0N,24,24^FDResponsavel^FS
+^FO215,50^A0N,34,34^FD${zplLine(checkin.guardian_name_snapshot, 13).toUpperCase()}^FS
+^FO215,94^A0N,21,21^FDCrianca: ${zplLine(checkin.child_name_snapshot, 14)}^FS
+^FO215,122^A0N,21,21^FDSala: ${zplLine(checkin.room_name_snapshot, 17)}^FS
+^FO215,156^A0N,20,20^FDNumero da crianca^FS
+^FO215,178^A0N,46,46^FD${number}^FS
+^FO360,190^A0N,22,22^FD${date}^FS
+^FO20,244^A0N,22,22^FD${code}^FS
 ^XZ`;
 }
 
 function buildPrintJob(checkin: Checkin, mode: PrintMode) {
-  if (mode === "crianca") {
-    const qrText = `NOME:${checkin.child_name_snapshot};SALA:${checkin.room_name_snapshot};CODIGO:${checkin.public_code}`;
-    return childZpl(checkin, qrText);
-  }
-
   const url = publicLabelUrl(checkin);
-  return `${childZpl(checkin, url)}\n${guardianZpl(checkin, url)}`;
+  const child = childZpl(checkin, url);
+  if (mode === "crianca" || checkin.guardian_label_needed === false) return child;
+  return `${guardianZpl(checkin, url)}\n${child}`;
 }
 
 export default function MyKidsPage() {
@@ -103,6 +127,7 @@ export default function MyKidsPage() {
   const [printerStatus, setPrinterStatus] = useState("Zebra aguardando check-in");
   const [showNewRoomForm, setShowNewRoomForm] = useState(false);
   const [showPersonForm, setShowPersonForm] = useState(false);
+  const [pendingPrint, setPendingPrint] = useState<Checkin | null>(null);
   const [expandedRoom, setExpandedRoom] = useState<number | null>(null);
   const [expandedGuardian, setExpandedGuardian] = useState<number | null>(null);
   const [checkinSearch, setCheckinSearch] = useState("");
@@ -198,6 +223,10 @@ export default function MyKidsPage() {
   }
 
   async function toggleRoom(room: Room) {
+    if (Boolean(room.is_open)) {
+      const confirmed = window.confirm("Tem certeza que deseja fechar esta sala? Todas as criancas sairão da sala.");
+      if (!confirmed) return;
+    }
     try {
       await myKidsApi.updateRoom(room.id, { is_open: !Boolean(room.is_open) });
       if (Boolean(room.is_open)) setExpandedRoom(null);
@@ -245,11 +274,24 @@ export default function MyKidsPage() {
         child_id: childId,
         room_id: selectedRoom.id,
       });
+      setPendingPrint(checkin);
       setMessage("Check-in realizado.");
-      await printLabel(checkin, "completo");
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro no check-in");
+    }
+  }
+
+  async function checkout(checkin: Checkin) {
+    if (!checkin.id) return;
+    setError("");
+    setMessage("");
+    try {
+      await myKidsApi.checkout(checkin.id);
+      setMessage(`${checkin.child_name_snapshot} saiu da sala.`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro no check-out");
     }
   }
 
@@ -263,10 +305,11 @@ export default function MyKidsPage() {
         body: JSON.stringify({ zpl, printerName: settings.printer_name || undefined }),
       });
       if (!response.ok) throw new Error("Falha na ponte Zebra");
-      setPrinterStatus(mode === "completo" ? "2 etiquetas enviadas para a Zebra" : "Etiqueta enviada para a Zebra");
+      setPrinterStatus(mode === "completo" && checkin.guardian_label_needed !== false ? "Etiquetas enviadas para a Zebra" : "Etiqueta da crianca enviada");
     } catch {
       setPrinterStatus(`Confira se a ponte Zebra esta rodando em ${settings.bridge_url || fallbackPrinter.bridge_url}`);
     }
+    setPendingPrint(null);
   }
 
   async function detectPrinterBridge() {
@@ -274,23 +317,51 @@ export default function MyKidsPage() {
     setError("");
     try {
       const response = await fetch(healthUrl, { cache: "no-store" });
-      if (!response.ok) throw new Error("Ponte respondeu com erro");
       const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.ok === false) throw new Error(data.error || "Ponte respondeu com erro");
       const detectedPrinter = typeof data.printerName === "string" && data.printerName ? data.printerName : null;
-      setPrinter({
+      const detectedBridgeUrl = healthUrl.replace(/\/health\/?$/, "/print");
+      const detectedSettings = {
         ...(printer || fallbackPrinter),
-        bridge_url: (typeof data.printUrl === "string" && data.printUrl) || printer?.bridge_url || fallbackPrinter.bridge_url,
+        bridge_url: detectedBridgeUrl,
         printer_name: detectedPrinter,
         is_active: true,
-      });
+      };
+      const savedSettings = await myKidsApi.updatePrinter(detectedSettings);
+      setPrinter(savedSettings);
       setPrinterStatus(detectedPrinter ? `Zebra conectada: ${detectedPrinter}` : "Ponte Zebra conectada");
-    } catch {
-      setPrinterStatus(`Nao consegui conectar em ${healthUrl}`);
+    } catch (e) {
+      const detail = e instanceof Error && e.message ? `: ${e.message}` : "";
+      setPrinterStatus(`Nao consegui conectar em ${healthUrl}${detail}`);
     }
   }
 
   return (
     <main className={styles.page}>
+      {pendingPrint && (
+        <div className={styles.modalBackdrop}>
+          <section className={styles.modal}>
+            <h2>Imprimir adesivo?</h2>
+            <p>
+              Escolha o kit completo ou apenas a etiqueta da crianca. Se este responsavel ja recebeu adesivo hoje,
+              o completo imprime somente a etiqueta da crianca.
+            </p>
+            <div className={styles.printOptions}>
+              <button className={styles.primaryButton} onClick={() => printLabel(pendingPrint, "completo")}>
+                <FaPrint />
+                Completo
+              </button>
+              <button className={styles.secondaryButton} onClick={() => printLabel(pendingPrint, "crianca")}>
+                Apenas crianca
+              </button>
+              <button className={styles.linkButton} onClick={() => setPendingPrint(null)}>
+                Nao imprimir agora
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       <header className={styles.header}>
         <div>
           <span className={styles.kicker}>Ministerio infantil</span>
@@ -397,8 +468,13 @@ export default function MyKidsPage() {
                             .find((item) => item.id === room.id)
                             ?.checkins.map((checkin) => (
                               <div key={checkin.public_code}>
-                                <strong>{checkin.child_name_snapshot}</strong>
-                                <span>{checkin.guardian_name_snapshot}</span>
+                                <span>
+                                  <strong>#{String(checkin.arrival_number || 0).padStart(3, "0")} {checkin.child_name_snapshot}</strong>
+                                  <small>{checkin.guardian_name_snapshot}</small>
+                                </span>
+                                <button className={styles.secondaryButton} onClick={() => checkout(checkin)}>
+                                  Check-out
+                                </button>
                               </div>
                             ))
                         ) : (

@@ -275,6 +275,7 @@
 
 .roomChildren div {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   border-left: 3px solid #6d28d9;
@@ -282,12 +283,18 @@
   background: #fff;
 }
 
+.roomChildren div > span {
+  display: grid;
+  gap: 3px;
+}
+
 .roomChildren strong {
   color: #111827;
 }
 
 .roomChildren span,
-.roomChildren p {
+.roomChildren p,
+.roomChildren small {
   color: #64748b;
 }
 

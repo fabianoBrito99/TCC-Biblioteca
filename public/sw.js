@@ -1,7 +1,7 @@
 // Public service worker para PWA
 // Este arquivo fica em /public/sw.js
 
-const CACHE_NAME = "biblioteca-v2";
+const CACHE_NAME = "biblioteca-v3";
 const urlsToCache = [
   "/",
   "/homecards",
@@ -43,6 +43,12 @@ self.addEventListener("activate", (event) => {
 
 // Fetch event - Estratégia: rede primeiro, depois cache
 self.addEventListener("fetch", (event) => {
+  const requestUrl = new URL(event.request.url);
+
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
   // Ignorar requisições de API e outras não-cacheaveis
   if (
     event.request.method !== "GET" ||

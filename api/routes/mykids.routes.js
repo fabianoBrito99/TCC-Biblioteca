@@ -13,6 +13,7 @@ router.patch("/mykids/rooms/:id", ...adminOnly, controller.updateRoom);
 router.get("/mykids/guardians", ...adminOnly, controller.listGuardians);
 router.post("/mykids/guardians", ...adminOnly, controller.createGuardian);
 router.post("/mykids/checkins", ...adminOnly, controller.createCheckin);
+router.patch("/mykids/checkins/:id/checkout", ...adminOnly, controller.checkoutCheckin);
 router.get("/mykids/checkins/today", ...adminOnly, controller.listTodayCheckins);
 router.get("/mykids/printer-settings", ...adminOnly, controller.getPrinterSettings);
 router.patch("/mykids/printer-settings", ...adminOnly, controller.updatePrinterSettings);

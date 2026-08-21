@@ -60,7 +60,7 @@ exports.updateRoom = async (req, res) => {
     if (!result.affectedRows) return res.status(404).json({ erro: "Sala não encontrada" });
     if (closingRoom) {
       await query(pool,
-        "DELETE FROM mykids_checkins WHERE room_id = ? AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY",
+        "UPDATE mykids_checkins SET checked_out_at = COALESCE(checked_out_at, NOW()) WHERE room_id = ? AND checked_out_at IS NULL AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY",
         [id]);
       await query(pool, "UPDATE mykids_children SET room_id = NULL WHERE room_id = ?", [id]);
     }
@@ -150,14 +150,16 @@ exports.createCheckin = async (req, res) => {
       error.status = 409;
       throw error;
     }
+    const [guardianCheckin] = await query(connection,`SELECT id FROM mykids_checkins WHERE guardian_id = ? AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY LIMIT 1`,[guardianId]);
+    const [sequence] = await query(connection,`SELECT COALESCE(MAX(arrival_number), 0) + 1 AS next_number FROM mykids_checkins WHERE created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY`);
     const publicCode = crypto.randomUUID().replace(/-/g, "");
     const result = await query(connection,
       `INSERT INTO mykids_checkins
        (public_code, guardian_id, child_id, room_id, child_name_snapshot, guardian_name_snapshot,
-        guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_notes_snapshot, room_name_snapshot)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_notes_snapshot, room_name_snapshot, arrival_number)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [publicCode, guardianId, childId, roomId, child.name, child.guardian_name, child.guardian_email,
-       child.guardian_phone, child.birth_date, child.notes, room.name]);
+       child.guardian_phone, child.birth_date, child.notes, room.name, sequence.next_number]);
     await query(connection, "UPDATE mykids_children SET checkins_count = checkins_count + 1, room_id = ? WHERE id = ?", [roomId, childId]);
     await query(connection,
       `UPDATE mykids_guardians g
@@ -167,6 +169,7 @@ exports.createCheckin = async (req, res) => {
       [guardianId, childId]);
     await commit(connection);
     const [checkin] = await query(pool, "SELECT * FROM mykids_checkins WHERE id = ?", [result.insertId]);
+    checkin.guardian_label_needed = !guardianCheckin;
     res.status(201).json(checkin);
   } catch (error) {
     await rollback(connection);
@@ -176,8 +179,20 @@ exports.createCheckin = async (req, res) => {
 
 exports.listTodayCheckins = async (_req, res) => {
   try {
-    const rows = await query(pool, "SELECT * FROM mykids_checkins WHERE created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY ORDER BY created_at DESC");
+    const rows = await query(pool, "SELECT * FROM mykids_checkins WHERE checked_out_at IS NULL AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY ORDER BY arrival_number IS NULL, arrival_number ASC, created_at ASC");
     res.json(rows);
+  } catch (error) { fail(res, error); }
+};
+
+exports.checkoutCheckin = async (req, res) => {
+  const id = positiveId(req.params.id);
+  if (!id) return res.status(400).json({ erro: "Check-out invalido" });
+  try {
+    const [checkin] = await query(pool, "SELECT id, child_id FROM mykids_checkins WHERE id = ? AND checked_out_at IS NULL", [id]);
+    if (!checkin) return res.status(404).json({ erro: "Check-in ativo nao encontrado" });
+    await query(pool, "UPDATE mykids_checkins SET checked_out_at = NOW() WHERE id = ?", [id]);
+    await query(pool, "UPDATE mykids_children SET room_id = NULL WHERE id = ?", [checkin.child_id]);
+    res.json({ ok: true });
   } catch (error) { fail(res, error); }
 };
 
@@ -186,10 +201,18 @@ exports.getPublicCheckin = async (req, res) => {
   if (!code) return res.status(400).json({ erro: "Código inválido" });
   try {
     const [checkin] = await query(pool,
-      `SELECT public_code, child_name_snapshot, guardian_name_snapshot, guardian_email_snapshot,
-       guardian_phone_snapshot, child_birth_date_snapshot, child_notes_snapshot, room_name_snapshot, created_at
+      `SELECT id, public_code, guardian_id, child_id, room_id, child_name_snapshot, guardian_name_snapshot,
+       guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_notes_snapshot,
+       room_name_snapshot, arrival_number, checked_out_at, created_at
        FROM mykids_checkins WHERE public_code = ? LIMIT 1`, [code]);
     if (!checkin) return res.status(404).json({ erro: "Etiqueta não encontrada" });
+    checkin.children = await query(pool,
+      `SELECT child_id, child_name_snapshot, child_birth_date_snapshot, child_notes_snapshot,
+       room_name_snapshot, arrival_number, checked_out_at, created_at
+       FROM mykids_checkins
+       WHERE guardian_id = ? AND created_at >= DATE(?) AND created_at < DATE(?) + INTERVAL 1 DAY
+       ORDER BY arrival_number IS NULL, arrival_number ASC, created_at ASC`,
+      [checkin.guardian_id, checkin.created_at, checkin.created_at]);
     res.json(checkin);
   } catch (error) { fail(res, error); }
 };
@@ -220,4 +243,6 @@ exports.updatePrinterSettings = async (req, res) => {
     res.json(settings);
   } catch (error) { fail(res, error); }
 };
+
+
 
