@@ -3,14 +3,19 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBaby,
+  FaChild,
   FaChevronDown,
   FaDoorOpen,
+  FaEdit,
   FaHome,
+  FaMars,
   FaPeopleArrows,
   FaPlus,
   FaPrint,
   FaSearch,
+  FaUser,
   FaUserFriends,
+  FaVenus,
 } from "react-icons/fa";
 import { Checkin, Guardian, myKidsApi, PrinterSettings, Room } from "@/lib/mykids-api";
 import styles from "./page.module.css";
@@ -28,10 +33,19 @@ type ChildDraft = {
 const emptyChild = (roomId = ""): ChildDraft => ({
   name: "",
   birth_date: "",
-  gender: "",
+  gender: "M",
   notes: "",
   room_id: roomId,
 });
+
+function PersonIcon({ gender, child = false }: { gender: "M" | "F" | null; child?: boolean }) {
+  return (
+    <span className={`${styles.personIcon} ${gender === "F" ? styles.femaleIcon : gender === "M" ? styles.maleIcon : styles.neutralIcon}`}>
+      {child ? <FaChild /> : <FaUser />}
+      {gender === "F" ? <FaVenus className={styles.genderMark} /> : gender === "M" ? <FaMars className={styles.genderMark} /> : null}
+    </span>
+  );
+}
 
 const fallbackPrinter: PrinterSettings = {
   id: 0,
@@ -67,6 +81,25 @@ function arrivalCode(checkin: Checkin) {
 function publicLabelUrl(checkin: Checkin) {
   if (typeof window === "undefined") return `/mykids-etiqueta/${checkin.public_code}`;
   return `${window.location.origin}/mykids-etiqueta/${checkin.public_code}`;
+}
+
+function localBridgeUrl(configuredUrl: string | null | undefined, endpoint: "print" | "health") {
+  const fallback = `http://127.0.0.1:9123/${endpoint}`;
+  if (!configuredUrl) return fallback;
+  try {
+    const url = new URL(configuredUrl);
+    // A pagina de producao usa HTTPS. Navegadores bloqueiam HTTP para um IP da
+    // rede local, mas permitem loopback para um servico instalado nesta maquina.
+    if (typeof window !== "undefined" && window.location.protocol === "https:" && url.protocol === "http:") {
+      url.hostname = "127.0.0.1";
+    }
+    url.pathname = `/${endpoint}`;
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return fallback;
+  }
 }
 
 function childZpl(checkin: Checkin, qrContent: string) {
@@ -111,7 +144,7 @@ function guardianZpl(checkin: Checkin, qrContent: string) {
 function buildPrintJob(checkin: Checkin, mode: PrintMode) {
   const url = publicLabelUrl(checkin);
   const child = childZpl(checkin, url);
-  if (mode === "crianca" || checkin.guardian_label_needed === false) return child;
+  if (mode === "crianca") return child;
   return `${guardianZpl(checkin, url)}\n${child}`;
 }
 
@@ -128,6 +161,8 @@ export default function MyKidsPage() {
   const [showNewRoomForm, setShowNewRoomForm] = useState(false);
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [pendingPrint, setPendingPrint] = useState<Checkin | null>(null);
+  const [showPrinterSetup, setShowPrinterSetup] = useState(false);
+  const [editingGuardian, setEditingGuardian] = useState<Guardian | null>(null);
   const [expandedRoom, setExpandedRoom] = useState<number | null>(null);
   const [expandedGuardian, setExpandedGuardian] = useState<number | null>(null);
   const [checkinSearch, setCheckinSearch] = useState("");
@@ -137,6 +172,7 @@ export default function MyKidsPage() {
     name: "",
     email: "",
     phone: "",
+    gender: "M" as "M" | "F",
     status: "visitante" as Guardian["status"],
     children: [emptyChild()],
   });
@@ -165,6 +201,63 @@ export default function MyKidsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const refreshPrinterStatus = async () => {
+      try {
+        const current = await myKidsApi.printer();
+        if (!current) return;
+        setPrinter(current);
+        setPrinterStatus(current.bridge_online
+          ? "Notebook conectado a impressora"
+          : "Nenhum notebook conectado a impressora");
+      } catch {
+        setPrinterStatus("Nao foi possivel consultar a impressora");
+      }
+    };
+    void refreshPrinterStatus();
+    const interval = window.setInterval(refreshPrinterStatus, 5000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 720px)").matches) return;
+    let busy = false;
+    let stopped = false;
+    const relayPrintJobs = async () => {
+      if (busy || stopped) return;
+      busy = true;
+      try {
+        const healthResponse = await fetch("http://127.0.0.1:9123/health", { cache: "no-store" });
+        const health = await healthResponse.json().catch(() => ({}));
+        if (!healthResponse.ok || health.ok === false) return;
+        const job = await myKidsApi.claimPrint();
+        if (!job) return;
+        try {
+          const printResponse = await fetch("http://127.0.0.1:9123/print", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ zpl: job.zpl, printerName: job.printer_name || undefined }),
+          });
+          const result = await printResponse.json().catch(() => ({}));
+          if (!printResponse.ok || result.ok === false) throw new Error(result.error || "Falha na ponte Zebra");
+          await myKidsApi.completePrint(job.id, { ok: true });
+          setPrinterStatus("Impressao recebida do celular e enviada para a Zebra");
+        } catch (e) {
+          const detail = e instanceof Error ? e.message : "Falha ao imprimir";
+          await myKidsApi.completePrint(job.id, { ok: false, error: detail });
+          setPrinterStatus(`Falha ao imprimir chamada recebida: ${detail}`);
+        }
+      } catch {
+        // Notebook sem ponte local: nao reivindica trabalhos da fila.
+      } finally {
+        busy = false;
+      }
+    };
+    void relayPrintJobs();
+    const interval = window.setInterval(relayPrintJobs, 1000);
+    return () => { stopped = true; window.clearInterval(interval); };
+  }, []);
 
   const openRooms = rooms.filter((room) => Boolean(room.is_open));
   const people = useMemo(
@@ -252,6 +345,7 @@ export default function MyKidsPage() {
         name: "",
         email: "",
         phone: "",
+        gender: "M",
         status: "visitante",
         children: [emptyChild(rooms[0]?.id ? String(rooms[0].id) : "")],
       });
@@ -282,6 +376,46 @@ export default function MyKidsPage() {
     }
   }
 
+  async function makeFamilyCheckin(guardian: Guardian) {
+    const available = guardian.children.filter((child) => !today.some((item) => item.child_id === child.id));
+    if (!openRooms.length || !available.length) return;
+    setError("");
+    try {
+      const created: Checkin[] = [];
+      for (const child of available) {
+        const room = openRooms.find((item) => item.id === child.room_id) || openRooms[0];
+        created.push(await myKidsApi.createCheckin({ guardian_id: guardian.id, child_id: child.id, room_id: room.id }));
+      }
+      for (let index = 0; index < created.length; index += 1) {
+        const checkin = created[index];
+        await myKidsApi.print({
+          zpl: buildPrintJob(checkin, index === 0 ? "completo" : "crianca"),
+          printer_name: printer?.printer_name || undefined,
+        });
+      }
+      setMessage(`${created.length} crianca(s) em check-in.`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro no check-in da familia");
+      await load();
+    }
+  }
+
+  async function savePersonEdits(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingGuardian) return;
+    setError("");
+    try {
+      await myKidsApi.updateGuardian(editingGuardian.id, editingGuardian);
+      await Promise.all(editingGuardian.children.map((child) => myKidsApi.updateChild(child.id, child)));
+      setEditingGuardian(null);
+      setMessage("Dados atualizados.");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao atualizar dados");
+    }
+  }
+
   async function checkout(checkin: Checkin) {
     if (!checkin.id) return;
     setError("");
@@ -299,52 +433,124 @@ export default function MyKidsPage() {
     const settings = printer || fallbackPrinter;
     const zpl = buildPrintJob(checkin, mode);
     try {
-      const response = await fetch(settings.bridge_url || fallbackPrinter.bridge_url || "", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zpl, printerName: settings.printer_name || undefined }),
-      });
-      if (!response.ok) throw new Error("Falha na ponte Zebra");
-      setPrinterStatus(mode === "completo" && checkin.guardian_label_needed !== false ? "Etiquetas enviadas para a Zebra" : "Etiqueta da crianca enviada");
-    } catch {
-      setPrinterStatus(`Confira se a ponte Zebra esta rodando em ${settings.bridge_url || fallbackPrinter.bridge_url}`);
+      await myKidsApi.print({ zpl, printer_name: settings.printer_name || undefined });
+      setPrinterStatus(mode === "completo" ? "Etiquetas do responsavel e da crianca enviadas" : "Etiqueta da crianca enviada");
+    } catch (e) {
+      const detail = e instanceof Error && e.message ? ` (${e.message})` : "";
+      setPrinterStatus(`Nao foi possivel enviar a impressao${detail}`);
     }
     setPendingPrint(null);
   }
 
   async function detectPrinterBridge() {
-    const healthUrl = (printer?.bridge_url || fallbackPrinter.bridge_url || "").replace(/\/print\/?$/, "/health");
+    let latestPrinter = printer;
+    try {
+      latestPrinter = await myKidsApi.printer();
+      if (latestPrinter) setPrinter(latestPrinter);
+    } catch {
+      // A deteccao local ainda pode funcionar mesmo se a consulta de status falhar.
+    }
+    const healthUrl = localBridgeUrl(latestPrinter?.bridge_url || fallbackPrinter.bridge_url, "health");
     setError("");
     try {
       const response = await fetch(healthUrl, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data.ok === false) throw new Error(data.error || "Ponte respondeu com erro");
       const detectedPrinter = typeof data.printerName === "string" && data.printerName ? data.printerName : null;
-      const detectedBridgeUrl = healthUrl.replace(/\/health\/?$/, "/print");
+      const detectedBridgeUrl = localBridgeUrl(healthUrl, "print");
       const detectedSettings = {
-        ...(printer || fallbackPrinter),
+        ...(latestPrinter || fallbackPrinter),
         bridge_url: detectedBridgeUrl,
         printer_name: detectedPrinter,
         is_active: true,
       };
       const savedSettings = await myKidsApi.updatePrinter(detectedSettings);
       setPrinter(savedSettings);
+      setShowPrinterSetup(false);
       setPrinterStatus(detectedPrinter ? `Zebra conectada: ${detectedPrinter}` : "Ponte Zebra conectada");
     } catch (e) {
+      if (latestPrinter?.bridge_online) {
+        setPrinterStatus("Notebook da Zebra conectado e aguardando impressoes");
+        setShowPrinterSetup(false);
+        return;
+      }
       const detail = e instanceof Error && e.message ? `: ${e.message}` : "";
       setPrinterStatus(`Nao consegui conectar em ${healthUrl}${detail}`);
+      setShowPrinterSetup(true);
+    }
+  }
+
+  async function checkRemotePrinter() {
+    try {
+      const current = await myKidsApi.printer();
+      if (current) setPrinter(current);
+      setPrinterStatus(current?.bridge_online
+        ? "Notebook conectado a impressora - impressoes liberadas"
+        : "Nenhum notebook conectado - ligue a ponte antes do check-in");
+    } catch {
+      setPrinterStatus("Nao foi possivel consultar o notebook da impressora");
     }
   }
 
   return (
     <main className={styles.page}>
+      {showPrinterSetup && (
+        <div className={styles.modalBackdrop}>
+          <section className={styles.modal}>
+            <h2>Configurar impressora Zebra</h2>
+            <p>A ponte ainda não está instalada neste computador. Faça a configuração uma única vez:</p>
+            <ol className={styles.setupSteps}>
+              <li>Baixe e extraia o instalador.</li>
+              <li>Execute <strong>instalar_zebra.bat</strong> e confirme a janela do Windows.</li>
+              <li>Volte aqui e clique em “Testar novamente”.</li>
+            </ol>
+            {printer?.bridge_token && (
+              <p>Codigo de pareamento: <strong className={styles.pairingCode}>{printer.bridge_token}</strong></p>
+            )}
+            <div className={styles.printOptions}>
+              <a className={styles.primaryButton} href="/downloads/MyKids-Zebra.zip" download>
+                Baixar instalador Zebra
+              </a>
+              <button className={styles.secondaryButton} onClick={detectPrinterBridge}>Testar novamente</button>
+              <button className={styles.linkButton} onClick={() => setShowPrinterSetup(false)}>Fechar</button>
+            </div>
+          </section>
+        </div>
+      )}
+      {editingGuardian && (
+        <div className={styles.modalBackdrop}>
+          <form className={`${styles.modal} ${styles.editModal}`} onSubmit={savePersonEdits}>
+            <h2>Editar familia</h2>
+            <div className={styles.formGrid}>
+              <label>Responsavel<input required value={editingGuardian.name} onChange={(e) => setEditingGuardian({ ...editingGuardian, name: e.target.value })} /></label>
+              <label>Sexo<select required value={editingGuardian.gender || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, gender: e.target.value as "M" | "F" })}><option value="">Selecione</option><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
+              <label>E-mail<input type="email" value={editingGuardian.email || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, email: e.target.value })} /></label>
+              <label>Telefone<input value={editingGuardian.phone || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, phone: e.target.value })} /></label>
+              <label>Status<select value={editingGuardian.status} onChange={(e) => setEditingGuardian({ ...editingGuardian, status: e.target.value as Guardian["status"] })}><option value="visitante">Visitante</option><option value="familia">Familia</option></select></label>
+            </div>
+            {editingGuardian.children.map((child, index) => (
+              <div className={styles.childDraftCard} key={child.id}>
+                <strong>Crianca {index + 1}</strong>
+                <div className={styles.formGrid}>
+                  <label>Nome<input required value={child.name} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, name: e.target.value } : item) })} /></label>
+                  <label>Sexo<select required value={child.gender || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, gender: e.target.value as "M" | "F" } : item) })}><option value="">Selecione</option><option value="M">Masculino</option><option value="F">Feminino</option></select></label>
+                  <label>Nascimento<input type="date" value={child.birth_date ? String(child.birth_date).slice(0, 10) : ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, birth_date: e.target.value || null } : item) })} /></label>
+                  <label>Sala<select value={child.room_id || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, room_id: e.target.value ? Number(e.target.value) : null } : item) })}><option value="">Sem sala</option>{rooms.map((room) => <option key={room.id} value={room.id}>{room.name}</option>)}</select></label>
+                </div>
+                <label>Observacoes<textarea value={child.notes || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, notes: e.target.value } : item) })} /></label>
+              </div>
+            ))}
+            <div className={styles.modalActions}><button type="button" className={styles.secondaryButton} onClick={() => setEditingGuardian(null)}>Cancelar</button><button className={styles.primaryButton}>Salvar alteracoes</button></div>
+          </form>
+        </div>
+      )}
       {pendingPrint && (
         <div className={styles.modalBackdrop}>
           <section className={styles.modal}>
             <h2>Imprimir adesivo?</h2>
             <p>
-              Escolha o kit completo ou apenas a etiqueta da crianca. Se este responsavel ja recebeu adesivo hoje,
-              o completo imprime somente a etiqueta da crianca.
+              Escolha o kit completo para imprimir uma etiqueta do responsavel e outra da crianca,
+              ou imprima somente a etiqueta da crianca.
             </p>
             <div className={styles.printOptions}>
               <button className={styles.primaryButton} onClick={() => printLabel(pendingPrint, "completo")}>
@@ -367,9 +573,15 @@ export default function MyKidsPage() {
           <span className={styles.kicker}>Ministerio infantil</span>
           <h1>MyKids</h1>
         </div>
-        <button className={styles.printButton} onClick={detectPrinterBridge}>
+        <button className={`${styles.printButton} ${styles.desktopPrinterButton} ${printer?.bridge_online ? styles.printerOnline : ""}`} onClick={detectPrinterBridge}>
+          <span className={styles.statusDot} />
           <FaPrint />
           Zebra
+        </button>
+        <button className={`${styles.printButton} ${styles.mobilePrinterButton} ${printer?.bridge_online ? styles.printerOnline : ""}`} onClick={checkRemotePrinter}>
+          <span className={styles.statusDot} />
+          <FaPrint />
+          {printer?.bridge_online ? "Impressora online" : "Ver impressora"}
         </button>
       </header>
 
@@ -543,19 +755,19 @@ export default function MyKidsPage() {
                 <div className={styles.peopleList}>
                   {filteredPeople.map(({ guardian, child }) => (
                     <article key={child.id} className={styles.personRow}>
-                      <div>
-                        <strong>{child.name}</strong>
-                        <span>
+                      <div className={styles.personIdentity}>
+                        <PersonIcon gender={child.gender} child />
+                        <span><strong>{child.name}</strong><small>
                           {guardian.name} - {guardian.status} - {child.checkins_count} check-ins
-                        </span>
+                        </small></span>
                       </div>
                       <button
                         className={styles.primaryButton}
-                        disabled={!openRooms.length}
+                        disabled={!openRooms.length || today.some((item) => item.child_id === child.id)}
                         onClick={() => makeCheckin(guardian.id, child.id, child.room_id)}
                       >
                         <FaPrint />
-                        Check-in
+                        {today.some((item) => item.child_id === child.id) ? "Na sala" : "Check-in"}
                       </button>
                     </article>
                   ))}
@@ -606,6 +818,13 @@ export default function MyKidsPage() {
                           >
                             <option value="visitante">Visitante</option>
                             <option value="familia">Familia</option>
+                          </select>
+                        </label>
+                        <label>
+                          Sexo do responsavel *
+                          <select required value={guardianForm.gender} onChange={(event) => setGuardianForm({ ...guardianForm, gender: event.target.value as "M" | "F" })}>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
                           </select>
                         </label>
                         <label>
@@ -680,11 +899,14 @@ export default function MyKidsPage() {
                                 />
                               </label>
                               <label>
-                                Sexo
-                                <input
+                                Sexo *
+                                <select required
                                   value={child.gender}
                                   onChange={(event) => updateChildDraft(index, { gender: event.target.value })}
-                                />
+                                >
+                                  <option value="M">Masculino</option>
+                                  <option value="F">Feminino</option>
+                                </select>
                               </label>
                               <label>
                                 Sala
@@ -722,26 +944,22 @@ export default function MyKidsPage() {
                 <div className={styles.peopleList}>
                   {filteredGuardians.map((guardian) => (
                     <article key={guardian.id} className={styles.guardianCard}>
-                      <button
-                        className={styles.guardianHeader}
-                        onClick={() =>
-                          setExpandedGuardian((current) => (current === guardian.id ? null : guardian.id))
-                        }
-                      >
-                        <div>
-                          <strong>{guardian.name}</strong>
-                          <span>{guardian.status} - {guardian.children.length} crianca(s)</span>
-                        </div>
-                        <FaChevronDown className={expandedGuardian === guardian.id ? styles.chevronOpen : ""} />
-                      </button>
+                      <div className={styles.guardianHeader}>
+                        <button className={styles.guardianExpand} onClick={() => setExpandedGuardian((current) => (current === guardian.id ? null : guardian.id))}>
+                          <PersonIcon gender={guardian.gender} />
+                          <span><strong>{guardian.name}</strong><small>{guardian.status} - {guardian.children.length} crianca(s)</small></span>
+                          <FaChevronDown className={expandedGuardian === guardian.id ? styles.chevronOpen : ""} />
+                        </button>
+                        <button className={styles.iconAction} title="Editar familia" onClick={() => setEditingGuardian(structuredClone(guardian))}><FaEdit /></button>
+                      </div>
                       {expandedGuardian === guardian.id && (
                         <div className={styles.childList}>
+                          <button className={styles.primaryButton} disabled={!openRooms.length || guardian.children.every((child) => today.some((item) => item.child_id === child.id))} onClick={() => makeFamilyCheckin(guardian)}>Check-in de todos</button>
                           {guardian.children.map((child) => (
-                            <div key={child.id}>
-                              <strong>{child.name}</strong>
-                              <span>
-                                {child.checkins_count} check-ins - {child.room_name || "Sem sala"}
-                              </span>
+                            <div key={child.id} className={styles.childPersonRow}>
+                              <PersonIcon gender={child.gender} child />
+                              <span><strong>{child.name}</strong><small>{child.checkins_count} check-ins - {child.room_name || "Sem sala"}</small></span>
+                              <button className={styles.secondaryButton} disabled={!openRooms.length || today.some((item) => item.child_id === child.id)} onClick={() => makeCheckin(guardian.id, child.id, child.room_id)}>{today.some((item) => item.child_id === child.id) ? "Na sala" : "Check-in"}</button>
                             </div>
                           ))}
                         </div>

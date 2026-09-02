@@ -17,6 +17,7 @@ const positiveId = (value) => {
   return Number.isInteger(id) && id > 0 ? id : null;
 };
 const bool = (value) => value === true || value === 1 || value === "1" || value === "true";
+const gender = (value) => ["M", "F"].includes(String(value || "").toUpperCase()) ? String(value).toUpperCase() : null;
 const validDate = (value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(String(value));
 
 function fail(res, error) {
@@ -87,11 +88,12 @@ exports.listGuardians = async (req, res) => {
 
 exports.createGuardian = async (req, res) => {
   const name = text(req.body.name, 160);
+  const guardianGender = gender(req.body.gender);
   const status = req.body.status || "visitante";
   const children = Array.isArray(req.body.children) ? req.body.children : [];
-  if (!name) return res.status(400).json({ erro: "Nome do responsável é obrigatório" });
+  if (!name || !guardianGender) return res.status(400).json({ erro: "Nome e sexo do responsável são obrigatórios" });
   if (!["visitante", "familia"].includes(status)) return res.status(400).json({ erro: "status inválido" });
-  if (!children.length || children.some((child) => !text(child.name, 160) || !validDate(child.birth_date))) {
+  if (!children.length || children.some((child) => !text(child.name, 160) || !gender(child.gender) || !validDate(child.birth_date))) {
     return res.status(400).json({ erro: "Informe ao menos uma criança com dados válidos" });
   }
   const connection = await getConnection().catch((error) => { fail(res, error); return null; });
@@ -99,8 +101,8 @@ exports.createGuardian = async (req, res) => {
   try {
     await begin(connection);
     const guardianResult = await query(connection,
-      "INSERT INTO mykids_guardians (name, email, phone, status) VALUES (?, ?, ?, ?)",
-      [name, text(req.body.email, 254), text(req.body.phone, 30), status]);
+      "INSERT INTO mykids_guardians (name, email, phone, gender, status) VALUES (?, ?, ?, ?, ?)",
+      [name, text(req.body.email, 254), text(req.body.phone, 30), guardianGender, status]);
     for (const child of children) {
       const roomId = positiveId(child.room_id);
       if (roomId) {
@@ -109,7 +111,7 @@ exports.createGuardian = async (req, res) => {
       }
       await query(connection,
         "INSERT INTO mykids_children (guardian_id, name, birth_date, gender, notes, room_id) VALUES (?, ?, ?, ?, ?, ?)",
-        [guardianResult.insertId, text(child.name, 160), child.birth_date || null, text(child.gender, 30), text(child.notes, 65535), roomId]);
+        [guardianResult.insertId, text(child.name, 160), child.birth_date || null, gender(child.gender), text(child.notes, 65535), roomId]);
     }
     await commit(connection);
     req.query.search = String(guardianResult.insertId);
@@ -120,6 +122,47 @@ exports.createGuardian = async (req, res) => {
     await rollback(connection);
     if (error.status) res.status(error.status).json({ erro: error.message }); else fail(res, error);
   } finally { connection.release(); }
+};
+
+exports.updateGuardian = async (req, res) => {
+  const id = positiveId(req.params.id);
+  if (!id) return res.status(400).json({ erro: "Responsavel invalido" });
+  const name = text(req.body.name, 160);
+  const guardianGender = gender(req.body.gender);
+  const status = req.body.status;
+  if (!name || !guardianGender || !["visitante", "familia"].includes(status)) {
+    return res.status(400).json({ erro: "Dados do responsavel invalidos" });
+  }
+  try {
+    const result = await query(pool,
+      "UPDATE mykids_guardians SET name=?, email=?, phone=?, gender=?, status=? WHERE id=?",
+      [name, text(req.body.email, 254), text(req.body.phone, 30), guardianGender, status, id]);
+    if (!result.affectedRows) return res.status(404).json({ erro: "Responsavel nao encontrado" });
+    const [guardian] = await query(pool, "SELECT * FROM mykids_guardians WHERE id=?", [id]);
+    res.json(guardian);
+  } catch (error) { fail(res, error); }
+};
+
+exports.updateChild = async (req, res) => {
+  const id = positiveId(req.params.id);
+  const name = text(req.body.name, 160);
+  const childGender = gender(req.body.gender);
+  if (!id || !name || !childGender || !validDate(req.body.birth_date)) {
+    return res.status(400).json({ erro: "Dados da crianca invalidos" });
+  }
+  const roomId = positiveId(req.body.room_id);
+  try {
+    if (roomId) {
+      const [room] = await query(pool, "SELECT id FROM mykids_rooms WHERE id=?", [roomId]);
+      if (!room) return res.status(400).json({ erro: "Sala nao encontrada" });
+    }
+    const result = await query(pool,
+      "UPDATE mykids_children SET name=?, birth_date=?, gender=?, notes=?, room_id=? WHERE id=?",
+      [name, req.body.birth_date || null, childGender, text(req.body.notes, 65535), roomId, id]);
+    if (!result.affectedRows) return res.status(404).json({ erro: "Crianca nao encontrada" });
+    const [child] = await query(pool, "SELECT * FROM mykids_children WHERE id=?", [id]);
+    res.json(child);
+  } catch (error) { fail(res, error); }
 };
 
 exports.createCheckin = async (req, res) => {
@@ -142,7 +185,8 @@ exports.createCheckin = async (req, res) => {
     if (!room) { const error = new Error("Check-in permitido somente em sala aberta"); error.status = 409; throw error; }
     const [activeCheckin] = await query(connection,
       `SELECT id, room_name_snapshot FROM mykids_checkins
-       WHERE child_id = ? AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY
+       WHERE child_id = ? AND checked_out_at IS NULL
+         AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY
        LIMIT 1 FOR UPDATE`,
       [childId]);
     if (activeCheckin) {
@@ -187,13 +231,24 @@ exports.listTodayCheckins = async (_req, res) => {
 exports.checkoutCheckin = async (req, res) => {
   const id = positiveId(req.params.id);
   if (!id) return res.status(400).json({ erro: "Check-out invalido" });
+  const connection = await getConnection().catch((error) => { fail(res, error); return null; });
+  if (!connection) return;
   try {
-    const [checkin] = await query(pool, "SELECT id, child_id FROM mykids_checkins WHERE id = ? AND checked_out_at IS NULL", [id]);
-    if (!checkin) return res.status(404).json({ erro: "Check-in ativo nao encontrado" });
-    await query(pool, "UPDATE mykids_checkins SET checked_out_at = NOW() WHERE id = ?", [id]);
-    await query(pool, "UPDATE mykids_children SET room_id = NULL WHERE id = ?", [checkin.child_id]);
+    await begin(connection);
+    const [checkin] = await query(connection,
+      "SELECT id, child_id FROM mykids_checkins WHERE id = ? AND checked_out_at IS NULL FOR UPDATE", [id]);
+    if (!checkin) {
+      await rollback(connection);
+      return res.status(404).json({ erro: "Check-in ativo nao encontrado" });
+    }
+    await query(connection, "UPDATE mykids_checkins SET checked_out_at = NOW() WHERE id = ?", [id]);
+    await query(connection, "UPDATE mykids_children SET room_id = NULL WHERE id = ?", [checkin.child_id]);
+    await commit(connection);
     res.json({ ok: true });
-  } catch (error) { fail(res, error); }
+  } catch (error) {
+    await rollback(connection);
+    fail(res, error);
+  } finally { connection.release(); }
 };
 
 exports.getPublicCheckin = async (req, res) => {
@@ -219,7 +274,13 @@ exports.getPublicCheckin = async (req, res) => {
 
 exports.getPrinterSettings = async (_req, res) => {
   try {
-    const [settings] = await query(pool, "SELECT * FROM mykids_printer_settings ORDER BY id LIMIT 1");
+    let [settings] = await query(pool, "SELECT * FROM mykids_printer_settings ORDER BY id LIMIT 1");
+    if (settings && !settings.bridge_token) {
+      const token = crypto.randomBytes(24).toString("hex");
+      await query(pool, "UPDATE mykids_printer_settings SET bridge_token = ? WHERE id = ?", [token, settings.id]);
+      settings = { ...settings, bridge_token: token };
+    }
+    if (settings) settings.bridge_online = Boolean(settings.bridge_last_seen_at && new Date(settings.bridge_last_seen_at).getTime() > Date.now() - 15000);
     res.json(settings || null);
   } catch (error) { fail(res, error); }
 };
@@ -241,6 +302,60 @@ exports.updatePrinterSettings = async (req, res) => {
     }
     const [settings] = await query(pool, "SELECT * FROM mykids_printer_settings ORDER BY id LIMIT 1");
     res.json(settings);
+  } catch (error) { fail(res, error); }
+};
+
+exports.createPrintJob = async (req, res) => {
+  const zpl = typeof req.body.zpl === "string" ? req.body.zpl : "";
+  if (!zpl.trim() || zpl.length > 1024 * 1024) return res.status(400).json({ erro: "ZPL invalido" });
+  try {
+    const result = await query(pool,
+      "INSERT INTO mykids_print_jobs (zpl, printer_name) VALUES (?, ?)",
+      [zpl, text(req.body.printer_name, 160)]);
+    res.status(202).json({ ok: true, job_id: result.insertId });
+  } catch (error) { fail(res, error); }
+};
+
+function validBridgeToken(req, storedToken) {
+  const supplied = String(req.headers["x-bridge-token"] || "");
+  if (!storedToken || supplied.length !== storedToken.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(storedToken));
+}
+
+exports.claimPrintJob = async (req, res) => {
+  const connection = await getConnection().catch(() => null);
+  if (!connection) return res.status(503).json({ erro: "Banco indisponivel" });
+  try {
+    const [settings] = await query(connection, "SELECT bridge_token FROM mykids_printer_settings ORDER BY id LIMIT 1");
+    if (!req.trustedAdminBridge && !validBridgeToken(req, settings?.bridge_token)) return res.status(401).json({ erro: "Ponte nao autorizada" });
+    await query(connection, "UPDATE mykids_printer_settings SET bridge_last_seen_at = NOW() ORDER BY id LIMIT 1");
+    await begin(connection);
+    const [job] = await query(connection,
+      "SELECT id, zpl, printer_name FROM mykids_print_jobs WHERE status = 'pending' ORDER BY created_at, id LIMIT 1 FOR UPDATE");
+    if (!job) {
+      await commit(connection);
+      return res.status(204).end();
+    }
+    await query(connection, "UPDATE mykids_print_jobs SET status = 'printing', claimed_at = NOW() WHERE id = ?", [job.id]);
+    await commit(connection);
+    res.json(job);
+  } catch (error) {
+    await rollback(connection);
+    fail(res, error);
+  } finally { connection.release(); }
+};
+
+exports.completePrintJob = async (req, res) => {
+  const id = positiveId(req.params.id);
+  if (!id) return res.status(400).json({ erro: "Trabalho invalido" });
+  try {
+    const [settings] = await query(pool, "SELECT bridge_token FROM mykids_printer_settings ORDER BY id LIMIT 1");
+    if (!req.trustedAdminBridge && !validBridgeToken(req, settings?.bridge_token)) return res.status(401).json({ erro: "Ponte nao autorizada" });
+    const succeeded = req.body.ok === true;
+    await query(pool,
+      "UPDATE mykids_print_jobs SET status = ?, error_message = ?, completed_at = NOW() WHERE id = ? AND status = 'printing'",
+      [succeeded ? "printed" : "failed", succeeded ? null : text(req.body.error, 500), id]);
+    res.json({ ok: true });
   } catch (error) { fail(res, error); }
 };
 

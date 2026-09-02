@@ -46,8 +46,7 @@ const isLocalOrigin = (origin) =>
 const allowNoOriginRequests =
   process.env.ALLOW_NO_ORIGIN_REQUESTS === "true" || process.env.NODE_ENV !== "production";
 
-app.use(
-  cors({
+const corsMiddleware = cors({
     origin(origin, callback) {
       if (!origin && allowNoOriginRequests) return callback(null, true);
       if (origin && (isLocalOrigin(origin) || allowedOrigins.includes(origin))) {
@@ -56,10 +55,15 @@ app.use(
       return callback(new Error("Origem nao permitida"));
     },
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Bridge-Token"],
     credentials: false,
-  })
-);
+  });
+
+app.use((req, res, next) => {
+  const isNativePrintBridge = !req.headers.origin && req.path.startsWith("/api/public/mykids/print-jobs/");
+  if (isNativePrintBridge) return next();
+  return corsMiddleware(req, res, next);
+});
 
 app.use(securityHeaders);
 app.use(
