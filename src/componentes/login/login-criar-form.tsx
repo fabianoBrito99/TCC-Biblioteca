@@ -25,9 +25,24 @@ function avaliarSenha(pwd: string) {
   return { forte, regras };
 }
 
-const FOTO_MAX_BYTES = 350 * 1024;
+const FOTO_MAX_BYTES = 300 * 1024;
 const FOTO_MAX_DIM = 1024;
 const LIMITE_FOTO_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+function formatTelefoneBrasileiro(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "";
+  if (digits.length <= 2) return `(${digits}`;
+
+  const ddd = digits.slice(0, 2);
+  const nonoDigito = digits.slice(2, 3);
+  const primeiroBloco = digits.slice(3, 7);
+  const segundoBloco = digits.slice(7, 11);
+
+  return `(${ddd}) ${nonoDigito}${
+    primeiroBloco ? ` ${primeiroBloco}` : ""
+  }${segundoBloco ? `-${segundoBloco}` : ""}`;
+}
 
 const loadImageFromFile = (file: File): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -68,31 +83,40 @@ async function compressFotoPerfilToDataUrl(file: File): Promise<string> {
     1,
     FOTO_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight)
   );
-  const width = Math.max(1, Math.round(img.naturalWidth * scale));
-  const height = Math.max(1, Math.round(img.naturalHeight * scale));
+  let width = Math.max(1, Math.round(img.naturalWidth * scale));
+  let height = Math.max(1, Math.round(img.naturalHeight * scale));
 
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  let compressedBlob: Blob | null = null;
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Falha ao preparar compressao da imagem.");
+  for (let resizeAttempt = 0; resizeAttempt < 7; resizeAttempt += 1) {
+    canvas.width = width;
+    canvas.height = height;
 
-  ctx.drawImage(img, 0, 0, width, height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Falha ao preparar compressao da imagem.");
+    ctx.drawImage(img, 0, 0, width, height);
 
-  let quality = 0.82;
-  let bestBlob = await canvasToBlob(canvas, quality);
+    for (let quality = 0.82; quality >= 0.34; quality -= 0.08) {
+      compressedBlob = await canvasToBlob(canvas, quality);
+      if (compressedBlob.size <= FOTO_MAX_BYTES) break;
+    }
 
-  while (bestBlob.size > FOTO_MAX_BYTES && quality >= 0.45) {
-    quality -= 0.08;
-    bestBlob = await canvasToBlob(canvas, quality);
+    if (compressedBlob && compressedBlob.size <= FOTO_MAX_BYTES) break;
+    width = Math.max(1, Math.round(width * 0.8));
+    height = Math.max(1, Math.round(height * 0.8));
   }
+
+  if (!compressedBlob || compressedBlob.size > FOTO_MAX_BYTES) {
+    throw new Error("Nao foi possivel reduzir a foto para envio.");
+  }
+  const finalBlob = compressedBlob;
 
   return await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
     reader.onerror = () => reject(new Error("Falha ao gerar base64 da imagem."));
-    reader.readAsDataURL(bestBlob);
+    reader.readAsDataURL(finalBlob);
   });
 }
 
@@ -119,6 +143,7 @@ function PasswordField({
         type={visible ? "text" : "password"}
         value={value}
         onChange={onChange}
+        autoComplete="new-password"
       />
       <button
         type="button"
@@ -179,6 +204,10 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
     [password, confirmPassword]
   );
   const emailValido = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
+  const telefoneValido = useMemo(
+    () => /^\(\d{2}\) 9 \d{4}-\d{4}$/.test(telefone),
+    [telefone]
+  );
 
   const usuarioValido = useMemo(
     () =>
@@ -204,9 +233,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
   const demaisDadosValidos = useMemo(
     () =>
       dataNascimento.trim().length > 0 &&
-      telefone.trim().length > 0 &&
+      telefoneValido &&
       sexo.trim().length > 0 &&
-      !!fotoBase64 &&
       !processandoFoto &&
       !erroFotoLimite &&
       aceitouTermos,
@@ -214,10 +242,9 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
       aceitouTermos,
       dataNascimento,
       erroFotoLimite,
-      fotoBase64,
       processandoFoto,
       sexo,
-      telefone,
+      telefoneValido,
     ]
   );
 
@@ -321,35 +348,34 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome_login: nomeLogin,
-          email,
+          email: email.trim().toLowerCase(),
           senha: password,
-          telefone,
+          telefone: telefone.trim(),
           data_nascimento: dataNascimento,
-          foto_usuario: fotoBase64,
+          foto_usuario: fotoBase64 || null,
           igreja_local: igrejaLocal,
           sexo,
-          cep,
-          rua,
-          numero,
-          bairro,
-          cidade,
-          estado,
+          cep: cep.trim(),
+          rua: rua.trim(),
+          numero: numero.trim(),
+          bairro: bairro.trim(),
+          cidade: cidade.trim(),
+          estado: estado.trim(),
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (data?.erro) {
-        alert(data.erro);
-        return;
+      if (!response.ok) {
+        throw new Error(data?.erro || "Nao foi possivel concluir o cadastro.");
       }
 
       localStorage.removeItem("token");
 
       alert("Usuario cadastrado com sucesso!");
       window.location.assign("/login");
-    } catch {
-      alert("Erro ao cadastrar usuario. Tente novamente.");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Erro ao cadastrar usuario. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -421,6 +447,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
+              maxLength={120}
+              autoComplete="given-name"
             />
             <Input
               label="Sobrenome"
@@ -428,6 +456,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={sobrenome}
               onChange={(e) => setSobrenome(e.target.value)}
+              maxLength={120}
+              autoComplete="family-name"
             />
             <Input
               label="Email"
@@ -435,6 +465,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              maxLength={254}
+              autoComplete="email"
             />
 
             <PasswordField
@@ -498,6 +530,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               value={cep}
               onChange={(e) => setCep(e.target.value)}
               onBlur={handleCepBlur}
+              maxLength={15}
+              autoComplete="postal-code"
             />
             <Input
               label="Rua"
@@ -505,6 +539,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={rua}
               onChange={(e) => setRua(e.target.value)}
+              maxLength={160}
+              autoComplete="street-address"
             />
             <Input
               label="Bairro"
@@ -512,6 +548,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={bairro}
               onChange={(e) => setBairro(e.target.value)}
+              maxLength={120}
             />
             <Input
               label="Cidade"
@@ -519,6 +556,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={cidade}
               onChange={(e) => setCidade(e.target.value)}
+              maxLength={120}
+              autoComplete="address-level2"
             />
             <Input
               label="Estado"
@@ -526,6 +565,8 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={estado}
               onChange={(e) => setEstado(e.target.value)}
+              maxLength={30}
+              autoComplete="address-level1"
             />
             <Input
               label="Numero"
@@ -533,6 +574,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               type="text"
               value={numero}
               onChange={(e) => setNumero(e.target.value)}
+              maxLength={30}
             />
           </div>
         )}
@@ -551,7 +593,17 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
               name="telefone"
               type="tel"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) =>
+                setTelefone(formatTelefoneBrasileiro(e.target.value))
+              }
+              maxLength={16}
+              inputMode="numeric"
+              autoComplete="tel-national"
+              error={
+                telefone.length > 0 && !telefoneValido
+                  ? "Use: (DDD) 9 1234-5678"
+                  : undefined
+              }
             />
 
             <div className={styles.selectField}>
@@ -580,7 +632,7 @@ export default function LoginCriarForm({ onToggle }: LoginCriarFormProps) {
                 {erroFotoLimite ||
                   (processandoFoto
                     ? "Processando foto..."
-                    : "Tamanho maximo permitido: 10MB.")}
+                    : "Foto opcional. Tamanho maximo permitido: 10MB.")}
               </p>
               {capaPreview && (
                 <div className={styles.capaContainerLivro}>

@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE =
   process.env.API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE ||
-  "https://api.helenaramazzotte.online";
+  (process.env.NODE_ENV === "production"
+    ? "http://127.0.0.1:4000"
+    : process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_API_BASE ||
+      "http://127.0.0.1:4000");
 
 const APP_ORIGIN =
   process.env.APP_ORIGIN || "https://app.helenaramazzotte.online";
@@ -21,6 +23,12 @@ const HOP_BY_HOP_HEADERS = new Set([
   "trailer",
   "transfer-encoding",
   "upgrade",
+  "forwarded",
+  "x-forwarded-for",
+  "x-forwarded-host",
+  "x-forwarded-port",
+  "x-forwarded-proto",
+  "x-real-ip",
 ]);
 
 type RouteContext = {
@@ -34,6 +42,7 @@ async function proxy(req: NextRequest, context: RouteContext) {
   target.search = req.nextUrl.search;
 
   const token = (await cookies()).get("token")?.value;
+  const clientIp = req.headers.get("x-real-ip");
   const headers = new Headers(req.headers);
 
   for (const header of HOP_BY_HOP_HEADERS) {
@@ -45,6 +54,7 @@ async function proxy(req: NextRequest, context: RouteContext) {
   // Same-origin GET requests usually do not include Origin. The API deliberately
   // rejects originless production requests, so identify this trusted proxy.
   headers.set("origin", APP_ORIGIN);
+  if (clientIp) headers.set("x-forwarded-for", clientIp);
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -52,12 +62,21 @@ async function proxy(req: NextRequest, context: RouteContext) {
 
   const method = req.method.toUpperCase();
   const hasBody = !["GET", "HEAD"].includes(method);
-  const response = await fetch(target, {
-    method,
-    headers,
-    body: hasBody ? await req.arrayBuffer() : undefined,
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(target, {
+      method,
+      headers,
+      body: hasBody ? await req.arrayBuffer() : undefined,
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error("[API proxy] Falha ao acessar a API:", target.origin, error);
+    return NextResponse.json(
+      { erro: "API temporariamente indisponivel" },
+      { status: 502, headers: { "Cache-Control": "no-store" } }
+    );
+  }
 
   const responseHeaders = new Headers(response.headers);
   for (const header of HOP_BY_HOP_HEADERS) {

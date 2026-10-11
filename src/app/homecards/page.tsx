@@ -10,7 +10,6 @@ import {
 } from "@/actions/categorias";
 import CategoriaSwiper from "@/componentes/cardLivros/livro-categorias";
 import LivrariaSectionComponent from "@/componentes/cardLivros/livraria-section";
-import PWAInitializer from "@/componentes/pwa/PWAInitializer";
 import styles from "@/componentes/cardLivros/livroCategorias.module.css";
 import IndicacoesDisplay from "@/componentes/indicacoes/vizualizaoHome";
 
@@ -63,14 +62,6 @@ const Home: React.FC = () => {
     useState<LivrosPorCategoria>({});
   const [livrosLivraria, setLivrosLivraria] = useState<Livro[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    setUserId(localStorage.getItem("userId"));
-    setToken(localStorage.getItem("token"));
-  }, []);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -146,7 +137,6 @@ const Home: React.FC = () => {
         <link rel="icon" href="/icones/home-.png" />
       </Head>
 
-      <PWAInitializer userId={userId || undefined} token={token || undefined} />
 
       <div className={styles.indicacoes}>
         <IndicacoesDisplay />

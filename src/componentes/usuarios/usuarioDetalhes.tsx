@@ -26,6 +26,11 @@ export default function UsuarioDetalhes({
   const [forbidden, setForbidden] = useState<boolean>(false);
   const [editando, setEditando] = useState<boolean>(false);
   const [novoTipoUsuario, setNovoTipoUsuario] = useState<string>("");
+  const [salvandoTipo, setSalvandoTipo] = useState(false);
+  const [mensagemTipo, setMensagemTipo] = useState<{
+    tipo: "sucesso" | "erro";
+    texto: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchUsuario = async () => {
@@ -55,6 +60,10 @@ export default function UsuarioDetalhes({
   const handleSalvar = async () => {
     if (!usuario) return;
 
+    const tipoSelecionado = novoTipoUsuario || usuario.tipo_usuario;
+    setSalvandoTipo(true);
+    setMensagemTipo(null);
+
     try {
       const response = await fetch(
         `/api/a6b7e9c4f/usuario/${usuario.id_usuario}/tipo`,
@@ -63,20 +72,37 @@ export default function UsuarioDetalhes({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ tipo_usuario: novoTipoUsuario }),
+          body: JSON.stringify({ tipo_usuario: tipoSelecionado }),
         }
       );
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error("Erro ao atualizar tipo de usuário");
+        throw new Error(
+          typeof data.erro === "string"
+            ? data.erro
+            : "Não foi possível atualizar o tipo de usuário."
+        );
       }
 
-      // Atualiza o estado local com o novo tipo de usuário
-      setUsuario({ ...usuario, tipo_usuario: novoTipoUsuario });
-      setEditando(false); // Fecha o modo de edição
+      const tipoAtualizado = data.usuario?.tipo_usuario || tipoSelecionado;
+      setUsuario({ ...usuario, tipo_usuario: tipoAtualizado });
+      setNovoTipoUsuario(tipoAtualizado);
+      setEditando(false);
+      setMensagemTipo({
+        tipo: "sucesso",
+        texto: "Tipo de usuário atualizado com sucesso.",
+      });
     } catch (error) {
-      console.error("Erro ao atualizar tipo de usuário:", error);
-      alert("Erro ao atualizar tipo de usuário");
+      setMensagemTipo({
+        tipo: "erro",
+        texto:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível atualizar o tipo de usuário.",
+      });
+    } finally {
+      setSalvandoTipo(false);
     }
   };
 
@@ -105,18 +131,23 @@ export default function UsuarioDetalhes({
                   <div className={styles.editContainer}>
                     <select
                       value={novoTipoUsuario || usuario.tipo_usuario}
-                      onChange={(e) => setNovoTipoUsuario(e.target.value)}
+                      onChange={(e) => {
+                        setNovoTipoUsuario(e.target.value);
+                        setMensagemTipo(null);
+                      }}
                       className={styles.tipoSelect}
                     >
                       <option value="leitor">Leitor</option>
+                      <option value="leitor+mykids">Leitor + MyKids</option>
                       <option value="voluntario">Voluntário</option>
                       <option value="admin">Administrador</option>
                     </select>
                     <button
                       className={styles.salvarBtn}
                       onClick={handleSalvar}
+                      disabled={salvandoTipo}
                     >
-                      Salvar
+                      {salvandoTipo ? "Salvando..." : "Salvar"}
                     </button>
                   </div>
                 ) : (
@@ -127,6 +158,7 @@ export default function UsuarioDetalhes({
                       onClick={() => {
                         setEditando(true);
                         setNovoTipoUsuario(usuario.tipo_usuario);
+                        setMensagemTipo(null);
                       }}
                     >
                       ✏️editar
@@ -134,6 +166,19 @@ export default function UsuarioDetalhes({
                   </>
                 )}
               </p>
+              {mensagemTipo && (
+                <p
+                  className={[
+                    styles.statusMessage,
+                    mensagemTipo.tipo === "sucesso"
+                      ? styles.statusSuccess
+                      : styles.statusError,
+                  ].join(" ")}
+                  role={mensagemTipo.tipo === "erro" ? "alert" : "status"}
+                >
+                  {mensagemTipo.texto}
+                </p>
+              )}
             </div>
           </div>
           <h1 className={styles.titleHistorico}>Histórico</h1>

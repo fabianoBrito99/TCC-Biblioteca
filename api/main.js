@@ -94,6 +94,7 @@ app.use("/api", relatorioRoutes);
 app.use("/api", indicacoesRoutes);
 app.use("/api", ocrRoutes);
 app.use("/api", mykidsRoutes);
+require("./controllers/mykids.controllers").startRoomAutoCloseWorker();
 
 app.use((err, req, res, next) => {
   console.error("Erro nao tratado na API:", err);

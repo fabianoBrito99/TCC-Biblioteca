@@ -1,0 +1,2 @@
+ALTER TABLE Usuario
+  MODIFY COLUMN tipo_usuario VARCHAR(30) NULL DEFAULT 'leitor';

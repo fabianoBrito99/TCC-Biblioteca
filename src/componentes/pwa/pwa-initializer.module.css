@@ -1,0 +1,9 @@
+.noticeStack { position: fixed; inset: 0; z-index: 100; display: grid; align-content: center; justify-items: center; gap: 12px; padding: 18px; background: rgba(15, 23, 42, .48); backdrop-filter: blur(7px); }
+.notice { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid #c4b5fd; border-left: 5px solid #6d28d9; border-radius: 10px; padding: 15px; background: #fff; box-shadow: 0 18px 55px rgba(49, 20, 92, .24); }
+.notice { width: min(620px, 100%); }
+.notice strong { display: block; color: #4c1d95; }
+.notice span { display: block; margin-top: 4px; color: #475569; line-height: 1.35; }
+.actions { display: flex; flex: 0 0 auto; gap: 8px; }
+.actions button { border: 0; border-radius: 8px; padding: 10px 14px; color: #fff; background: #6d28d9; font-weight: 800; cursor: pointer; }
+.actions .secondary { border: 1px solid #d8b4fe; color: #6d28d9; background: #fff; }
+@media (max-width: 620px) { .notice { align-items: stretch; flex-direction: column; } .actions { width: 100%; } .actions button { flex: 1; } }

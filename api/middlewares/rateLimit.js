@@ -2,7 +2,7 @@ const buckets = new Map();
 
 function defaultKey(req) {
   const auth = req.headers.authorization || "";
-  const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0].trim() || req.ip || "unknown";
+  const ip = req.ip || req.socket?.remoteAddress || "unknown";
   if (auth.startsWith("Bearer ")) {
     return `token:${auth.slice(7, 23)}`;
   }

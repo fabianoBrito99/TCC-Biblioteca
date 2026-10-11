@@ -105,14 +105,14 @@ CREATE TABLE Avaliacoes (
 -- Tabela Usuario
 CREATE TABLE Usuario (
     id_usuario INT PRIMARY KEY AUTO_INCREMENT,
-    nome_login VARCHAR(20),
+    nome_login VARCHAR(255),
     email VARCHAR(100),
     senha VARCHAR(255),
     telefone VARCHAR(20),
     data_nascimento DATE,
     igreja_local VARCHAR(20),
     foto_usuario MEDIUMBLOB,
-    tipo_usuario VARCHAR(10) default "leitor",
+    tipo_usuario VARCHAR(30) default "leitor",
     fk_id_avaliacoes INT,
     FOREIGN KEY (fk_id_avaliacoes) REFERENCES Avaliacoes(id_avaliacoes)
 );
@@ -121,11 +121,11 @@ CREATE TABLE Usuario (
 CREATE TABLE Endereco (
     id_endereco INT PRIMARY KEY AUTO_INCREMENT,
     cep VARCHAR(15),
-    rua VARCHAR(45),
-    numero INT,
-    bairro VARCHAR(20),
-    cidade VARCHAR(20),
-    estado VARCHAR(20)
+    rua VARCHAR(160),
+    numero VARCHAR(30),
+    bairro VARCHAR(120),
+    cidade VARCHAR(120),
+    estado VARCHAR(30)
 );
 
 -- Tabela Usuario_Endereco (Relacionamento entre Usuario e Endereco)

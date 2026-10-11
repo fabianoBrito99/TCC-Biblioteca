@@ -3,8 +3,13 @@ MYKIDS - INSTALADOR DA IMPRESSORA ZEBRA
 1. Extraia todos os arquivos deste ZIP.
 2. Clique duas vezes em instalar_zebra.bat.
 3. Se o Windows exibir um aviso, confirme a execucao.
-4. Cole o codigo de pareamento exibido no MyKids.
+4. Na primeira instalacao, cole o codigo de pareamento exibido no MyKids.
 5. Volte ao MyKids e clique em Zebra > Testar novamente.
 
-A ponte inicia automaticamente junto com o Windows.
-A impressora deve estar instalada no Windows e conectada por USB.
+A ponte fica oculta, inicia automaticamente com o Windows e se reconecta sozinha.
+Ao clicar em Zebra no MyKids, a ponte e iniciada e procura novamente a impressora USB.
+As impressoes aguardam na fila enquanto a Zebra estiver desconectada e seguem ao reconectar.
+Nao e necessario atualizar a pagina depois de cada check-in.
+A impressora e o driver Zebra devem estar instalados no Windows.
+
+Diagnostico: %LOCALAPPDATA%\MyKidsZebra\bridge.log

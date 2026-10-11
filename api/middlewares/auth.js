@@ -17,6 +17,7 @@ function normalizeRole(role) {
   if (normalized === "administrador") return "admin";
   if (normalized === "voluntario") return "voluntario";
   if (normalized === "leitor") return "leitor";
+  if (["leitor+mykids", "leitor_mykids", "leitor-mykids"].includes(normalized)) return "leitor+mykids";
   return normalized;
 }
 

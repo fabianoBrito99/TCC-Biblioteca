@@ -38,6 +38,8 @@ export default function EtiquetaPublicaPage() {
             <article key={`${child.child_id}-${child.created_at}`}>
               <strong>#{String(child.arrival_number || 0).padStart(3, "0")} {child.child_name_snapshot}</strong>
               <span>{child.room_name_snapshot}</span>
+              {Boolean(child.child_has_autism_snapshot) && <p>♾️ Autismo{child.child_autism_type_snapshot ? ` — ${child.child_autism_type_snapshot}` : ""}</p>}
+              {Boolean(child.child_has_food_restriction_snapshot) && <p>🍽️ Restricao alimentar</p>}
               {child.child_notes_snapshot && <p>{child.child_notes_snapshot}</p>}
               <small>{child.checked_out_at ? "Saiu da sala" : "Dentro da sala"}</small>
             </article>

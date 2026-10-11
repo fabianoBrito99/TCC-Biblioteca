@@ -119,3 +119,28 @@
 .salvarBtn:hover {
   background-color: #218838;
 }
+
+.salvarBtn:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.statusMessage {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.statusSuccess {
+  border-color: #78bd89;
+  background: #edf8f0;
+  color: #1f6b31;
+}
+
+.statusError {
+  border-color: #e5a29a;
+  background: #fff2f0;
+  color: #84251c;
+}

@@ -1,58 +1,52 @@
 "use client";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { getPushSubscription, registerServiceWorker, requestNotificationPermission, sendNotificationToServer, setupVencimentoChecker } from "@/functions/notification-utils";
+import styles from "./pwa-initializer.module.css";
 
-import { useEffect } from "react";
-import {
-  registerServiceWorker,
-  requestNotificationPermission,
-  setupVencimentoChecker,
-  getPushSubscription,
-  sendNotificationToServer,
-} from "@/functions/notification-utils";
-
-interface PWAInitializerProps {
-  userId?: string;
-  token?: string;
-}
+interface PWAInitializerProps { userId?: string; token?: string }
+interface InstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> }
 
 export default function PWAInitializer({ userId, token }: PWAInitializerProps) {
+  const pathname = usePathname();
+  const quietPublicRoute = pathname === "/salaKids";
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [showIosHelp, setShowIosHelp] = useState(false);
+  const [iosInstructionsOpen, setIosInstructionsOpen] = useState(false);
+  const [showNotificationInvite, setShowNotificationInvite] = useState(false);
+
   useEffect(() => {
-    const initializePWA = async () => {
-      try {
-        // 1. Registrar Service Worker
-        const registration = await registerServiceWorker();
-        if (!registration) return;
+    if (quietPublicRoute) return;
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone;
+    const dismissed = sessionStorage.getItem("pwa-install-dismissed") === "1";
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (!standalone && !dismissed && isIos) setShowIosHelp(true);
+    const onInstallPrompt = (event: Event) => { event.preventDefault(); if (!standalone && !dismissed) setInstallPrompt(event as InstallPromptEvent); };
+    window.addEventListener("beforeinstallprompt", onInstallPrompt);
+    void registerServiceWorker().then(() => {
+      const currentUserId = userId || localStorage.getItem("userId") || undefined;
+      const currentToken = token || localStorage.getItem("token") || undefined;
+      if (currentUserId && currentToken && "Notification" in window && Notification.permission === "default") setShowNotificationInvite(true);
+      else if (currentUserId && currentToken && "Notification" in window && Notification.permission === "granted") setupVencimentoChecker(currentUserId, currentToken);
+    });
+    return () => window.removeEventListener("beforeinstallprompt", onInstallPrompt);
+  }, [userId, token, quietPublicRoute]);
 
-        console.log("PWA inicializado com sucesso");
+  const dismissInstall = () => { sessionStorage.setItem("pwa-install-dismissed", "1"); setInstallPrompt(null); setShowIosHelp(false); };
+  const install = async () => { if (!installPrompt) return; await installPrompt.prompt(); await installPrompt.userChoice; dismissInstall(); };
+  const enableNotifications = async () => {
+    setShowNotificationInvite(false);
+    if (await requestNotificationPermission() !== "granted") return;
+    const currentUserId = userId || localStorage.getItem("userId") || undefined;
+    const currentToken = token || localStorage.getItem("token") || undefined;
+    const subscription = await getPushSubscription();
+    if (subscription && currentUserId) await sendNotificationToServer(currentUserId, subscription, currentToken);
+    if (currentUserId && currentToken) setupVencimentoChecker(currentUserId, currentToken);
+  };
 
-        // 2. Se o usuário está logado, solicitar permissão de notificações
-        if (userId && token) {
-          // Aguardar um pouco para não ser muito agressivo
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-
-          const permission = await requestNotificationPermission();
-
-          if (permission === "granted") {
-            console.log("Notificações permidas");
-
-            // 3. Tentar se inscrever em notificações push
-            const subscription = await getPushSubscription();
-            if (subscription) {
-              // Enviar subscription para o servidor
-              await sendNotificationToServer(userId, subscription, token);
-
-              // 4. Configurar verificação de vencimentos
-              setupVencimentoChecker(userId, token);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao inicializar PWA:", error);
-      }
-    };
-
-    initializePWA();
-  }, [userId, token]);
-
-  // Este componente não renderiza nada
-  return null;
+  if (quietPublicRoute || (!installPrompt && !showIosHelp && !showNotificationInvite)) return null;
+  return <div className={styles.noticeStack}>
+    {(installPrompt || showIosHelp) && <div className={styles.notice} role="status"><div><strong>Baixar Biblioteca Helena Ramazzotte</strong><span>{showIosHelp && iosInstructionsOpen ? "No iPhone: toque em Compartilhar e depois em Adicionar à Tela de Início." : "Adicione o aplicativo à tela inicial para acessar a biblioteca mais rápido."}</span></div><div className={styles.actions}>{installPrompt ? <button onClick={install}>Baixar</button> : <button onClick={() => setIosInstructionsOpen(true)}>Baixar</button>}<button className={styles.secondary} onClick={dismissInstall}>Agora não</button></div></div>}
+    {showNotificationInvite && <div className={styles.notice} role="status"><div><strong>Ativar notificações?</strong><span>Receba avisos importantes da biblioteca no seu aparelho.</span></div><div className={styles.actions}><button onClick={enableNotifications}>Ativar</button><button className={styles.secondary} onClick={() => setShowNotificationInvite(false)}>Agora não</button></div></div>}
+  </div>;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from '@/componentes/navbar/navbar';
+import PWAInitializer from '@/componentes/pwa/PWAInitializer';
 
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({
         <title>Biblioteca Helena Ramazzotte</title>
       </head>
       <body >
-        
+        <PWAInitializer />
         <Navbar />
         {children}
       </body>

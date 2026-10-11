@@ -19,6 +19,36 @@ const positiveId = (value) => {
 const bool = (value) => value === true || value === 1 || value === "1" || value === "true";
 const gender = (value) => ["M", "F"].includes(String(value || "").toUpperCase()) ? String(value).toUpperCase() : null;
 const validDate = (value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(String(value));
+const childNeeds = (body) => {
+  const hasAutism = bool(body.has_autism);
+  const hasFoodRestriction = bool(body.has_food_restriction);
+  return {
+    hasAutism,
+    autismType: hasAutism ? text(body.autism_type, 120) : null,
+    hasFoodRestriction,
+    foodRestrictionNotes: hasFoodRestriction
+      ? text(body.food_restriction_notes ?? (!hasAutism ? body.notes : null), 2000)
+      : null,
+    notes: hasAutism ? text(body.notes, 65535) : null,
+  };
+};
+
+function ageOnDate(birthDate, now = new Date()) {
+  if (!birthDate) return null;
+  const birth = new Date(`${String(birthDate).slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(birth.getTime()) || birth > now) return null;
+  let age = now.getFullYear() - birth.getFullYear();
+  if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age -= 1;
+  return age;
+}
+
+function roomContainsAge(room, age) {
+  const numbers = String(room.age_range || "").match(/\d+/g)?.map(Number) || [];
+  if (!numbers.length) return false;
+  const min = numbers[0];
+  const max = numbers.length > 1 ? numbers[1] : numbers[0];
+  return age >= Math.min(min, max) && age <= Math.max(min, max);
+}
 
 function fail(res, error) {
   console.error("[MyKids]", error);
@@ -64,6 +94,13 @@ exports.updateRoom = async (req, res) => {
         "UPDATE mykids_checkins SET checked_out_at = COALESCE(checked_out_at, NOW()) WHERE room_id = ? AND checked_out_at IS NULL AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY",
         [id]);
       await query(pool, "UPDATE mykids_children SET room_id = NULL WHERE room_id = ?", [id]);
+      await query(pool, "UPDATE mykids_room_sessions SET closed_at = COALESCE(closed_at, NOW()) WHERE room_id = ? AND closed_at IS NULL", [id]);
+    } else if (req.body.is_open !== undefined && bool(req.body.is_open)) {
+      const [activeSession] = await query(pool, "SELECT id FROM mykids_room_sessions WHERE room_id = ? AND closed_at IS NULL LIMIT 1", [id]);
+      if (!activeSession) {
+        const [openedRoom] = await query(pool, "SELECT name FROM mykids_rooms WHERE id = ?", [id]);
+        if (openedRoom) await query(pool, "INSERT INTO mykids_room_sessions (room_id, room_name_snapshot) VALUES (?, ?)", [id, openedRoom.name]);
+      }
     }
     const [room] = await query(pool, "SELECT * FROM mykids_rooms WHERE id = ?", [id]);
     res.json(room);
@@ -96,6 +133,13 @@ exports.createGuardian = async (req, res) => {
   if (!children.length || children.some((child) => !text(child.name, 160) || !gender(child.gender) || !validDate(child.birth_date))) {
     return res.status(400).json({ erro: "Informe ao menos uma criança com dados válidos" });
   }
+  const missingRestriction = children.find((child) => {
+    const needs = childNeeds(child);
+    return needs.hasFoodRestriction && !needs.foodRestrictionNotes;
+  });
+  if (missingRestriction) {
+    return res.status(400).json({ erro: "Informe qual e a restricao alimentar de " + text(missingRestriction.name, 160) });
+  }
   const connection = await getConnection().catch((error) => { fail(res, error); return null; });
   if (!connection) return;
   try {
@@ -104,14 +148,14 @@ exports.createGuardian = async (req, res) => {
       "INSERT INTO mykids_guardians (name, email, phone, gender, status) VALUES (?, ?, ?, ?, ?)",
       [name, text(req.body.email, 254), text(req.body.phone, 30), guardianGender, status]);
     for (const child of children) {
-      const roomId = positiveId(child.room_id);
-      if (roomId) {
-        const rooms = await query(connection, "SELECT id FROM mykids_rooms WHERE id = ?", [roomId]);
-        if (!rooms.length) { const error = new Error("Sala não encontrada"); error.status = 400; throw error; }
-      }
+      const needs = childNeeds(child);
       await query(connection,
-        "INSERT INTO mykids_children (guardian_id, name, birth_date, gender, notes, room_id) VALUES (?, ?, ?, ?, ?, ?)",
-        [guardianResult.insertId, text(child.name, 160), child.birth_date || null, gender(child.gender), text(child.notes, 65535), roomId]);
+        `INSERT INTO mykids_children
+         (guardian_id, name, birth_date, gender, has_autism, autism_type, has_food_restriction,
+          food_restriction_notes, notes, room_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+        [guardianResult.insertId, text(child.name, 160), child.birth_date || null, gender(child.gender),
+         needs.hasAutism, needs.autismType, needs.hasFoodRestriction, needs.foodRestrictionNotes, needs.notes]);
     }
     await commit(connection);
     req.query.search = String(guardianResult.insertId);
@@ -151,17 +195,49 @@ exports.updateChild = async (req, res) => {
     return res.status(400).json({ erro: "Dados da crianca invalidos" });
   }
   const roomId = positiveId(req.body.room_id);
+  const needs = childNeeds(req.body);
+  if (needs.hasFoodRestriction && !needs.foodRestrictionNotes) {
+    return res.status(400).json({ erro: "Informe qual e a restricao alimentar da crianca" });
+  }
   try {
     if (roomId) {
       const [room] = await query(pool, "SELECT id FROM mykids_rooms WHERE id=?", [roomId]);
       if (!room) return res.status(400).json({ erro: "Sala nao encontrada" });
     }
     const result = await query(pool,
-      "UPDATE mykids_children SET name=?, birth_date=?, gender=?, notes=?, room_id=? WHERE id=?",
-      [name, req.body.birth_date || null, childGender, text(req.body.notes, 65535), roomId, id]);
+      `UPDATE mykids_children SET name=?, birth_date=?, gender=?, has_autism=?, autism_type=?,
+       has_food_restriction=?, food_restriction_notes=?, notes=?, room_id=? WHERE id=?`,
+      [name, req.body.birth_date || null, childGender, needs.hasAutism, needs.autismType,
+       needs.hasFoodRestriction, needs.foodRestrictionNotes, needs.notes, roomId, id]);
     if (!result.affectedRows) return res.status(404).json({ erro: "Crianca nao encontrada" });
     const [child] = await query(pool, "SELECT * FROM mykids_children WHERE id=?", [id]);
     res.json(child);
+  } catch (error) { fail(res, error); }
+};
+
+exports.createChild = async (req, res) => {
+  const guardianId = positiveId(req.params.id);
+  const name = text(req.body.name, 160);
+  const childGender = gender(req.body.gender);
+  if (!guardianId || !name || !childGender || !validDate(req.body.birth_date)) {
+    return res.status(400).json({ erro: "Dados da crianca invalidos" });
+  }
+  const needs = childNeeds(req.body);
+  if (needs.hasFoodRestriction && !needs.foodRestrictionNotes) {
+    return res.status(400).json({ erro: "Informe qual e a restricao alimentar da crianca" });
+  }
+  try {
+    const [guardian] = await query(pool, "SELECT id FROM mykids_guardians WHERE id = ?", [guardianId]);
+    if (!guardian) return res.status(404).json({ erro: "Responsavel nao encontrado" });
+    const result = await query(pool,
+      `INSERT INTO mykids_children
+       (guardian_id, name, birth_date, gender, has_autism, autism_type, has_food_restriction,
+        food_restriction_notes, notes, room_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+      [guardianId, name, req.body.birth_date || null, childGender, needs.hasAutism,
+       needs.autismType, needs.hasFoodRestriction, needs.foodRestrictionNotes, needs.notes]);
+    const [child] = await query(pool, "SELECT * FROM mykids_children WHERE id = ?", [result.insertId]);
+    res.status(201).json(child);
   } catch (error) { fail(res, error); }
 };
 
@@ -179,8 +255,14 @@ exports.createCheckin = async (req, res) => {
        FROM mykids_children c JOIN mykids_guardians g ON g.id = c.guardian_id
        WHERE c.id = ? AND c.guardian_id = ? FOR UPDATE`, [childId, guardianId]);
     if (!child) { const error = new Error("Criança não pertence ao responsável informado"); error.status = 404; throw error; }
-    const roomId = requestedRoomId || child.room_id;
-    if (!roomId) { const error = new Error("Selecione uma sala"); error.status = 400; throw error; }
+    let roomId = requestedRoomId || child.room_id;
+    if (!roomId) {
+      const age = ageOnDate(child.birth_date);
+      if (age === null) { const error = new Error("Informe a data de nascimento para selecionar a sala automaticamente"); error.status = 400; throw error; }
+      const openRooms = await query(connection, "SELECT * FROM mykids_rooms WHERE is_open = 1 ORDER BY id FOR UPDATE");
+      roomId = openRooms.find((item) => roomContainsAge(item, age))?.id || null;
+      if (!roomId) { const error = new Error(`Nenhuma sala aberta atende a idade de ${age} ano(s)`); error.status = 409; throw error; }
+    }
     const [room] = await query(connection, "SELECT * FROM mykids_rooms WHERE id = ? AND is_open = 1 FOR UPDATE", [roomId]);
     if (!room) { const error = new Error("Check-in permitido somente em sala aberta"); error.status = 409; throw error; }
     const [activeCheckin] = await query(connection,
@@ -195,15 +277,22 @@ exports.createCheckin = async (req, res) => {
       throw error;
     }
     const [guardianCheckin] = await query(connection,`SELECT id FROM mykids_checkins WHERE guardian_id = ? AND created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY LIMIT 1`,[guardianId]);
+    const [activeSession] = await query(connection, "SELECT id FROM mykids_room_sessions WHERE room_id = ? AND closed_at IS NULL LIMIT 1 FOR UPDATE", [roomId]);
+    if (!activeSession) await query(connection, "INSERT INTO mykids_room_sessions (room_id, room_name_snapshot) VALUES (?, ?)", [roomId, room.name]);
     const [sequence] = await query(connection,`SELECT COALESCE(MAX(arrival_number), 0) + 1 AS next_number FROM mykids_checkins WHERE created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY`);
     const publicCode = crypto.randomUUID().replace(/-/g, "");
     const result = await query(connection,
       `INSERT INTO mykids_checkins
        (public_code, guardian_id, child_id, room_id, child_name_snapshot, guardian_name_snapshot,
-        guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_notes_snapshot, room_name_snapshot, arrival_number)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_has_autism_snapshot,
+        child_autism_type_snapshot, child_has_food_restriction_snapshot,
+        child_food_restriction_notes_snapshot, child_notes_snapshot, room_name_snapshot,
+        arrival_number, created_by_user_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [publicCode, guardianId, childId, roomId, child.name, child.guardian_name, child.guardian_email,
-       child.guardian_phone, child.birth_date, child.notes, room.name, sequence.next_number]);
+       child.guardian_phone, child.birth_date, child.has_autism, child.autism_type,
+       child.has_food_restriction, child.food_restriction_notes, child.notes, room.name,
+       sequence.next_number, positiveId(req.user?.id)]);
     await query(connection, "UPDATE mykids_children SET checkins_count = checkins_count + 1, room_id = ? WHERE id = ?", [roomId, childId]);
     await query(connection,
       `UPDATE mykids_guardians g
@@ -257,12 +346,16 @@ exports.getPublicCheckin = async (req, res) => {
   try {
     const [checkin] = await query(pool,
       `SELECT id, public_code, guardian_id, child_id, room_id, child_name_snapshot, guardian_name_snapshot,
-       guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_notes_snapshot,
+       guardian_email_snapshot, guardian_phone_snapshot, child_birth_date_snapshot, child_has_autism_snapshot,
+       child_autism_type_snapshot, child_has_food_restriction_snapshot,
+       child_food_restriction_notes_snapshot, child_notes_snapshot,
        room_name_snapshot, arrival_number, checked_out_at, created_at
        FROM mykids_checkins WHERE public_code = ? LIMIT 1`, [code]);
     if (!checkin) return res.status(404).json({ erro: "Etiqueta não encontrada" });
     checkin.children = await query(pool,
-      `SELECT child_id, child_name_snapshot, child_birth_date_snapshot, child_notes_snapshot,
+      `SELECT child_id, child_name_snapshot, child_birth_date_snapshot, child_has_autism_snapshot,
+       child_autism_type_snapshot, child_has_food_restriction_snapshot,
+       child_food_restriction_notes_snapshot, child_notes_snapshot,
        room_name_snapshot, arrival_number, checked_out_at, created_at
        FROM mykids_checkins
        WHERE guardian_id = ? AND created_at >= DATE(?) AND created_at < DATE(?) + INTERVAL 1 DAY
@@ -270,6 +363,139 @@ exports.getPublicCheckin = async (req, res) => {
       [checkin.guardian_id, checkin.created_at, checkin.created_at]);
     res.json(checkin);
   } catch (error) { fail(res, error); }
+};
+
+exports.getPublicRoomOccupancy = async (_req, res) => {
+  try {
+    const rooms = await query(
+      pool,
+      "SELECT id, name, age_range, is_open FROM mykids_rooms ORDER BY id"
+    );
+    const checkins = await query(
+      pool,
+      `SELECT ci.id, ci.child_id, ci.room_id, ci.child_name_snapshot, ci.arrival_number,
+              CASE
+                WHEN ci.child_has_food_restriction_snapshot = 1 OR COALESCE(c.has_food_restriction, 0) = 1
+                THEN 1 ELSE 0
+              END AS child_has_food_restriction_snapshot,
+              COALESCE(NULLIF(c.food_restriction_notes, ''), ci.child_food_restriction_notes_snapshot)
+                AS child_food_restriction_notes_snapshot,
+              ci.created_at
+       FROM mykids_checkins ci
+       LEFT JOIN mykids_children c ON c.id = ci.child_id
+       WHERE ci.checked_out_at IS NULL
+         AND ci.created_at >= CURDATE()
+         AND ci.created_at < CURDATE() + INTERVAL 1 DAY
+       ORDER BY ci.room_id, ci.arrival_number IS NULL, ci.arrival_number, ci.child_name_snapshot`
+    );
+
+    const childrenByRoom = new Map();
+    for (const checkin of checkins) {
+      const hasFoodRestriction = Boolean(checkin.child_has_food_restriction_snapshot);
+      const child = {
+        checkin_id: checkin.id,
+        child_id: checkin.child_id,
+        name: checkin.child_name_snapshot,
+        arrival_number: checkin.arrival_number,
+        has_food_restriction: hasFoodRestriction,
+        food_restriction: hasFoodRestriction
+          ? checkin.child_food_restriction_notes_snapshot || null
+          : null,
+        checked_in_at: checkin.created_at,
+      };
+      childrenByRoom.set(checkin.room_id, [
+        ...(childrenByRoom.get(checkin.room_id) || []),
+        child,
+      ]);
+    }
+
+    const publicRooms = rooms.map((room) => {
+      const children = childrenByRoom.get(room.id) || [];
+      return {
+        id: room.id,
+        name: room.name,
+        age_range: room.age_range,
+        is_open: Boolean(room.is_open),
+        quantity: children.length,
+        restrictions_count: children.filter((child) => child.has_food_restriction).length,
+        children,
+      };
+    });
+
+    res.set("Cache-Control", "no-store, max-age=0");
+    res.json({
+      updated_at: new Date().toISOString(),
+      total: checkins.length,
+      restrictions_total: checkins.filter((checkin) => Boolean(checkin.child_has_food_restriction_snapshot)).length,
+      rooms: publicRooms,
+    });
+  } catch (error) { fail(res, error); }
+};
+
+exports.roomCloseAlerts = async (req, res) => {
+  try {
+    await processRoomAutoClose();
+    const userId = positiveId(req.user?.id);
+    const rows = await query(pool,
+      `SELECT r.id room_id, r.name room_name, MAX(c.created_at) last_checkin_at,
+              DATE_ADD(MAX(c.created_at), INTERVAL 130 MINUTE) auto_close_at
+       FROM mykids_rooms r
+       JOIN mykids_room_sessions s ON s.room_id = r.id AND s.closed_at IS NULL
+       JOIN mykids_checkins c ON c.room_id = r.id AND c.created_at >= s.opened_at
+       WHERE r.is_open = 1 AND c.created_by_user_id = ?
+         AND (s.auto_close_snoozed_until IS NULL OR s.auto_close_snoozed_until <= NOW())
+       GROUP BY r.id, r.name
+       HAVING MAX(c.created_at) <= NOW() - INTERVAL 120 MINUTE
+          AND MAX(c.created_at) > NOW() - INTERVAL 130 MINUTE`, [userId]);
+    res.json(rows);
+  } catch (error) { fail(res, error); }
+};
+
+exports.snoozeRoomClose = async (req, res) => {
+  const roomId = positiveId(req.params.id);
+  if (!roomId) return res.status(400).json({ erro: "Sala invalida" });
+  try {
+    await query(pool,
+      "UPDATE mykids_room_sessions SET auto_close_snoozed_until = NOW() + INTERVAL 120 MINUTE WHERE room_id = ? AND closed_at IS NULL",
+      [roomId]);
+    res.json({ ok: true });
+  } catch (error) { fail(res, error); }
+};
+
+exports.roomHistory = async (_req, res) => {
+  try {
+    const rows = await query(pool,
+      `SELECT s.id, s.room_id, s.room_name_snapshot room_name, s.opened_at, s.closed_at,
+              s.closed_automatically, COUNT(DISTINCT c.child_id) children_count
+       FROM mykids_room_sessions s
+       LEFT JOIN mykids_checkins c ON c.room_id = s.room_id
+        AND c.created_at >= s.opened_at AND c.created_at <= s.closed_at
+       WHERE s.closed_at IS NOT NULL
+       GROUP BY s.id
+       ORDER BY s.closed_at DESC
+       LIMIT 3`);
+    res.json(rows);
+  } catch (error) { fail(res, error); }
+};
+
+async function processRoomAutoClose() {
+  const expired = await query(pool,
+    `SELECT r.id FROM mykids_rooms r
+     JOIN mykids_room_sessions s ON s.room_id = r.id AND s.closed_at IS NULL
+     JOIN mykids_checkins c ON c.room_id = r.id AND c.created_at >= s.opened_at
+     WHERE r.is_open = 1 AND (s.auto_close_snoozed_until IS NULL OR s.auto_close_snoozed_until <= NOW()) GROUP BY r.id
+     HAVING MAX(c.created_at) <= NOW() - INTERVAL 130 MINUTE`);
+  for (const room of expired) {
+    await query(pool, "UPDATE mykids_rooms SET is_open = 0 WHERE id = ? AND is_open = 1", [room.id]);
+    await query(pool, "UPDATE mykids_checkins SET checked_out_at = COALESCE(checked_out_at, NOW()) WHERE room_id = ? AND checked_out_at IS NULL", [room.id]);
+    await query(pool, "UPDATE mykids_children SET room_id = NULL WHERE room_id = ?", [room.id]);
+    await query(pool, "UPDATE mykids_room_sessions SET closed_at = COALESCE(closed_at, NOW()), closed_automatically = 1 WHERE room_id = ? AND closed_at IS NULL", [room.id]);
+  }
+}
+
+exports.startRoomAutoCloseWorker = () => {
+  const timer = setInterval(() => processRoomAutoClose().catch((error) => console.error("[MyKids auto-close]", error)), 60_000);
+  timer.unref();
 };
 
 exports.getPrinterSettings = async (_req, res) => {
@@ -280,7 +506,10 @@ exports.getPrinterSettings = async (_req, res) => {
       await query(pool, "UPDATE mykids_printer_settings SET bridge_token = ? WHERE id = ?", [token, settings.id]);
       settings = { ...settings, bridge_token: token };
     }
-    if (settings) settings.bridge_online = Boolean(settings.bridge_last_seen_at && new Date(settings.bridge_last_seen_at).getTime() > Date.now() - 15000);
+    if (settings) {
+      settings.bridge_online = Boolean(settings.bridge_last_seen_at && new Date(settings.bridge_last_seen_at).getTime() > Date.now() - 90_000);
+      settings.printer_online = settings.bridge_online && Boolean(settings.printer_online);
+    }
     res.json(settings || null);
   } catch (error) { fail(res, error); }
 };
@@ -325,22 +554,48 @@ function validBridgeToken(req, storedToken) {
 exports.claimPrintJob = async (req, res) => {
   const connection = await getConnection().catch(() => null);
   if (!connection) return res.status(503).json({ erro: "Banco indisponivel" });
+  let transactionStarted = false;
   try {
     const [settings] = await query(connection, "SELECT bridge_token FROM mykids_printer_settings ORDER BY id LIMIT 1");
-    if (!req.trustedAdminBridge && !validBridgeToken(req, settings?.bridge_token)) return res.status(401).json({ erro: "Ponte nao autorizada" });
-    await query(connection, "UPDATE mykids_printer_settings SET bridge_last_seen_at = NOW() ORDER BY id LIMIT 1");
+    if (!validBridgeToken(req, settings?.bridge_token)) return res.status(401).json({ erro: "Ponte nao autorizada" });
+    const body = req.body || {};
+    const reportsPrinterStatus = Object.prototype.hasOwnProperty.call(body, "printer_online");
+    if (reportsPrinterStatus) {
+      await query(connection,
+        `UPDATE mykids_printer_settings
+         SET bridge_last_seen_at = NOW(), detected_printer_name = ?, printer_online = ?,
+             printer_last_error = ?, bridge_version = ?
+         ORDER BY id LIMIT 1`,
+        [text(body.printer_name, 160), bool(body.printer_online), text(body.printer_error, 500), text(body.bridge_version, 30)]);
+      if (!bool(body.printer_online)) return res.status(204).end();
+    } else {
+      await query(connection, "UPDATE mykids_printer_settings SET bridge_last_seen_at = NOW() ORDER BY id LIMIT 1");
+    }
     await begin(connection);
+    transactionStarted = true;
+    await query(
+      connection,
+      "UPDATE mykids_print_jobs SET status = 'pending', claimed_at = NULL WHERE status = 'printing' AND claimed_at < NOW() - INTERVAL 2 MINUTE"
+    );
+    await query(
+      connection,
+      `UPDATE mykids_print_jobs
+       SET status = 'failed', error_message = 'Impressao expirada antes da reconexao', completed_at = NOW()
+       WHERE status = 'pending' AND created_at < NOW() - INTERVAL 12 HOUR`
+    );
     const [job] = await query(connection,
       "SELECT id, zpl, printer_name FROM mykids_print_jobs WHERE status = 'pending' ORDER BY created_at, id LIMIT 1 FOR UPDATE");
     if (!job) {
       await commit(connection);
+      transactionStarted = false;
       return res.status(204).end();
     }
     await query(connection, "UPDATE mykids_print_jobs SET status = 'printing', claimed_at = NOW() WHERE id = ?", [job.id]);
     await commit(connection);
+    transactionStarted = false;
     res.json(job);
   } catch (error) {
-    await rollback(connection);
+    if (transactionStarted) await rollback(connection);
     fail(res, error);
   } finally { connection.release(); }
 };
@@ -350,11 +605,24 @@ exports.completePrintJob = async (req, res) => {
   if (!id) return res.status(400).json({ erro: "Trabalho invalido" });
   try {
     const [settings] = await query(pool, "SELECT bridge_token FROM mykids_printer_settings ORDER BY id LIMIT 1");
-    if (!req.trustedAdminBridge && !validBridgeToken(req, settings?.bridge_token)) return res.status(401).json({ erro: "Ponte nao autorizada" });
+    if (!validBridgeToken(req, settings?.bridge_token)) return res.status(401).json({ erro: "Ponte nao autorizada" });
     const succeeded = req.body.ok === true;
+    const retry = !succeeded && req.body.retry === true;
     await query(pool,
-      "UPDATE mykids_print_jobs SET status = ?, error_message = ?, completed_at = NOW() WHERE id = ? AND status = 'printing'",
-      [succeeded ? "printed" : "failed", succeeded ? null : text(req.body.error, 500), id]);
+      `UPDATE mykids_printer_settings
+       SET bridge_last_seen_at = NOW(), detected_printer_name = COALESCE(?, detected_printer_name),
+           printer_online = ?, printer_last_error = ?
+       ORDER BY id LIMIT 1`,
+      [text(req.body.printer_name, 160), succeeded, succeeded ? null : text(req.body.error, 500)]);
+    if (retry) {
+      await query(pool,
+        "UPDATE mykids_print_jobs SET status = 'pending', error_message = ?, claimed_at = NULL, completed_at = NULL WHERE id = ? AND status = 'printing'",
+        [text(req.body.error, 500), id]);
+    } else {
+      await query(pool,
+        "UPDATE mykids_print_jobs SET status = ?, error_message = ?, completed_at = NOW() WHERE id = ? AND status = 'printing'",
+        [succeeded ? "printed" : "failed", succeeded ? null : text(req.body.error, 500), id]);
+    }
     res.json({ ok: true });
   } catch (error) { fail(res, error); }
 };

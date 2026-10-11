@@ -350,6 +350,7 @@ export default function Navbar() {
       "/login",
     ],
     leitor: ["/homecards", "/doeumlivro", "/comunidade", "/login"],
+    "leitor+mykids": ["/homecards", "/doeumlivro", "/comunidade", "/MyKids", "/login"],
   };
 
   // Buscar o usuário logado
@@ -456,7 +457,7 @@ export default function Navbar() {
 
   const fecharMenu = () => setMenuOpen(false);
 
-  if (pathname === "/login" || pathname.startsWith("/MyKids")) return null; // Nao exibe a Navbar na pagina de login
+  if (pathname === "/login" || pathname.startsWith("/MyKids") || pathname === "/salaKids") return null; // Nao exibe a Navbar na pagina de login
 
   return (
     <nav className={`${styles.navMenu} ${menuOpen ? styles.navOpen : ""}`}>

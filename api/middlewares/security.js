@@ -1,5 +1,6 @@
 const BLOCKED_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const MAX_STRING_LENGTH = 5000;
+const MAX_PROFILE_PHOTO_LENGTH = 3 * 1024 * 1024;
 const MAX_DEPTH = 8;
 
 function securityHeaders(req, res, next) {
@@ -11,15 +12,22 @@ function securityHeaders(req, res, next) {
   next();
 }
 
-function assertSafeValue(value, depth = 0) {
+function assertSafeValue(value, depth = 0, path = "") {
   if (depth > MAX_DEPTH) {
     const error = new Error("Payload muito profundo");
     error.statusCode = 400;
     throw error;
   }
 
-  if (typeof value === "string" && value.length > MAX_STRING_LENGTH) {
-    const error = new Error("Texto muito longo");
+  const maxStringLength =
+    path === "body.foto_usuario"
+      ? MAX_PROFILE_PHOTO_LENGTH
+      : MAX_STRING_LENGTH;
+
+  if (typeof value === "string" && value.length > maxStringLength) {
+    const error = new Error(
+      path === "body.foto_usuario" ? "Foto muito grande" : "Texto muito longo"
+    );
     error.statusCode = 413;
     throw error;
   }
@@ -32,7 +40,9 @@ function assertSafeValue(value, depth = 0) {
       error.statusCode = 413;
       throw error;
     }
-    value.forEach((item) => assertSafeValue(item, depth + 1));
+    value.forEach((item, index) =>
+      assertSafeValue(item, depth + 1, `${path}.${index}`)
+    );
     return;
   }
 
@@ -42,15 +52,15 @@ function assertSafeValue(value, depth = 0) {
       error.statusCode = 400;
       throw error;
     }
-    assertSafeValue(value[key], depth + 1);
+    assertSafeValue(value[key], depth + 1, path ? `${path}.${key}` : key);
   }
 }
 
 function validateRequestShape(req, res, next) {
   try {
-    assertSafeValue(req.body);
-    assertSafeValue(req.query);
-    assertSafeValue(req.params);
+    assertSafeValue(req.body, 0, "body");
+    assertSafeValue(req.query, 0, "query");
+    assertSafeValue(req.params, 0, "params");
     next();
   } catch (error) {
     res.status(error.statusCode || 400).json({ erro: error.message || "Requisicao invalida" });

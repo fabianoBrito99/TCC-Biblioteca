@@ -8,8 +8,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Add-Type -TypeDefinition @"
+if (-not ("RawPrinterHelper" -as [type])) {
+  Add-Type -TypeDefinition @"
 using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 public class RawPrinterHelper {
@@ -41,10 +43,14 @@ public class RawPrinterHelper {
   [DllImport("winspool.Drv", EntryPoint="WritePrinter", SetLastError=true, ExactSpelling=true, CallingConvention=CallingConvention.StdCall)]
   public static extern bool WritePrinter(IntPtr hPrinter, byte[] pBytes, Int32 dwCount, out Int32 dwWritten);
 
+  private static Exception PrinterError(string action) {
+    return new Win32Exception(Marshal.GetLastWin32Error(), action);
+  }
+
   public static void SendBytesToPrinter(string printerName, byte[] bytes) {
     IntPtr hPrinter;
     if (!OpenPrinter(printerName, out hPrinter, IntPtr.Zero)) {
-      throw new Exception("Nao foi possivel abrir a impressora: " + printerName);
+      throw PrinterError("Nao foi possivel abrir a impressora " + printerName);
     }
 
     try {
@@ -52,13 +58,14 @@ public class RawPrinterHelper {
       di.pDocName = "MyKids etiqueta";
       di.pDataType = "RAW";
 
-      if (!StartDocPrinter(hPrinter, 1, di)) throw new Exception("Nao foi possivel iniciar o documento RAW");
+      if (!StartDocPrinter(hPrinter, 1, di)) throw PrinterError("Nao foi possivel iniciar o documento RAW");
 
       try {
-        if (!StartPagePrinter(hPrinter)) throw new Exception("Nao foi possivel iniciar a pagina RAW");
+        if (!StartPagePrinter(hPrinter)) throw PrinterError("Nao foi possivel iniciar a pagina RAW");
         try {
           Int32 written;
-          if (!WritePrinter(hPrinter, bytes, bytes.Length, out written)) throw new Exception("Nao foi possivel enviar ZPL para a impressora");
+          if (!WritePrinter(hPrinter, bytes, bytes.Length, out written)) throw PrinterError("Nao foi possivel enviar ZPL para a impressora");
+          if (written != bytes.Length) throw new Exception("O Windows recebeu apenas parte da etiqueta ZPL");
         } finally {
           EndPagePrinter(hPrinter);
         }
@@ -71,6 +78,7 @@ public class RawPrinterHelper {
   }
 }
 "@
+}
 
 $bytes = [System.IO.File]::ReadAllBytes($ZplPath)
 [RawPrinterHelper]::SendBytesToPrinter($PrinterName, $bytes)

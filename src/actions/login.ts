@@ -1,7 +1,6 @@
 "use server";
 
-import apiError from "@/functions/api-error";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export interface LoginResponse {
   data: { id_usuario: string; tipo_usuario?: string } | null;
@@ -10,9 +9,19 @@ export interface LoginResponse {
 }
 
 interface ApiLoginResponse {
-  token: string;
-  usuario: { id_usuario: string; tipo_usuario?: string };
+  token?: unknown;
+  usuario?: { id_usuario?: unknown; tipo_usuario?: unknown };
 }
+
+const API_BASE =
+  process.env.API_BASE_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "http://127.0.0.1:4000"
+    : process.env.NEXT_PUBLIC_API_BASE_URL ||
+      "http://127.0.0.1:4000");
+
+const LOGIN_UNAVAILABLE =
+  "Não foi possível entrar agora. Tente novamente em instantes.";
 
 export default async function login(
   _state: unknown,
@@ -21,35 +30,75 @@ export default async function login(
   const email = formData.get("username");
   const password = formData.get("password");
   const cookieStore = await cookies();
+  const requestHeaders = await headers();
+
+  const fail = (error: string): LoginResponse => {
+    cookieStore.delete("token");
+    cookieStore.delete("tipo_usuario");
+    return { data: null, ok: false, error };
+  };
 
   try {
-    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-      throw new Error("Os campos não podem ser vazios");
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
+      return fail("Informe seu usuário/e-mail e sua senha.");
     }
 
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.helenaramazzotte.online";
-    const appOrigin = process.env.APP_ORIGIN || "https://app.helenaramazzotte.online";
-    const response = await fetch(`${apiBaseUrl}/api/login`, {
+    const appOrigin =
+      process.env.APP_ORIGIN || "https://app.helenaramazzotte.online";
+    const clientIp = requestHeaders.get("x-real-ip");
+    const apiHeaders: Record<string, string> = {
+      "Content-Type": "application/json",
+      Origin: appOrigin,
+    };
+    if (clientIp) apiHeaders["X-Forwarded-For"] = clientIp;
+
+    const response = await fetch(`${API_BASE}/api/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Origin: appOrigin,
-      },
-      body: JSON.stringify({ email, senha: password }),
-      // credenciais não são necessárias aqui porque o cookie será setado no servidor via cookies()
+      headers: apiHeaders,
+      body: JSON.stringify({ email: email.trim(), senha: password }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
 
+    const data = (await response.json().catch(() => null)) as
+      | ApiLoginResponse
+      | null;
+
     if (!response.ok) {
-      throw new Error("Usuário ou senha inválidos.");
+      if (response.status === 400) {
+        return fail("Informe seu usuário/e-mail e sua senha.");
+      }
+      if (response.status === 401) {
+        return fail("Usuário/e-mail ou senha incorretos.");
+      }
+      if (response.status === 429) {
+        return fail(
+          "Muitas tentativas de acesso. Aguarde um minuto e tente novamente."
+        );
+      }
+      console.error("[login] API respondeu com status", response.status);
+      return fail(LOGIN_UNAVAILABLE);
     }
 
-    const data: ApiLoginResponse = (await response.json()) as ApiLoginResponse;
+    const userId = data?.usuario?.id_usuario;
+    if (
+      typeof data?.token !== "string" ||
+      (typeof userId !== "string" && typeof userId !== "number")
+    ) {
+      console.error("[login] Resposta inválida da API de autenticação");
+      return fail(LOGIN_UNAVAILABLE);
+    }
 
     cookieStore.set("token", data.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24, // 1 dia
+      maxAge: 60 * 60 * 24,
       path: "/",
     });
 
@@ -57,15 +106,17 @@ export default async function login(
 
     return {
       data: {
-        id_usuario: data.usuario.id_usuario,
-        tipo_usuario: data.usuario.tipo_usuario,
+        id_usuario: String(userId),
+        tipo_usuario:
+          typeof data.usuario?.tipo_usuario === "string"
+            ? data.usuario.tipo_usuario
+            : undefined,
       },
       ok: true,
       error: "",
     };
   } catch (error: unknown) {
-    cookieStore.delete("token");
-    cookieStore.delete("tipo_usuario");
-    return apiError(error);
+    console.error("[login] Falha ao acessar a API:", error);
+    return fail(LOGIN_UNAVAILABLE);
   }
 }

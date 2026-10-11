@@ -3,11 +3,13 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBaby,
+  FaArrowLeft,
   FaChild,
   FaChevronDown,
   FaDoorOpen,
   FaEdit,
   FaHome,
+  FaHistory,
   FaMars,
   FaPeopleArrows,
   FaPlus,
@@ -17,25 +19,41 @@ import {
   FaUserFriends,
   FaVenus,
 } from "react-icons/fa";
-import { Checkin, Guardian, myKidsApi, PrinterSettings, Room } from "@/lib/mykids-api";
+import { Checkin, Guardian, myKidsApi, PrinterSettings, Room, RoomCloseAlert, RoomHistory } from "@/lib/mykids-api";
 import styles from "./page.module.css";
 
-type Tab = "inicio" | "salas" | "checkin" | "pessoas";
+type Tab = "inicio" | "salas" | "checkin" | "pessoas" | "historico";
 type PrintMode = "completo" | "crianca";
 type ChildDraft = {
   name: string;
   birth_date: string;
   gender: string;
   notes: string;
-  room_id: string;
+  has_autism: boolean;
+  autism_type: string;
+  has_food_restriction: boolean;
+  food_restriction_notes: string;
+};
+type LocalBridgeHealth = {
+  ok?: boolean;
+  paired?: boolean;
+  cloudOnline?: boolean;
+  cloudError?: string | null;
+  printerOnline?: boolean;
+  printerName?: string | null;
+  connection?: string | null;
+  error?: string | null;
 };
 
-const emptyChild = (roomId = ""): ChildDraft => ({
+const emptyChild = (): ChildDraft => ({
   name: "",
   birth_date: "",
   gender: "M",
   notes: "",
-  room_id: roomId,
+  has_autism: false,
+  autism_type: "",
+  has_food_restriction: false,
+  food_restriction_notes: "",
 });
 
 function PersonIcon({ gender, child = false }: { gender: "M" | "F" | null; child?: boolean }) {
@@ -68,14 +86,20 @@ function zplLine(value: string | null | undefined, max = 34) {
   return cleanZplText(value).slice(0, max);
 }
 
-function formatLabelDate(value: string) {
-  const date = new Date(value.replace(" ", "T"));
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
-}
-
 function arrivalCode(checkin: Checkin) {
   return String(checkin.arrival_number || 0).padStart(3, "0");
+}
+
+function attentionIcons(hasAutism: boolean, hasFoodRestriction: boolean) {
+  // Infinito desenhado com duas alcas e cruzamento central bem definido.
+  const autism = hasAutism
+    ? "^FO347,186^GE29,17,2,B^FS^FO371,186^GE29,17,2,B^FS^FO367,187^GD11,15,2,B,R^FS^FO367,187^GD11,15,2,B,L^FS"
+    : "";
+  const foodX = hasAutism ? 410 : 355;
+  const food = hasFoodRestriction
+    ? `^FO${foodX + 3},178^GB2,10,2^FS^FO${foodX + 7},178^GB2,10,2^FS^FO${foodX + 11},178^GB2,10,2^FS^FO${foodX + 15},178^GB2,10,2^FS^FO${foodX + 3},187^GB14,3,3^FS^FO${foodX + 9},189^GB3,18,3^FS^FO${foodX + 25},178^GB7,18,7^FS^FO${foodX + 27},194^GB3,13,3^FS^FO${foodX},177^GD38,32,2,B,R^FS`
+    : "";
+  return `${autism}${food}`;
 }
 
 function publicLabelUrl(checkin: Checkin) {
@@ -83,7 +107,7 @@ function publicLabelUrl(checkin: Checkin) {
   return `${window.location.origin}/mykids-etiqueta/${checkin.public_code}`;
 }
 
-function localBridgeUrl(configuredUrl: string | null | undefined, endpoint: "print" | "health") {
+function localBridgeUrl(configuredUrl: string | null | undefined, endpoint: "print" | "health" | "reconnect") {
   const fallback = `http://127.0.0.1:9123/${endpoint}`;
   if (!configuredUrl) return fallback;
   try {
@@ -102,42 +126,80 @@ function localBridgeUrl(configuredUrl: string | null | undefined, endpoint: "pri
   }
 }
 
+function printerStatusText(settings: PrinterSettings | null) {
+  if (!settings?.bridge_online) return "Ponte Zebra offline - clique em Zebra para reconectar";
+  if (!settings.printer_online) {
+    return settings.printer_last_error
+      ? `Ponte ativa, mas a Zebra esta desconectada: ${settings.printer_last_error}`
+      : "Ponte ativa, mas a Zebra USB ainda nao foi reconhecida";
+  }
+  const name = settings.detected_printer_name || settings.printer_name;
+  return name ? `Zebra conectada: ${name}` : "Zebra conectada e pronta para imprimir";
+}
+
+async function requestLocalBridge(url: string, method: "GET" | "POST" = "GET", timeout = 4000) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { method, cache: "no-store", signal: controller.signal });
+    const data = await response.json().catch(() => ({})) as LocalBridgeHealth;
+    if (!response.ok || data.ok === false) throw new Error(data.error || "Ponte respondeu com erro");
+    return data;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+function launchInstalledBridge() {
+  const frame = document.createElement("iframe");
+  frame.style.display = "none";
+  frame.src = `mykids-zebra://connect?time=${Date.now()}`;
+  document.body.appendChild(frame);
+  window.setTimeout(() => frame.remove(), 3000);
+}
+
 function childZpl(checkin: Checkin, qrContent: string) {
-  const code = checkin.public_code.slice(-6).toUpperCase();
-  const date = formatLabelDate(checkin.created_at);
   const number = arrivalCode(checkin);
+  const nameParts = cleanZplText(checkin.child_name_snapshot).split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+  const icons = attentionIcons(Boolean(checkin.child_has_autism_snapshot), Boolean(checkin.child_has_food_restriction_snapshot));
   return `^XA
 ^CI28
 ^PW480
 ^LL320
 ^FO16,30^BQN,2,5^FDLA,${qrContent}^FS
-^FO215,24^A0N,36,36^FD${zplLine(checkin.child_name_snapshot, 13).toUpperCase()}^FS
-^FO215,70^A0N,21,21^FDResp: ${zplLine(checkin.guardian_name_snapshot, 16)}^FS
-^FO215,98^A0N,21,21^FDSala: ${zplLine(checkin.room_name_snapshot, 17)}^FS
-^FO215,132^A0N,22,22^FDNumero^FS
-^FO215,154^A0N,58,58^FD${number}^FS
-^FO360,190^A0N,22,22^FD${date}^FS
-^FO20,244^A0N,22,22^FD${code}^FS
+^FO215,16^A0N,34,34^FD${zplLine(firstName, 12).toUpperCase()}^FS
+^FO215,50^A0N,30,30^FD${zplLine(lastName, 14).toUpperCase()}^FS
+${icons}
+^FO215,86^A0N,20,20^FDResp: ${zplLine(checkin.guardian_name_snapshot, 16)}^FS
+^FO215,112^A0N,20,20^FDSala: ${zplLine(checkin.room_name_snapshot, 17)}^FS
+^FO215,140^A0N,22,22^FDNumero^FS
+^FO215,162^A0N,54,54^FD${number}^FS
 ^XZ`;
 }
 
-function guardianZpl(checkin: Checkin, qrContent: string) {
-  const code = checkin.public_code.slice(-6).toUpperCase();
-  const date = formatLabelDate(checkin.created_at);
-  const number = arrivalCode(checkin);
+function guardianZpl(checkin: Checkin, qrContent: string, family: Checkin[] = [checkin]) {
+  const numbers = family.map((item) => String(Number(item.arrival_number || 0))).join(", ");
+  const nameParts = cleanZplText(checkin.guardian_name_snapshot).split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+  const multipleChildren = family.length > 1;
+  const childDescription = multipleChildren ? `${family.length} CRIANCAS` : checkin.child_name_snapshot;
+  const familyRooms = [...new Set(family.map((item) => cleanZplText(item.room_name_snapshot)))];
+  const roomDescription = familyRooms.length > 1 ? `${familyRooms.length} SALAS` : familyRooms[0];
   return `^XA
 ^CI28
 ^PW480
 ^LL320
 ^FO16,30^BQN,2,5^FDLA,${qrContent}^FS
 ^FO215,20^A0N,24,24^FDResponsavel^FS
-^FO215,50^A0N,34,34^FD${zplLine(checkin.guardian_name_snapshot, 13).toUpperCase()}^FS
-^FO215,94^A0N,21,21^FDCrianca: ${zplLine(checkin.child_name_snapshot, 14)}^FS
-^FO215,122^A0N,21,21^FDSala: ${zplLine(checkin.room_name_snapshot, 17)}^FS
-^FO215,156^A0N,20,20^FDNumero da crianca^FS
-^FO215,178^A0N,46,46^FD${number}^FS
-^FO360,190^A0N,22,22^FD${date}^FS
-^FO20,244^A0N,22,22^FD${code}^FS
+^FO215,48^A0N,32,32^FD${zplLine(firstName, 12).toUpperCase()}^FS
+^FO215,80^A0N,28,28^FD${zplLine(lastName, 14).toUpperCase()}^FS
+^FO215,116^A0N,20,20^FDCriancas: ${zplLine(childDescription, 14)}^FS
+^FO215,142^A0N,18,18^FDSalas: ${zplLine(roomDescription, 22)}^FS
+^FO215,170^A0N,19,19^FDNumero da crianca^FS
+^FO215,190^A0N,38,38^FD${zplLine(numbers, 12)}^FS
 ^XZ`;
 }
 
@@ -148,9 +210,18 @@ function buildPrintJob(checkin: Checkin, mode: PrintMode) {
   return `${guardianZpl(checkin, url)}\n${child}`;
 }
 
+function buildFamilyPrintJob(checkins: Checkin[]) {
+  const first = checkins[0];
+  const url = publicLabelUrl(first);
+  return `${guardianZpl(first, url, checkins)}\n${checkins.map((item) => childZpl(item, publicLabelUrl(item))).join("\n")}`;
+}
+
 export default function MyKidsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("inicio");
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomHistory, setRoomHistory] = useState<RoomHistory[]>([]);
+  const [closeAlerts, setCloseAlerts] = useState<RoomCloseAlert[]>([]);
+  const [roomConfirmation, setRoomConfirmation] = useState<{ room: Room; opening: boolean } | null>(null);
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [today, setToday] = useState<Checkin[]>([]);
   const [printer, setPrinter] = useState<PrinterSettings | null>(null);
@@ -181,16 +252,18 @@ export default function MyKidsPage() {
     setLoading(true);
     setError("");
     try {
-      const [roomData, guardianData, todayData, printerData] = await Promise.all([
+      const [roomData, guardianData, todayData, printerData, historyData] = await Promise.all([
         myKidsApi.rooms(),
         myKidsApi.guardians(),
         myKidsApi.today(),
         myKidsApi.printer(),
+        myKidsApi.roomHistory(),
       ]);
       setRooms(roomData);
       setGuardians(guardianData);
       setToday(todayData);
       setPrinter(printerData || fallbackPrinter);
+      setRoomHistory(historyData);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao carregar MyKids");
     } finally {
@@ -199,8 +272,31 @@ export default function MyKidsPage() {
   }, []);
 
   useEffect(() => {
+    const checkRoomAlerts = async () => {
+      try { setCloseAlerts(await myKidsApi.roomCloseAlerts()); } catch { /* Mantem a tela funcional offline. */ }
+    };
+    void checkRoomAlerts();
+    const interval = window.setInterval(checkRoomAlerts, 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let stopped = false;
+    const refreshSharedState = async () => {
+      try {
+        const [roomData, todayData, historyData] = await Promise.all([myKidsApi.rooms(), myKidsApi.today(), myKidsApi.roomHistory()]);
+        if (!stopped) { setRooms(roomData); setToday(todayData); setRoomHistory(historyData); }
+      } catch { /* A proxima sincronizacao tenta novamente. */ }
+    };
+    const onVisible = () => { if (document.visibilityState === "visible") void refreshSharedState(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const interval = window.setInterval(refreshSharedState, 5000);
+    return () => { stopped = true; document.removeEventListener("visibilitychange", onVisible); window.clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     const refreshPrinterStatus = async () => {
@@ -208,9 +304,7 @@ export default function MyKidsPage() {
         const current = await myKidsApi.printer();
         if (!current) return;
         setPrinter(current);
-        setPrinterStatus(current.bridge_online
-          ? "Notebook conectado a impressora"
-          : "Nenhum notebook conectado a impressora");
+        setPrinterStatus(printerStatusText(current));
       } catch {
         setPrinterStatus("Nao foi possivel consultar a impressora");
       }
@@ -220,46 +314,9 @@ export default function MyKidsPage() {
     return () => window.clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (window.matchMedia("(max-width: 720px)").matches) return;
-    let busy = false;
-    let stopped = false;
-    const relayPrintJobs = async () => {
-      if (busy || stopped) return;
-      busy = true;
-      try {
-        const healthResponse = await fetch("http://127.0.0.1:9123/health", { cache: "no-store" });
-        const health = await healthResponse.json().catch(() => ({}));
-        if (!healthResponse.ok || health.ok === false) return;
-        const job = await myKidsApi.claimPrint();
-        if (!job) return;
-        try {
-          const printResponse = await fetch("http://127.0.0.1:9123/print", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ zpl: job.zpl, printerName: job.printer_name || undefined }),
-          });
-          const result = await printResponse.json().catch(() => ({}));
-          if (!printResponse.ok || result.ok === false) throw new Error(result.error || "Falha na ponte Zebra");
-          await myKidsApi.completePrint(job.id, { ok: true });
-          setPrinterStatus("Impressao recebida do celular e enviada para a Zebra");
-        } catch (e) {
-          const detail = e instanceof Error ? e.message : "Falha ao imprimir";
-          await myKidsApi.completePrint(job.id, { ok: false, error: detail });
-          setPrinterStatus(`Falha ao imprimir chamada recebida: ${detail}`);
-        }
-      } catch {
-        // Notebook sem ponte local: nao reivindica trabalhos da fila.
-      } finally {
-        busy = false;
-      }
-    };
-    void relayPrintJobs();
-    const interval = window.setInterval(relayPrintJobs, 1000);
-    return () => { stopped = true; window.clearInterval(interval); };
-  }, []);
-
   const openRooms = rooms.filter((room) => Boolean(room.is_open));
+  const printerReady = Boolean(printer?.bridge_online && printer?.printer_online);
+  const printerButtonState = printerReady ? styles.printerOnline : printer?.bridge_online ? styles.printerBridgeOnline : "";
   const people = useMemo(
     () => guardians.flatMap((guardian) => guardian.children.map((child) => ({ guardian, child }))),
     [guardians]
@@ -316,17 +373,29 @@ export default function MyKidsPage() {
   }
 
   async function toggleRoom(room: Room) {
-    if (Boolean(room.is_open)) {
-      const confirmed = window.confirm("Tem certeza que deseja fechar esta sala? Todas as criancas sairão da sala.");
-      if (!confirmed) return;
-    }
+    setRoomConfirmation({ room, opening: !Boolean(room.is_open) });
+  }
+
+  async function confirmToggleRoom() {
+    if (!roomConfirmation) return;
+    const { room, opening } = roomConfirmation;
+    setRoomConfirmation(null);
     try {
-      await myKidsApi.updateRoom(room.id, { is_open: !Boolean(room.is_open) });
+      await myKidsApi.updateRoom(room.id, { is_open: opening });
       if (Boolean(room.is_open)) setExpandedRoom(null);
+      setCloseAlerts((current) => current.filter((alert) => alert.room_id !== room.id));
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao atualizar sala");
     }
+  }
+
+  async function keepRoomOpen(alert: RoomCloseAlert) {
+    try {
+      await myKidsApi.snoozeRoomClose(alert.room_id);
+      setCloseAlerts((current) => current.filter((item) => item.room_id !== alert.room_id));
+      setMessage(`${alert.room_name} permanecera aberta. Um novo aviso aparecera em 2 horas.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Erro ao manter a sala aberta"); }
   }
 
   async function submitGuardian(event: FormEvent<HTMLFormElement>) {
@@ -336,10 +405,7 @@ export default function MyKidsPage() {
     try {
       await myKidsApi.createGuardian({
         ...guardianForm,
-        children: guardianForm.children.map((child) => ({
-          ...child,
-          room_id: child.room_id ? Number(child.room_id) : null,
-        })),
+        children: guardianForm.children,
       });
       setGuardianForm({
         name: "",
@@ -347,7 +413,7 @@ export default function MyKidsPage() {
         phone: "",
         gender: "M",
         status: "visitante",
-        children: [emptyChild(rooms[0]?.id ? String(rooms[0].id) : "")],
+        children: [emptyChild()],
       });
       setShowPersonForm(false);
       setMessage("Responsavel e criancas cadastrados.");
@@ -359,14 +425,14 @@ export default function MyKidsPage() {
 
   async function makeCheckin(guardianId: number, childId: number, roomId: number | null) {
     if (!openRooms.length) return;
-    const selectedRoom = openRooms.find((room) => room.id === roomId) ?? openRooms[0];
+    const selectedRoom = openRooms.find((room) => room.id === roomId);
     setError("");
     setMessage("");
     try {
       const checkin = await myKidsApi.createCheckin({
         guardian_id: guardianId,
         child_id: childId,
-        room_id: selectedRoom.id,
+        ...(selectedRoom ? { room_id: selectedRoom.id } : {}),
       });
       setPendingPrint(checkin);
       setMessage("Check-in realizado.");
@@ -383,16 +449,10 @@ export default function MyKidsPage() {
     try {
       const created: Checkin[] = [];
       for (const child of available) {
-        const room = openRooms.find((item) => item.id === child.room_id) || openRooms[0];
-        created.push(await myKidsApi.createCheckin({ guardian_id: guardian.id, child_id: child.id, room_id: room.id }));
+        const room = openRooms.find((item) => item.id === child.room_id);
+        created.push(await myKidsApi.createCheckin({ guardian_id: guardian.id, child_id: child.id, ...(room ? { room_id: room.id } : {}) }));
       }
-      for (let index = 0; index < created.length; index += 1) {
-        const checkin = created[index];
-        await myKidsApi.print({
-          zpl: buildPrintJob(checkin, index === 0 ? "completo" : "crianca"),
-          printer_name: printer?.printer_name || undefined,
-        });
-      }
+      await myKidsApi.print({ zpl: buildFamilyPrintJob(created), printer_name: printer?.printer_name || undefined });
       setMessage(`${created.length} crianca(s) em check-in.`);
       await load();
     } catch (e) {
@@ -407,7 +467,9 @@ export default function MyKidsPage() {
     setError("");
     try {
       await myKidsApi.updateGuardian(editingGuardian.id, editingGuardian);
-      await Promise.all(editingGuardian.children.map((child) => myKidsApi.updateChild(child.id, child)));
+      await Promise.all(editingGuardian.children.map((child) => child.id > 0
+        ? myKidsApi.updateChild(child.id, child)
+        : myKidsApi.createChild(editingGuardian.id, child)));
       setEditingGuardian(null);
       setMessage("Dados atualizados.");
       await load();
@@ -444,38 +506,69 @@ export default function MyKidsPage() {
 
   async function detectPrinterBridge() {
     let latestPrinter = printer;
+    const bridgeLaunchRequested = !printer?.bridge_online;
+    if (bridgeLaunchRequested) launchInstalledBridge();
+    setPrinterStatus("Procurando a Zebra conectada por USB...");
     try {
       latestPrinter = await myKidsApi.printer();
       if (latestPrinter) setPrinter(latestPrinter);
     } catch {
       // A deteccao local ainda pode funcionar mesmo se a consulta de status falhar.
     }
-    const healthUrl = localBridgeUrl(latestPrinter?.bridge_url || fallbackPrinter.bridge_url, "health");
+    const reconnectUrl = localBridgeUrl(latestPrinter?.bridge_url || fallbackPrinter.bridge_url, "reconnect");
     setError("");
+    let data: LocalBridgeHealth | null = null;
+    let localError: unknown = null;
     try {
-      const response = await fetch(healthUrl, { cache: "no-store" });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || data.ok === false) throw new Error(data.error || "Ponte respondeu com erro");
+      data = await requestLocalBridge(reconnectUrl, "POST");
+    } catch (e) {
+      localError = e;
+      if (!bridgeLaunchRequested) launchInstalledBridge();
+      for (let attempt = 0; attempt < 8 && !data; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        try { data = await requestLocalBridge(reconnectUrl, "POST", 2500); } catch (retryError) { localError = retryError; }
+      }
+    }
+
+    try {
+      if (!data) throw localError instanceof Error ? localError : new Error("Ponte local nao respondeu");
+      if (data.paired === false) {
+        setPrinterStatus("Ponte instalada, mas sem pareamento. Reinstale usando o codigo exibido abaixo.");
+        setShowPrinterSetup(true);
+        return;
+      }
+      if (data.cloudError && /(401|autoriza)/i.test(data.cloudError)) {
+        setPrinterStatus("A ponte foi encontrada, mas o codigo de pareamento nao foi aceito. Reinstale e informe o codigo atual.");
+        setShowPrinterSetup(true);
+        return;
+      }
+      if (data.printerOnline === false || (!data.printerOnline && !data.printerName)) {
+        setPrinterStatus(data.error || "Ponte ativa, mas nenhuma Zebra USB foi reconhecida");
+        setShowPrinterSetup(true);
+        return;
+      }
+
       const detectedPrinter = typeof data.printerName === "string" && data.printerName ? data.printerName : null;
-      const detectedBridgeUrl = localBridgeUrl(healthUrl, "print");
+      const detectedBridgeUrl = localBridgeUrl(reconnectUrl, "print");
       const detectedSettings = {
         ...(latestPrinter || fallbackPrinter),
         bridge_url: detectedBridgeUrl,
-        printer_name: detectedPrinter,
+        printer_name: detectedPrinter || latestPrinter?.printer_name || fallbackPrinter.printer_name,
         is_active: true,
       };
       const savedSettings = await myKidsApi.updatePrinter(detectedSettings);
-      setPrinter(savedSettings);
+      setPrinter({ ...savedSettings, bridge_online: true, printer_online: true, detected_printer_name: detectedPrinter });
       setShowPrinterSetup(false);
-      setPrinterStatus(detectedPrinter ? `Zebra conectada: ${detectedPrinter}` : "Ponte Zebra conectada");
+      const connection = data.connection ? ` via ${data.connection}` : "";
+      setPrinterStatus(detectedPrinter ? `Zebra conectada${connection}: ${detectedPrinter}` : "Zebra conectada e pronta");
     } catch (e) {
       if (latestPrinter?.bridge_online) {
-        setPrinterStatus("Notebook da Zebra conectado e aguardando impressoes");
+        setPrinterStatus(printerStatusText(latestPrinter));
         setShowPrinterSetup(false);
         return;
       }
       const detail = e instanceof Error && e.message ? `: ${e.message}` : "";
-      setPrinterStatus(`Nao consegui conectar em ${healthUrl}${detail}`);
+      setPrinterStatus(`Nao foi possivel iniciar a ponte Zebra${detail}`);
       setShowPrinterSetup(true);
     }
   }
@@ -484,9 +577,7 @@ export default function MyKidsPage() {
     try {
       const current = await myKidsApi.printer();
       if (current) setPrinter(current);
-      setPrinterStatus(current?.bridge_online
-        ? "Notebook conectado a impressora - impressoes liberadas"
-        : "Nenhum notebook conectado - ligue a ponte antes do check-in");
+      setPrinterStatus(printerStatusText(current));
     } catch {
       setPrinterStatus("Nao foi possivel consultar o notebook da impressora");
     }
@@ -494,15 +585,30 @@ export default function MyKidsPage() {
 
   return (
     <main className={styles.page}>
+      {closeAlerts.slice(0, 1).map((alert) => (
+        <div className={styles.noticeBackdrop} key={alert.room_id}><div className={styles.brandNotice} role="status">
+          <div><strong>O culto pode ter terminado</strong><span>O ultimo check-in de {alert.room_name} foi ha 2 horas. Sem resposta, ela fecha automaticamente em 10 minutos.</span></div>
+          <div className={styles.noticeActions}>
+            <button className={styles.primaryButton} onClick={() => { const room = rooms.find((item) => item.id === alert.room_id); if (room) setRoomConfirmation({ room, opening: false }); }}>Fechar agora</button>
+            <button className={styles.secondaryButton} onClick={() => keepRoomOpen(alert)}>Manter aberta</button>
+          </div>
+        </div></div>
+      ))}
+      {roomConfirmation && (
+        <div className={styles.noticeBackdrop}><div className={styles.confirmNotice} role="status">
+          <div><strong>{roomConfirmation.opening ? "Abrir sala?" : "Fechar sala?"}</strong><span>{roomConfirmation.opening ? `Confirma a abertura de ${roomConfirmation.room.name}?` : `Todas as criancas de ${roomConfirmation.room.name} receberao check-out.`}</span></div>
+          <div className={styles.noticeActions}><button className={styles.primaryButton} onClick={confirmToggleRoom}>Confirmar</button><button className={styles.secondaryButton} onClick={() => setRoomConfirmation(null)}>Cancelar</button></div>
+        </div></div>
+      )}
       {showPrinterSetup && (
         <div className={styles.modalBackdrop}>
           <section className={styles.modal}>
             <h2>Configurar impressora Zebra</h2>
-            <p>A ponte ainda não está instalada neste computador. Faça a configuração uma única vez:</p>
+            <p>{printerStatus}</p>
             <ol className={styles.setupSteps}>
-              <li>Baixe e extraia o instalador.</li>
-              <li>Execute <strong>instalar_zebra.bat</strong> e confirme a janela do Windows.</li>
-              <li>Volte aqui e clique em “Testar novamente”.</li>
+              <li>Confirme que a Zebra está ligada, com etiquetas e conectada pelo cabo USB.</li>
+              <li>Clique em <strong>Testar novamente</strong> para redetectar automaticamente.</li>
+              <li>Se ainda não conectar, baixe e execute novamente <strong>instalar_zebra.bat</strong>.</li>
             </ol>
             {printer?.bridge_token && (
               <p>Codigo de pareamento: <strong className={styles.pairingCode}>{printer.bridge_token}</strong></p>
@@ -537,9 +643,16 @@ export default function MyKidsPage() {
                   <label>Nascimento<input type="date" value={child.birth_date ? String(child.birth_date).slice(0, 10) : ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, birth_date: e.target.value || null } : item) })} /></label>
                   <label>Sala<select value={child.room_id || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, room_id: e.target.value ? Number(e.target.value) : null } : item) })}><option value="">Sem sala</option>{rooms.map((room) => <option key={room.id} value={room.id}>{room.name}</option>)}</select></label>
                 </div>
-                <label>Observacoes<textarea value={child.notes || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, notes: e.target.value } : item) })} /></label>
+                <div className={styles.attentionOptions}>
+                  <label><input type="checkbox" checked={Boolean(child.has_autism)} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, has_autism: e.target.checked } : item) })} /> Autismo</label>
+                  {Boolean(child.has_autism) && <label>Tipo / nivel de suporte<input value={child.autism_type || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, autism_type: e.target.value } : item) })} /></label>}
+                  <label><input type="checkbox" checked={Boolean(child.has_food_restriction)} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, has_food_restriction: e.target.checked } : item) })} /> Restricao alimentar</label>
+                </div>
+                {Boolean(child.has_food_restriction) && <label>Qual e a restricao alimentar?<textarea required maxLength={2000} value={child.food_restriction_notes || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, food_restriction_notes: e.target.value } : item) })} placeholder="Ex.: alergia a leite e derivados" /></label>}
+                {Boolean(child.has_autism) && <label>Observacoes de cuidado<textarea value={child.notes || ""} onChange={(e) => setEditingGuardian({ ...editingGuardian, children: editingGuardian.children.map((item) => item.id === child.id ? { ...item, notes: e.target.value } : item) })} /></label>}
               </div>
             ))}
+            <button type="button" className={styles.secondaryButton} onClick={() => setEditingGuardian({ ...editingGuardian, children: [...editingGuardian.children, { id: -Date.now(), guardian_id: editingGuardian.id, name: "", birth_date: null, gender: "M", has_autism: false, autism_type: null, has_food_restriction: false, food_restriction_notes: null, notes: null, room_id: null, checkins_count: 0 }] })}><FaPlus /> Adicionar crianca</button>
             <div className={styles.modalActions}><button type="button" className={styles.secondaryButton} onClick={() => setEditingGuardian(null)}>Cancelar</button><button className={styles.primaryButton}>Salvar alteracoes</button></div>
           </form>
         </div>
@@ -569,19 +682,20 @@ export default function MyKidsPage() {
       )}
 
       <header className={styles.header}>
+        <a href="/homecards" className={styles.backHome} aria-label="Voltar para a biblioteca" title="Voltar para a biblioteca"><FaArrowLeft /></a>
         <div>
           <span className={styles.kicker}>Ministerio infantil</span>
           <h1>MyKids</h1>
         </div>
-        <button className={`${styles.printButton} ${styles.desktopPrinterButton} ${printer?.bridge_online ? styles.printerOnline : ""}`} onClick={detectPrinterBridge}>
+        <button className={`${styles.printButton} ${styles.desktopPrinterButton} ${printerButtonState}`} onClick={detectPrinterBridge}>
           <span className={styles.statusDot} />
           <FaPrint />
           Zebra
         </button>
-        <button className={`${styles.printButton} ${styles.mobilePrinterButton} ${printer?.bridge_online ? styles.printerOnline : ""}`} onClick={checkRemotePrinter}>
+        <button className={`${styles.printButton} ${styles.mobilePrinterButton} ${printerButtonState}`} onClick={checkRemotePrinter}>
           <span className={styles.statusDot} />
           <FaPrint />
-          {printer?.bridge_online ? "Impressora online" : "Ver impressora"}
+          {printerReady ? "Impressora online" : printer?.bridge_online ? "Zebra desconectada" : "Ver impressora"}
         </button>
       </header>
 
@@ -853,7 +967,7 @@ export default function MyKidsPage() {
                           onClick={() =>
                             setGuardianForm({
                               ...guardianForm,
-                              children: [...guardianForm.children, emptyChild(rooms[0]?.id ? String(rooms[0].id) : "")],
+                              children: [...guardianForm.children, emptyChild()],
                             })
                           }
                         >
@@ -908,28 +1022,14 @@ export default function MyKidsPage() {
                                   <option value="F">Feminino</option>
                                 </select>
                               </label>
-                              <label>
-                                Sala
-                                <select
-                                  value={child.room_id}
-                                  onChange={(event) => updateChildDraft(index, { room_id: event.target.value })}
-                                >
-                                  <option value="">Sem sala</option>
-                                  {rooms.map((room) => (
-                                    <option key={room.id} value={room.id}>
-                                      {room.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
                             </div>
-                            <label>
-                              Observacoes
-                              <textarea
-                                value={child.notes}
-                                onChange={(event) => updateChildDraft(index, { notes: event.target.value })}
-                              />
-                            </label>
+                            <div className={styles.attentionOptions}>
+                              <label><input type="checkbox" checked={child.has_autism} onChange={(event) => updateChildDraft(index, { has_autism: event.target.checked })} /> Autismo</label>
+                              {child.has_autism && <label>Tipo / nivel de suporte<input value={child.autism_type} onChange={(event) => updateChildDraft(index, { autism_type: event.target.value })} placeholder="Ex.: nivel 1 de suporte" /></label>}
+                              <label><input type="checkbox" checked={child.has_food_restriction} onChange={(event) => updateChildDraft(index, { has_food_restriction: event.target.checked })} /> Restricao alimentar</label>
+                            </div>
+                            {child.has_food_restriction && <label>Qual e a restricao alimentar?<textarea required maxLength={2000} value={child.food_restriction_notes} onChange={(event) => updateChildDraft(index, { food_restriction_notes: event.target.value })} placeholder="Ex.: alergia a leite e derivados" /></label>}
+                            {child.has_autism && <label>Observacoes de cuidado<textarea value={child.notes} onChange={(event) => updateChildDraft(index, { notes: event.target.value })} placeholder="Informacoes importantes para o cuidado" /></label>}
                           </article>
                         ))}
                       </div>
@@ -970,6 +1070,22 @@ export default function MyKidsPage() {
               </section>
             </section>
           )}
+
+          {activeTab === "historico" && (
+            <section className={styles.content}>
+              <section className={styles.panel}>
+                <div className={styles.sectionTitle}><h2>Ultimas salas fechadas</h2><span>Historico dos cultos recentes</span></div>
+                <div className={styles.roomList}>
+                  {roomHistory.length ? roomHistory.map((item) => (
+                    <article className={styles.roomCard} key={item.id}>
+                      <div><h3>{item.room_name}</h3><p>{new Date(item.closed_at).toLocaleString("pt-BR")}{Boolean(item.closed_automatically) ? " · fechamento automatico" : ""}</p></div>
+                      <div className={styles.roomCount}><strong>{item.children_count}</strong><span>crianca(s)</span></div>
+                    </article>
+                  )) : <p>Nenhuma sala fechada registrada ainda.</p>}
+                </div>
+              </section>
+            </section>
+          )}
         </>
       )}
 
@@ -990,6 +1106,7 @@ export default function MyKidsPage() {
           <FaUserFriends />
           Pessoas
         </button>
+        <button className={activeTab === "historico" ? styles.activeNav : ""} onClick={() => setActiveTab("historico")}><FaHistory />Historico</button>
       </nav>
     </main>
   );

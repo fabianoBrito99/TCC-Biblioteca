@@ -14,6 +14,7 @@ const permissoes = {
   ],
   voluntario: ["/homecards", "/doeumlivro", "/comunidade"],
   leitor: ["/homecards", "/doeumlivro", "/comunidade"],
+  "leitor+mykids": ["/homecards", "/doeumlivro", "/comunidade", "/MyKids"],
 } as const;
 
 type Role = keyof typeof permissoes;
@@ -24,6 +25,7 @@ const roleAlias: Record<string, Role> = {
   bibliotecario: "administrador",
   voluntario: "voluntario",
   leitor: "leitor",
+  "leitor+mykids": "leitor+mykids",
   user: "leitor",
 };
 

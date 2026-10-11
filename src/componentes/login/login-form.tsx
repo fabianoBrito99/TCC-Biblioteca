@@ -24,6 +24,21 @@ type LoginFormProps = {
   onToggle: () => void;
 };
 
+const LOGIN_ERROR_FALLBACK =
+  "Não foi possível entrar agora. Tente novamente em instantes.";
+const LOGIN_ERRORS = new Set([
+  "Informe seu usuário/e-mail e sua senha.",
+  "Usuário/e-mail ou senha incorretos.",
+  "Muitas tentativas de acesso. Aguarde um minuto e tente novamente.",
+  LOGIN_ERROR_FALLBACK,
+]);
+
+function getLoginErrorMessage(error: unknown) {
+  return typeof error === "string" && LOGIN_ERRORS.has(error)
+    ? error
+    : LOGIN_ERROR_FALLBACK;
+}
+
 export default function LoginForm({ onToggle }: LoginFormProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +51,7 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsSubmitting(true);
 
     try {
@@ -55,10 +71,10 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
         window.location.assign(redirectTo);
       } else {
 
-        setError(response.error);
+        setError(getLoginErrorMessage(response.error));
       }
     } catch {
-      setError("Erro ao fazer login");
+      setError(LOGIN_ERROR_FALLBACK);
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +89,13 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
           name="username"
           type="text"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setError(null);
+          }}
+          autoComplete="username"
+          maxLength={254}
+          required
         />
         <div className={styles.passwordContainer}>
           {/* Campo de senha */}
@@ -82,7 +104,13 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
             name="password"
             type={showPassword ? "text" : "password"}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(null);
+            }}
+            autoComplete="current-password"
+            maxLength={128}
+            required
           />
 
           {/* Ícone para exibir/ocultar a senha */}
